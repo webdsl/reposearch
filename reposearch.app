@@ -42,7 +42,7 @@ application svnsearch
     }
     */
     for(p:Project){
-      navigate(search(p)){"Search " output(p.name)}
+      navigate(search(p, "")){"Search " output(p.name)}
       <br/>
     }
     navigate(manage()){"Manage"}
@@ -64,13 +64,13 @@ application svnsearch
   }
   entity Entry{
     name :: String
-    content :: Text(searchable)
+    content :: Text
     url :: URL
-    projectname :: String(searchable)
+    projectname :: String
     repo ->Repo
        searchmapping{
-        content    		
-        projectname
+        content (autocomplete)
+        projectname using kw
       }
   }
   
