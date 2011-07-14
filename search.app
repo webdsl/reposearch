@@ -96,9 +96,9 @@ function highlightedResult(line:Entry,searchQuery : EntrySearchQuery):List<Strin
   }
 
   define ajax paginatedResults(query : EntrySearchQuery, pagenumber : Int, resultsPerPage : Int){
-    var lastResult : Int;
-    var size := query.resultSize();
     var resultList := query.firstResult((pagenumber - 1) * resultsPerPage).maxResults(resultsPerPage).list();
+    var size := query.resultSize();
+    var lastResult := size;
     init{
       if(size > pagenumber*resultsPerPage){
         lastResult := pagenumber * resultsPerPage;
