@@ -77,7 +77,7 @@ application svnsearch
 
   native class svn.Svn as Svn{
     //static getCommits(String):List<Commit>
-    //static getFiles(String):List<Entry>
+    static getFiles(String):List<Entry>
     static checkoutSvn(String):List<Entry>
     static checkoutGithub(String,String):List<Entry>
   }
@@ -142,9 +142,13 @@ application svnsearch
     div{
       if(r.refresh){
         "REFRESH SCHEDULED"
+        submit action{cancelQueryRepo(r);} {"Cancel refresh"}  
       }
       else{
-        submit action{queryRepo(r);} {"Refresh"}    	
+        submit action{queryRepo(r);} {"Refresh with checkout"}  
+        if(r isa SvnRepo){  	
+          submit action{queryRepoSVN(r);} {"Refresh SVN without checkout"}  
+        }  	
       }
     }
     div{
@@ -159,6 +163,7 @@ application svnsearch
   entity Repo{
     project -> Project (inverse=Project.repos)
     refresh :: Bool
+    refreshSVN :: Bool
     error::Bool
   }
   entity SvnRepo : Repo{
@@ -172,10 +177,18 @@ application svnsearch
     Project{name:="WebDSL" repos:=[(SvnRepo{url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac"} as Repo)]}.save();
   }
   
-  
+  function cancelQueryRepo(r:Repo){
+    r.refresh := false;
+    r.refreshSVN := false;
+  }
   
   function queryRepo(r:Repo){
     r.refresh := true;
+  }
+  
+  function queryRepoSVN(r:Repo){
+    r.refresh := true;
+    r.refreshSVN := true;
   }
   
   invoke queryRepoTask() every 30 seconds
@@ -185,8 +198,13 @@ application svnsearch
     if(repos.length > 0){
       var r := repos[0];
       var col : List<Entry>;
-      if(r isa SvnRepo){ col := Svn.checkoutSvn((r as SvnRepo).url); }
-      if(r isa GithubRepo){ col := Svn.checkoutGithub((r as GithubRepo).user,(r as GithubRepo).repo); }
+      if(r.refreshSVN){
+        col := Svn.getFiles((r as SvnRepo).url);
+      }
+      else{
+        if(r isa SvnRepo){ col := Svn.checkoutSvn((r as SvnRepo).url); }
+        if(r isa GithubRepo){ col := Svn.checkoutGithub((r as GithubRepo).user,(r as GithubRepo).repo); }
+      }
       if(col != null){ 
         deleteRepoEntries(r);
         for(c: Entry in col){
