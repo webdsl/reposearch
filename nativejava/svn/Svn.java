@@ -2,11 +2,15 @@ package svn;
 
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 import org.tmatesoft.svn.core.SVNException;
@@ -19,6 +23,11 @@ import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
+import org.tmatesoft.svn.core.wc.SVNClientManager;
+import org.tmatesoft.svn.core.wc.SVNRevision;
+import org.tmatesoft.svn.core.wc.SVNUpdateClient;
+
+import com.google.common.io.Files;
 
 import webdsl.generated.domain.*;
 
@@ -35,6 +44,89 @@ public class Svn {
         }
         */
     }
+    
+    public static List<Entry> checkoutSvn(String repo1) {
+        return checkout(repo1,null);
+    }
+    public static List<Entry> checkoutGithub(String user,String repo) {
+        return checkout("http://svn.github.com/"+user+"/"+repo+".git",
+                        "https://github.com/"+user+"/"+repo+"/blob/master/");
+    }
+    public static List<Entry> checkout(String repo1, String repo2) {
+        if(repo2==null){
+            repo2=repo1;
+        }
+        setupLibrary();
+        File dst;
+        List<Entry> list;
+        try {
+            dst = Files.createTempDir();
+            System.out.println(dst);
+            SVNURL svnurl = SVNURL.parseURIEncoded(repo1);
+
+            SVNClientManager cm = SVNClientManager.newInstance();
+            SVNUpdateClient uc = cm.getUpdateClient();
+            
+            uc.doCheckout(svnurl, dst, SVNRevision.UNDEFINED, SVNRevision.HEAD, true);
+
+            list = new ArrayList<Entry>();
+            
+            if(!repo2.endsWith("/")){
+                repo2 = repo2+"/";
+            }
+            addEntryRecursive(repo2,"",dst,list);
+
+        } catch (SVNException svne) {
+            svne.printStackTrace();
+            return null;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        //ignore failed delete
+        try {
+            //Files.deleteRecursively(dst);  //fails
+            FileUtils.deleteDirectory(dst);	
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    private static void addEntryRecursive(String repo, String dir, File dst, List<Entry> list) throws IOException{
+        File[] files = dst.listFiles();
+        if (files != null) { // Either dir does not exist or is not a directory
+            for (File f : files) {
+               // System.out.println("file name: "+f.getName());
+                //System.out.println(f.getAbsolutePath());
+                if(f.isDirectory()){
+                    if(!f.getName().equals(".svn")){
+                        System.out.println("dir: "+f.getName());
+                        addEntryRecursive(repo,dir+f.getName()+"/",f,list);
+                    }
+                }
+                else{
+                    if(!(f.getName().endsWith(".zip")
+                            ||f.getName().endsWith(".tbl")		
+                            ||f.getName().endsWith(".png")		
+                            ||f.getName().endsWith(".jpg")		
+                            ||f.getName().endsWith(".bmp")		
+                            ||f.getName().endsWith(".jar"))){
+                        Entry c = new Entry();
+                        list.add(c);
+                        c.setNameNoEventsOrValidation(f.getName());
+                        //System.out.println("file name: "+f.getName());
+                        c.setContentNoEventsOrValidation(Files.toString(f,Charset.defaultCharset()));
+                        //System.out.println("file contents: "+Files.toString(f,Charset.defaultCharset()));
+                        c.setUrlNoEventsOrValidation(repo+dir+f.getName());
+                        //System.out.println("file url: "+repo+dir+f.getName());
+                    }
+                }
+            }
+        }
+    }     
     
     public static List<Commit> getCommits(String repo) {
         String url = repo;

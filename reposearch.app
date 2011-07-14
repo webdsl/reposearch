@@ -76,8 +76,10 @@ application svnsearch
   
 
   native class svn.Svn as Svn{
-    static getCommits(String):List<Commit>
-    static getFiles(String):List<Entry>
+    //static getCommits(String):List<Commit>
+    //static getFiles(String):List<Entry>
+    static checkoutSvn(String):List<Entry>
+    static checkoutGithub(String,String):List<Entry>
   }
     
   //todo:configurable filter on file extension
@@ -86,6 +88,8 @@ application svnsearch
   define page manage(){
     var p := ""
     var n :URL
+    var gu:String
+    var gr:String
     form{
       input(p)
       submit action{Project{name:=p}.save();} {"Add project"}
@@ -101,8 +105,16 @@ application svnsearch
       }
       div{
         form{
+          "SVN: "
           input(n)
-          submit action{ pr.repos.add(Repo{url:=n}); } {"Add repository"}
+          submit action{ pr.repos.add(SvnRepo{url:=n}); } {"Add repository"}
+        }
+        form{
+          "Github user: "
+          input(gu)
+          " repository: "
+          input(gr)
+          submit action{ pr.repos.add(GithubRepo{user:=gu repo:=gr}); } {"Add repository"}
         }
       }
       <br/>
@@ -111,7 +123,16 @@ application svnsearch
   
   define showrepo(p:Project, r:Repo){
     div{
-      output(r.url)
+      if(r isa SvnRepo){
+        "SVN: " 
+        output((r as SvnRepo).url)
+      }
+      if(r isa GithubRepo){
+        "Github: " 
+        output((r as GithubRepo).user) 
+        " " 
+        output((r as GithubRepo).repo)
+      }
     }
     div{
       if(r.error){
@@ -132,17 +153,23 @@ application svnsearch
   }
   
   entity Project {
-    name :: String
+    name :: String (id)
     repos -> List<Repo>
   }
   entity Repo{
     project -> Project (inverse=Project.repos)
-    url :: URL
     refresh :: Bool
     error::Bool
   }
+  entity SvnRepo : Repo{
+    url :: URL  	
+  }
+  entity GithubRepo : Repo{
+    user::String
+    repo::String
+  }
   init{
-    Project{name:="WebDSL" repos:=[Repo{url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac"}]}.save();
+    Project{name:="WebDSL" repos:=[(SvnRepo{url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac"} as Repo)]}.save();
   }
   
   
@@ -157,7 +184,9 @@ application svnsearch
     var repos := from Repo where refresh=true;
     if(repos.length > 0){
       var r := repos[0];
-      var col := Svn.getFiles(r.url);
+      var col : List<Entry>;
+      if(r isa SvnRepo){ col := Svn.checkoutSvn((r as SvnRepo).url); }
+      if(r isa GithubRepo){ col := Svn.checkoutGithub((r as GithubRepo).user,(r as GithubRepo).repo); }
       if(col != null){ 
         deleteRepoEntries(r);
         for(c: Entry in col){
@@ -171,9 +200,25 @@ application svnsearch
         r.error := true;	
       }
       r.refresh:=false;
-      
+      if(!settings.reindex){
+        settings.reindex := true;
+      }
     }
   }
+  
+  invoke invokeCheckReindex() every 60 seconds
+  
+  function invokeCheckReindex(){
+    if(settings.reindex){
+      IndexManager.indexSuggestions();
+    }
+    settings.reindex := false;
+  }
+
+  entity Settings{
+    reindex :: Bool
+  }
+  var settings := Settings{} 
   
   function deleteRepoEntries(r:Repo){
     for(e:Entry where e.repo == r){e.delete();}

@@ -2,34 +2,33 @@ module search
 
 define page search(p:Project, q:String){
   var query := q;
-  var searchQuery := EntrySearchQuery();
+  var searchQuery := toSearchQuery(query,p.name);
   navigate(root()){"return to home"}
-
-  init {
-  	if(q.length()>0){
-  	  searchQuery := toSearchQuery(query,p.name);
-  	}  	  
-  }
   
   form {
-    input(query)[autocomplete="off", onkeyup = action{replace(suggestionsOutputPh,viewAutoComplete(EntrySearchQuery.autoCompleteSuggest(query,["content"], 10),p));}]
-    action ("search", action{return search(p,query);})[ajax]
+    input(query)[autocomplete="off", onkeyup = updateResults()]
+    submit action{return search(p,query);} {"search"}
   }  
   
   table{row{column{placeholder suggestionsOutputPh{} } } }
   
-  placeholder results{
-  	if(query.length()>0){
-  		paginatedTemplate(searchQuery, 10)
-  	}
+  action updateResults(){
+    //log("q: "+q);
+    //log("query: "+query);
+    searchQuery := toSearchQuery(query,p.name); //update with entered query
+    replace(suggestionsOutputPh,viewAutoComplete(EntrySearchQuery.autoCompleteSuggest(query,["content"], 10),p));
+    replace(resultArea,paginatedResults(searchQuery,1,10));
+    //HTML5 feature, replace url without causing page reload
+    runscript("window.history.replaceState('','','"+navigate(search(p,query))+"');");
   }
-  		
+  
+  paginatedTemplate(searchQuery, 10)
 }
 
 function toSearchQuery(q:String, projectname: String) : EntrySearchQuery{
-	var searchQuery := EntrySearchQuery();
-	var patchedUserQuery := EntrySearchQuery.escapeQuery(q);	
-	return searchQuery.defaultAnd().filterByField("projectname",projectname).query(patchedUserQuery);
+  var searchQuery := EntrySearchQuery();
+  var patchedUserQuery := EntrySearchQuery.escapeQuery(q);	
+  return searchQuery.defaultAnd().filterByField("projectname",projectname).query(patchedUserQuery);
 }
 
 
@@ -90,60 +89,64 @@ function highlightedResult(line:Entry,searchQuery : EntrySearchQuery):List<Strin
 
 
 
-  define paginatedTemplate(sq : EntrySearchQuery, resultsPerPage : Int){  	
-  	placeholder resultArea{
-  		paginatedResults(sq,1,resultsPerPage)
-  	}
+  define paginatedTemplate(sq :EntrySearchQuery, resultsPerPage : Int){
+    placeholder resultArea{
+        paginatedResults(sq,1,resultsPerPage)
+    }
   }
 
   define ajax paginatedResults(query : EntrySearchQuery, pagenumber : Int, resultsPerPage : Int){
-  	var lastResult : Int;
-  	var size := query.resultSize();
-  	var resultList := query.firstResult((pagenumber - 1) * resultsPerPage).maxResults(resultsPerPage).list();
-  	init{
-  		if(size > pagenumber*resultsPerPage){
-  			lastResult := pagenumber * resultsPerPage;
-  		}
-  	}
-  	par{
-    	output(size) " results found in " output(query.searchTimeAsString()) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
+    var lastResult : Int;
+    var size := query.resultSize();
+    var resultList := query.firstResult((pagenumber - 1) * resultsPerPage).maxResults(resultsPerPage).list();
+    init{
+      if(size > pagenumber*resultsPerPage){
+        lastResult := pagenumber * resultsPerPage;
+      }
     }
-    list{
-  	for (e : Entry in resultList){
-  		listitem{ highlightedResult(e, query)} 
-  	}}
-  	par{
-  		resultIndex(query, pagenumber, resultsPerPage)
-  	}
+    if(query.query().length()>0){
+      par{
+        output(size) " results found in " output(query.searchTimeAsString()) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
+      }
+      list{
+      for (e : Entry in resultList){
+        listitem{ highlightedResult(e, query)} 
+      }}
+      par{
+        resultIndex(query, pagenumber, resultsPerPage)
+      }
+    }
   }
   
   define resultIndex (query: EntrySearchQuery, pagenumber : Int, resultsPerPage : Int){  		
-  	var totalPages := (query.resultSize().floatValue() / resultsPerPage.floatValue()).ceil()
-  	var start : Int := SearchHelper.firstIndexLink(pagenumber,totalPages, 9) //9 index links at most
-  	var end : Int := SearchHelper.lastIndexLink(pagenumber,totalPages, 9)
-	if(totalPages > 1){
-	  	if (pagenumber > 1){
-	  		submit("|<<", showResultsPage(query, 1, resultsPerPage))
-	  		submit("<", showResultsPage(query, pagenumber-1, resultsPerPage))
-	  	}	
-	  	for(pagenum:Int from start to pagenumber){
-			 gotoresultpage(query, pagenum, resultsPerPage)
-	  	}
-	  	"-"output(pagenumber)"-"  	
-	  	for(pagenum:Int from pagenumber+1 to end+1){
-			 gotoresultpage(query, pagenum, resultsPerPage)	
-	  	}	 
-	  	if(pagenumber < totalPages){
-	  		submit(">", showResultsPage(query, pagenumber+1, resultsPerPage))
-	  		submit(">>|", showResultsPage(query, totalPages, resultsPerPage))
-	  	}
-  	}
-  	action showResultsPage(query: EntrySearchQuery, pagenumber : Int, resultsPerPage : Int){replace(resultArea, paginatedResults(query, pagenumber, resultsPerPage));}
+    var totalPages := (query.resultSize().floatValue() / resultsPerPage.floatValue()).ceil()
+    var start : Int := SearchHelper.firstIndexLink(pagenumber,totalPages, 9) //9 index links at most
+    var end : Int := SearchHelper.lastIndexLink(pagenumber,totalPages, 9)
+  if(totalPages > 1){
+      if (pagenumber > 1){
+        submit("|<<", showResultsPage(query, 1, resultsPerPage))
+        submit("<", showResultsPage(query, pagenumber-1, resultsPerPage))
+      }	
+      for(pagenum:Int from start to pagenumber){
+       gotoresultpage(query, pagenum, resultsPerPage)
+      }
+      "-"output(pagenumber)"-"  	
+      for(pagenum:Int from pagenumber+1 to end+1){
+       gotoresultpage(query, pagenum, resultsPerPage)	
+      }	 
+      if(pagenumber < totalPages){
+        submit(">", showResultsPage(query, pagenumber+1, resultsPerPage))
+        submit(">>|", showResultsPage(query, totalPages, resultsPerPage))
+      }
+    }
+    action showResultsPage(query: EntrySearchQuery, pagenumber : Int, resultsPerPage : Int){replace(resultArea, paginatedResults(query, pagenumber, resultsPerPage));}
   }
   
   define gotoresultpage(query: EntrySearchQuery, pagenum: Int, resultsPerPage: Int){
-  	submit(pagenum, showResultsPage(query, pagenum, resultsPerPage))
-  	action showResultsPage(query: EntrySearchQuery, pagenumber : Int, resultsPerPage : Int){replace(resultArea, paginatedResults(query, pagenumber, resultsPerPage));}	
+    submit(pagenum, showResultsPage(query, pagenum, resultsPerPage))
+    action showResultsPage(query: EntrySearchQuery, pagenumber : Int, resultsPerPage : Int){
+      replace(resultArea, paginatedResults(query, pagenumber, resultsPerPage));
+    }	
   } 
 
 native class org.webdsl.search.SearchHelper as SearchHelper {
