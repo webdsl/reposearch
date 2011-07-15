@@ -16,7 +16,7 @@ define page search(p:Project, q:String){
     //log("q: "+q);
     //log("query: "+query);
     searchQuery := toSearchQuery(query,p.name); //update with entered query
-    replace(suggestionsOutputPh,viewAutoComplete(EntrySearchQuery.autoCompleteSuggest(query,["content"], 10),p));
+    replace(suggestionsOutputPh,viewAutoComplete(EntrySearchQuery.autoCompleteSuggest(query,["contentcase"], 10),p));
     replace(resultArea,paginatedResults(searchQuery,1,10));
     //HTML5 feature, replace url without causing page reload
     runscript("window.history.replaceState('','','"+navigate(search(p,query))+"');");

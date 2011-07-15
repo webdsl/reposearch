@@ -12,6 +12,10 @@ default analyzer code_analyzer{
   tokenfilter = LowerCaseFilter
 }
 
+analyzer code_analyzer_casesensitive{
+  tokenizer = PatternTokenizer(pattern="[a-zA-Z0-9\\-\\_]+|[!-/:-@\\[-\\^{-~`]", group="0")
+}
+
 analyzer kw{
-	tokenizer = KeywordTokenizer
+  tokenizer = KeywordTokenizer
 }

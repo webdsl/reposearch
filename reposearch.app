@@ -68,10 +68,11 @@ application svnsearch
     url :: URL
     projectname :: String
     repo ->Repo
-       searchmapping{
-        content (autocomplete)
-        projectname using kw
-      }
+    searchmapping{
+      content 
+      projectname using kw
+      content as contentcase using code_analyzer_casesensitive (autocomplete)
+    }
   }
   
 
