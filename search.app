@@ -2,7 +2,7 @@ module search
 
 define page search(p:Project, q:String){
   var query := q;
-  var searchQuery := toSearchQuery(query,p.name);
+  var searcher := toSearcher(query,p.name);
   navigate(root()){"return to home"}
   
   form {
@@ -15,23 +15,21 @@ define page search(p:Project, q:String){
   action updateResults(){
     //log("q: "+q);
     //log("query: "+query);
-    searchQuery := toSearchQuery(query,p.name); //update with entered query
-    replace(suggestionsOutputPh,viewAutoComplete(EntrySearchQuery.autoCompleteSuggest(query,["contentcase"], 10),p));
-    replace(resultArea,paginatedResults(searchQuery,1,10));
+    searcher := toSearcher(query,p.name); //update with entered query
+    replace(suggestionsOutputPh,viewAutoComplete(EntrySearcher.autoCompleteSuggest(query,p.name,["contentcase"], 10),p));
+    replace(resultArea,paginatedResults(searcher,1,10));
     //HTML5 feature, replace url without causing page reload
     runscript("window.history.replaceState('','','"+navigate(search(p,query))+"');");
   }
   
-  paginatedTemplate(searchQuery, 10)
+  paginatedTemplate(searcher, 10)
 }
 
-function toSearchQuery(q:String, projectname: String) : EntrySearchQuery{
-  var searchQuery := EntrySearchQuery();
-  var patchedUserQuery := EntrySearchQuery.escapeQuery(q);	
-  return searchQuery.defaultAnd().filterByField("projectname",projectname).query(patchedUserQuery);
+function toSearcher(q:String, projectname: String) : EntrySearcher{
+  var searcher := EntrySearcher();
+  var patchedUserQuery := EntrySearcher.escapeQuery(q);	
+  return searcher.defaultAnd().setNamespace(projectname).query(patchedUserQuery);
 }
-
-
   
 define ajax viewAutoComplete(suggestions : List<String>, p:Project){
   if(suggestions.length > 0) {
@@ -43,14 +41,14 @@ define ajax viewAutoComplete(suggestions : List<String>, p:Project){
   }
 }
 
-define ajax showResults(searchQuery : EntrySearchQuery){
-  var results := searchQuery.maxResults(10).list();
-  var count := searchQuery.resultSize();
+define ajax showResults(searcher : EntrySearcher){
+  var results := searcher.maxResults(10).list();
+  var count := searcher.resultSize();
   "# of results:" output(count)
     //list{
     for (cf : Entry in results){
       //listitem{ 
-      highlightedResult(cf, searchQuery)
+      highlightedResult(cf, searcher)
       //} 
     }
     //}
@@ -61,19 +59,19 @@ define ajax showResults(searchQuery : EntrySearchQuery){
      par{output(cf.lines)}
    }
 */
-define highlightedResult(cf : Entry, searchQuery : EntrySearchQuery){
-  //var code : String := rendertemplate(output(searchQuery.highlight("code",cf.code,"$OHL$","$CHL$"))).replace("\n","<br/>").replace(" ","&nbsp;").replace("$OHL$","<b>").replace("$CHL$","</b>")
+define highlightedResult(cf : Entry, searcher : EntrySearcher){
+  //var code : String := rendertemplate(output(searcher.highlight("code",cf.code,"$OHL$","$CHL$"))).replace("\n","<br/>").replace(" ","&nbsp;").replace("$OHL$","<b>").replace("$CHL$","</b>")
   div{ output(cf.url) }
     //for(line:Entry in cf.lines){
-      for(s:String in highlightedResult(cf,searchQuery)){
+      for(s:String in highlightedResult(cf,searcher)){
         div { rawoutput(s) }
       }
     //} 
   <br/>
 }
 
-function highlightedResult(line:Entry,searchQuery : EntrySearchQuery):List<String>{
-  var raw := searchQuery.highlight("content",line.content,"$OHL$","$CHL$");
+function highlightedResult(line:Entry,searcher : EntrySearcher):List<String>{
+  var raw := searcher.highlight("content",line.content,"$OHL$","$CHL$");
   var highlighted := rendertemplate(output(raw)).replace(" ","&nbsp;").replace("$OHL$","<b>").replace("$CHL$","</b>");
   var splitted := highlighted.split("\n");
   var list := List<String>();
@@ -89,13 +87,13 @@ function highlightedResult(line:Entry,searchQuery : EntrySearchQuery):List<Strin
 
 
 
-  define paginatedTemplate(sq :EntrySearchQuery, resultsPerPage : Int){
+  define paginatedTemplate(sq :EntrySearcher, resultsPerPage : Int){
     placeholder resultArea{
         paginatedResults(sq,1,resultsPerPage)
     }
   }
 
-  define ajax paginatedResults(query : EntrySearchQuery, pagenumber : Int, resultsPerPage : Int){
+  define ajax paginatedResults(query : EntrySearcher, pagenumber : Int, resultsPerPage : Int){
     var resultList := query.firstResult((pagenumber - 1) * resultsPerPage).maxResults(resultsPerPage).list();
     var size := query.resultSize();
     var lastResult := size;
@@ -118,7 +116,7 @@ function highlightedResult(line:Entry,searchQuery : EntrySearchQuery):List<Strin
     }
   }
   
-  define resultIndex (query: EntrySearchQuery, pagenumber : Int, resultsPerPage : Int){  		
+  define resultIndex (query: EntrySearcher, pagenumber : Int, resultsPerPage : Int){  		
     var totalPages := (query.resultSize().floatValue() / resultsPerPage.floatValue()).ceil()
     var start : Int := SearchHelper.firstIndexLink(pagenumber,totalPages, 9) //9 index links at most
     var end : Int := SearchHelper.lastIndexLink(pagenumber,totalPages, 9)
@@ -139,12 +137,12 @@ function highlightedResult(line:Entry,searchQuery : EntrySearchQuery):List<Strin
         submit(">>|", showResultsPage(query, totalPages, resultsPerPage))
       }
     }
-    action showResultsPage(query: EntrySearchQuery, pagenumber : Int, resultsPerPage : Int){replace(resultArea, paginatedResults(query, pagenumber, resultsPerPage));}
+    action showResultsPage(query: EntrySearcher, pagenumber : Int, resultsPerPage : Int){replace(resultArea, paginatedResults(query, pagenumber, resultsPerPage));}
   }
   
-  define gotoresultpage(query: EntrySearchQuery, pagenum: Int, resultsPerPage: Int){
+  define gotoresultpage(query: EntrySearcher, pagenum: Int, resultsPerPage: Int){
     submit(pagenum, showResultsPage(query, pagenum, resultsPerPage))
-    action showResultsPage(query: EntrySearchQuery, pagenumber : Int, resultsPerPage : Int){
+    action showResultsPage(query: EntrySearcher, pagenumber : Int, resultsPerPage : Int){
       replace(resultArea, paginatedResults(query, pagenumber, resultsPerPage));
     }	
   } 
