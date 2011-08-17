@@ -61,7 +61,7 @@ public class Svn {
         List<Entry> list;
         try {
             dst = Files.createTempDir();
-            System.out.println(dst);
+            System.out.println("temp dir: " + dst);
             SVNURL svnurl = SVNURL.parseURIEncoded(repo1);
 
             SVNClientManager cm = SVNClientManager.newInstance();

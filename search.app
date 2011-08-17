@@ -1,13 +1,14 @@
 module search
 
-define page search(p:Project, q:String){
+define page search(namespace:String, q:String){
   var query := q;
-  var searcher := toSearcher(query,p.name);
+  var searcher := toSearcher(query, namespace);
+
   navigate(root()){"return to home"}
   
   form {
     input(query)[autocomplete="off", onkeyup = updateResults()]
-    submit action{return search(p,query);} {"search"}
+    submit action{return search(namespace,query);} {"search"}
   }  
   
   table{row{column{placeholder suggestionsOutputPh{} } } }
@@ -15,27 +16,27 @@ define page search(p:Project, q:String){
   action updateResults(){
     //log("q: "+q);
     //log("query: "+query);
-    searcher := toSearcher(query,p.name); //update with entered query
-    replace(suggestionsOutputPh,viewAutoComplete(EntrySearcher.autoCompleteSuggest(query,p.name,["contentcase"], 10),p));
+    searcher := toSearcher(query,namespace); //update with entered query
+    replace(suggestionsOutputPh,viewAutoComplete(EntrySearcher.autoCompleteSuggest(query,namespace,["contentcase"], 10),namespace));
     replace(resultArea,paginatedResults(searcher,1,10));
     //HTML5 feature, replace url without causing page reload
-    runscript("window.history.replaceState('','','"+navigate(search(p,query))+"');");
+    runscript("window.history.replaceState('','','"+navigate(search(namespace,query))+"');");
   }
   
   paginatedTemplate(searcher, 10)
 }
 
-function toSearcher(q:String, projectname: String) : EntrySearcher{
+function toSearcher(q:String, namespace:String) : EntrySearcher{
   var searcher := EntrySearcher();
   var patchedUserQuery := EntrySearcher.escapeQuery(q);	
-  return searcher.defaultAnd().setNamespace(projectname).query(patchedUserQuery);
+  return searcher.defaultAnd().setNamespace(namespace).query(patchedUserQuery);
 }
   
-define ajax viewAutoComplete(suggestions : List<String>, p:Project){
+define ajax viewAutoComplete(suggestions : List<String>, namespace:String){
   if(suggestions.length > 0) {
     list{
       for(sug : String in suggestions){
-        listitem{ navigate(search(p,sug)){output(sug)} }
+        listitem{ navigate(search(namespace,sug)){output(sug)} }
       }
     }
   }
@@ -84,8 +85,6 @@ function highlightedResult(line:Entry,searcher : EntrySearcher):List<String>{
   }
   return list;
 }
-
-
 
   define paginatedTemplate(sq :EntrySearcher, resultsPerPage : Int){
     placeholder resultArea{

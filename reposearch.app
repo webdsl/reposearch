@@ -41,8 +41,10 @@ application svnsearch
       return search("");
     }
     */
+    navigate(search("", "")){"Search all projects"}
+      <br/>
     for(p:Project){
-      navigate(search(p, "")){"Search " output(p.name)}
+      navigate(search(p.name, "")){"Search " output(p.name)}
       <br/>
     }
     navigate(manage()){"Manage"}
@@ -62,15 +64,15 @@ application svnsearch
     message :: Text
     date :: DateTime
   }
+
   entity Entry{
     name :: String
     content :: Text
     url :: URL
     projectname :: String
-    repo ->Repo
+    repo -> Repo
     searchmapping{
       content
-      projectname using kw
       content as contentcase using code_analyzer_casesensitive (autocomplete)
       namespace by projectname
     }
@@ -92,13 +94,15 @@ application svnsearch
     var n :URL
     var gu:String
     var gr:String
+    
+    navigate(root()){"return to home"}
     form{
       input(p)
       submit action{Project{name:=p}.save();} {"Add project"}
     }
     <br/>
     for(pr:Project){
-      div{"Project: " output(pr.name) }
+      div{"Project: " output(pr.name) " [" submitlink("remove", removeProject(pr))"]"}
       div{
         "Repositories: "
         for(r:Repo in pr.repos){
@@ -120,6 +124,16 @@ application svnsearch
         }
       }
       <br/>
+    }
+    
+    action removeProject(pr : Project){
+    	for(r:Repo in pr.repos){
+    		deleteRepoEntries(r);
+    		r.delete();
+    	}
+      pr.delete();
+      settings.reindex := true;
+      return manage();
     }
   }
   
