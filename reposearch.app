@@ -72,8 +72,10 @@ application svnsearch
     projectname :: String
     repo -> Repo
     searchmapping{
-      content
-      content as contentcase using code_analyzer_casesensitive (autocomplete)
+      + content
+      + content as contentcase using code_analyzer_casesensitive * 4.0 (autocomplete)
+      + name using filename_analyzer
+      name using kw as filename_autocomplete (autocomplete)
       namespace by projectname
     }
   }

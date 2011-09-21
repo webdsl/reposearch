@@ -7,8 +7,13 @@ analyzer standard{
   tokenfilter = StopFilter
 }
 
+analyzer filename_analyzer{
+  tokenizer = PatternTokenizer(pattern="[^\\.]+", group="0")
+  tokenfilter = LowerCaseFilter
+}
+
 default analyzer code_analyzer{
-  tokenizer = PatternTokenizer(pattern="[a-zA-Z0-9\\-\\_]+|[!-/:-@\\[-\\^{-~`]", group="0")
+  tokenizer = PatternTokenizer(pattern="[a-zA-Z0-9\\_]+|[!-/:-@\\[-\\^{-~`]", group="0")
   tokenfilter = LowerCaseFilter
 }
 

@@ -17,7 +17,7 @@ define page search(namespace:String, q:String){
     //log("q: "+q);
     //log("query: "+query);
     searcher := toSearcher(query,namespace); //update with entered query
-    replace(suggestionsOutputPh,viewAutoComplete(EntrySearcher.autoCompleteSuggest(query,namespace,["contentcase"], 10),namespace));
+    replace(suggestionsOutputPh,viewAutoComplete(EntrySearcher.autoCompleteSuggest(query,namespace,["contentcase","filename_autocomplete"], 10),namespace));
     replace(resultArea,paginatedResults(searcher,1,10));
     //HTML5 feature, replace url without causing page reload
     runscript("window.history.replaceState('','','"+navigate(search(namespace,query))+"');");
