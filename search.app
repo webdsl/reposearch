@@ -5,25 +5,59 @@ define page search(namespace:String, q:String){
   var searcher := toSearcher(query, namespace);
 
   navigate(root()){"return to home"}
+  includeJS("jquery-1.5.min.js")
+  includeJS("jquery-ui-1.8.9.custom.min.js")
+  includeCSS("jquery-ui.css")
+  var source := "/autocompleteService"+"/"+namespace;
+  <script>
+  $(function() {
+		$( "#searchfield" ).autocomplete({
+			autoFocus: true,
+			source: contextpath+"~source",
+			minLength: 1,
+			delay: 200
+		});
+	});
+  </script>
   
+
   form {
-    input(query)[autocomplete="off", onkeyup = updateResults()]
-    submit action{return search(namespace,query);} {"search"}
+  	<div class="ui-widget">
+    input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()]
+	submit action{return search(namespace,query);} {"search"}
+	</div>    
   }  
   
   table{row{column{placeholder suggestionsOutputPh{} } } }
   
   action updateResults(){
-    //log("q: "+q);
-    //log("query: "+query);
     searcher := toSearcher(query,namespace); //update with entered query
-    replace(suggestionsOutputPh,viewAutoComplete(EntrySearcher.autoCompleteSuggest(query,namespace,["contentcase","filename_autocomplete"], 10),namespace));
     replace(resultArea,paginatedResults(searcher,1,10));
     //HTML5 feature, replace url without causing page reload
     runscript("window.history.replaceState('','','"+navigate(search(namespace,query))+"');");
   }
   
   paginatedTemplate(searcher, 10)
+}
+
+//[focus] 
+//autocomplete service Entry contentcase
+//AutoComplete(ent,props) ->  where props van ent
+//declare:  service autocompleteServiceEnt(namespace:String,term : String)
+//override autocomplete:
+//balabl { <x>.autoocomplet  }
+// principal is User with credentials username
+
+service autocompleteService(namespace:String, term : String){ 
+
+  var jsonArray := JSONArray();//<Entity> autoCompleteSuggest contentcase;  "213content"
+  var results := EntrySearcher.autoCompleteSuggest(term,namespace,["contentcase","filename_autocomplete"], 10);
+    
+  for(sug : String in results){
+    jsonArray.put(sug);    
+    //jsonArray.put(sug.replace(term, "<b>"+term+"</b>"));
+  }  
+  return jsonArray;
 }
 
 function toSearcher(q:String, namespace:String) : EntrySearcher{
@@ -42,24 +76,7 @@ define ajax viewAutoComplete(suggestions : List<String>, namespace:String){
   }
 }
 
-define ajax showResults(searcher : EntrySearcher){
-  var results := searcher.maxResults(10).list();
-  var count := searcher.resultSize();
-  "# of results:" output(count)
-    //list{
-    for (cf : Entry in results){
-      //listitem{ 
-      highlightedResult(cf, searcher)
-      //} 
-    }
-    //}
-}
-/*
-   define ajax codeFragment(cf : CodeFragment){
-     par{output(cf.title)}
-     par{output(cf.lines)}
-   }
-*/
+
 define highlightedResult(cf : Entry, searcher : EntrySearcher){
   //var code : String := rendertemplate(output(searcher.highlight("code",cf.code,"$OHL$","$CHL$"))).replace("\n","<br/>").replace(" ","&nbsp;").replace("$OHL$","<b>").replace("$CHL$","</b>")
   div{ output(cf.url) }
