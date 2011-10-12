@@ -4,7 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
-	<classpathentry kind="output" path="WebContent/WEB-INF/classes"/>
 	<classpathentry kind="lib" path=".servletapp/bin/WEB-INF/lib/antlr.jar"/>
 	<classpathentry kind="lib" path=".servletapp/bin/WEB-INF/lib/asm-attrs.jar"/>
 	<classpathentry kind="lib" path=".servletapp/bin/WEB-INF/lib/asm.jar"/>
@@ -42,4 +41,5 @@
 	<classpathentry kind="lib" path=".servletapp/bin/WEB-INF/lib/urlrewrite.jar"/>
 	<classpathentry kind="lib" path=".servletapp/bin/WEB-INF/lib/webdsl-support.jar"/>
 	<classpathentry kind="lib" path=".servletapp/bin/WEB-INF/lib/xercesImpl.jar"/>
+	<classpathentry kind="output" path="WebContent/WEB-INF/classes"/>
 </classpath>

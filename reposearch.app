@@ -76,7 +76,8 @@ application svnsearch
       + content as contentcase using code_analyzer_casesensitive * 4.0 (autocomplete)
       + name using filename_analyzer
       name using kw as filename_autocomplete (autocomplete)
-      namespace by projectname
+      name using extension_analyzer as file_ext
+      namespace by projectname      
     }
   }
   

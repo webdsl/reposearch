@@ -32,12 +32,13 @@ define page search(namespace:String, q:String){
   
   action updateResults(){
     searcher := toSearcher(query,namespace); //update with entered query
-    replace(resultArea,paginatedResults(searcher,1,10));
+    
+    replace(resultAndfacetArea, paginatedTemplate(searcher,10,namespace));
     //HTML5 feature, replace url without causing page reload
     runscript("window.history.replaceState('','','"+navigate(search(namespace,query))+"');");
   }
   
-  paginatedTemplate(searcher, 10)
+  paginatedTemplate(searcher, 10, namespace)
 }
 
 //[focus] 
@@ -62,8 +63,11 @@ service autocompleteService(namespace:String, term : String){
 
 function toSearcher(q:String, namespace:String) : EntrySearcher{
   var searcher := EntrySearcher();
-  var patchedUserQuery := EntrySearcher.escapeQuery(q);	
-  return searcher.defaultAnd().setNamespace(namespace).query(patchedUserQuery);
+  var patchedUserQuery := EntrySearcher.escapeQuery(q);	  
+  if (namespace.length() > 0) {
+      searcher.enableFaceting("file_ext", 20);
+  }
+  return searcher.defaultAnd().setNamespace(namespace).allowLuceneSyntax(false).query(q);
 }
   
 define ajax viewAutoComplete(suggestions : List<String>, namespace:String){
@@ -103,10 +107,39 @@ function highlightedResult(line:Entry,searcher : EntrySearcher):List<String>{
   return list;
 }
 
-  define paginatedTemplate(sq :EntrySearcher, resultsPerPage : Int){
-    placeholder resultArea{
-        paginatedResults(sq,1,resultsPerPage)
-    }
+  define ajax paginatedTemplate(sq :EntrySearcher, resultsPerPage : Int, namespace : String){
+  	placeholder resultAndfacetArea{
+  		if(sq.query().length() > 0) {
+  			viewFacets(sq, resultsPerPage, namespace)
+  		}
+	    placeholder resultArea{
+	        paginatedResults(sq,1,resultsPerPage)
+	    }
+	}
+    
+  }
+  
+  define viewFacets(sq :EntrySearcher, resultsPerPage : Int, namespace : String){
+  	if (namespace.length() > 0) {
+  		<i>"Filter on file extension:"</i>
+	  	table{
+	  		row {			
+	          for(f : Facet in sq.getFacets("file_ext")) {
+	          	column {
+		          	if(f.isSelected()) {	          		
+		          		div{
+		          			submitlink action{replace(resultAndfacetArea, paginatedTemplate(sq.filterByFacet(f), resultsPerPage, namespace));}{<b>output(f.getValue()) " (" output(f.getCount()) ")"</b>}
+		          			submitlink action{return search(namespace, sq.query());}{"[x]"}
+		          		}
+		          	} else {
+		          		div{submitlink action{replace(resultAndfacetArea, paginatedTemplate(sq.filterByFacet(f), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}}
+		          	}
+		         }
+	          }        
+	          
+	      }
+	    }
+  	}
   }
 
   define ajax paginatedResults(query : EntrySearcher, pagenumber : Int, resultsPerPage : Int){
