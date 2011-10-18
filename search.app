@@ -37,8 +37,7 @@ define page search(namespace:String, q:String){
     //HTML5 feature, replace url without causing page reload
     runscript("window.history.replaceState('','','"+navigate(search(namespace,query))+"');");
   }
-  
-  paginatedTemplate(searcher, 10, namespace)
+  placeholder resultAndfacetArea paginatedTemplate(searcher, 10, namespace)
 }
 
 //[focus] 
@@ -108,15 +107,12 @@ function highlightedResult(line:Entry,searcher : EntrySearcher):List<String>{
 }
 
   define ajax paginatedTemplate(sq :EntrySearcher, resultsPerPage : Int, namespace : String){
-  	placeholder resultAndfacetArea{
-  		if(sq.query().length() > 0) {
-  			viewFacets(sq, resultsPerPage, namespace)
-  		}
-	    placeholder resultArea{
-	        paginatedResults(sq,1,resultsPerPage)
-	    }
+ 	if(sq.query().length() > 0) {
+  	  viewFacets(sq, resultsPerPage, namespace)
+  	}
+	placeholder resultArea{
+	  paginatedResults(sq,1,resultsPerPage)
 	}
-    
   }
   
   define viewFacets(sq :EntrySearcher, resultsPerPage : Int, namespace : String){
