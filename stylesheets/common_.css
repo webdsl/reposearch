@@ -1,3 +1,11 @@
 body{
-  margin-left:20px;	
+  margin-left:20px;
 }
+
+#resultAndfacetArea{
+  position:absolute;
+  left:0;
+  min-width:1000px;
+  padding-left: 250px;
+  padding-top: 10px;
+}                
