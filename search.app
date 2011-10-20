@@ -9,23 +9,16 @@ define page search(namespace:String, q:String){
   includeJS("jquery-ui-1.8.9.custom.min.js")
   includeCSS("jquery-ui.css")
   var source := "/autocompleteService"+"/"+namespace;
+  includeJS("completion.js")
   <script>
-  $(function() {
-		$( "#searchfield" ).autocomplete({
-			autoFocus: true,
-			source: contextpath+"~source",
-			minLength: 1,
-			delay: 200
-		});
-	});
+    setupcompletion("~source");
   </script>
-  
 
   form {
-  	<div class="ui-widget">
+    <div class="ui-widget">
     input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()]
-	submit action{return search(namespace,query);} {"search"}
-	</div>    
+  submit action{return search(namespace,query);} {"search"}
+  </div>    
   }  
   
   table{row{column{placeholder suggestionsOutputPh{} } } }
@@ -107,35 +100,35 @@ function highlightedResult(line:Entry,searcher : EntrySearcher):List<String>{
 }
 
   define ajax paginatedTemplate(sq :EntrySearcher, resultsPerPage : Int, namespace : String){
- 	if(sq.query().length() > 0) {
-  	  viewFacets(sq, resultsPerPage, namespace)
-  	}
-	placeholder resultArea{
-	  paginatedResults(sq,1,resultsPerPage)
-	}
+   if(sq.query().length() > 0) {
+      viewFacets(sq, resultsPerPage, namespace)
+    }
+  placeholder resultArea{
+    paginatedResults(sq,1,resultsPerPage)
+  }
   }
   
   define viewFacets(sq :EntrySearcher, resultsPerPage : Int, namespace : String){
-  	if (namespace.length() > 0) {
-  		<i>"Filter on file extension:"</i>
-	  	table{
-	  		row {			
-	          for(f : Facet in sq.getFacets("file_ext")) {
-	          	column {
-		          	if(f.isSelected()) {	          		
-		          		div{
-		          			submitlink action{replace(resultAndfacetArea, paginatedTemplate(sq.filterByFacet(f), resultsPerPage, namespace));}{<b>output(f.getValue()) " (" output(f.getCount()) ")"</b>}
-		          			submitlink action{return search(namespace, sq.query());}{"[x]"}
-		          		}
-		          	} else {
-		          		div{submitlink action{replace(resultAndfacetArea, paginatedTemplate(sq.filterByFacet(f), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}}
-		          	}
-		         }
-	          }        
-	          
-	      }
-	    }
-  	}
+    if (namespace.length() > 0) {
+      <i>"Filter on file extension:"</i>
+      table{
+        row {			
+            for(f : Facet in sq.getFacets("file_ext")) {
+              column {
+                if(f.isSelected()) {	          		
+                  div{
+                    submitlink action{replace(resultAndfacetArea, paginatedTemplate(sq.filterByFacet(f), resultsPerPage, namespace));}{<b>output(f.getValue()) " (" output(f.getCount()) ")"</b>}
+                    submitlink action{return search(namespace, sq.query());}{"[x]"}
+                  }
+                } else {
+                  div{submitlink action{replace(resultAndfacetArea, paginatedTemplate(sq.filterByFacet(f), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}}
+                }
+             }
+            }        
+            
+        }
+      }
+    }
   }
 
   define ajax paginatedResults(query : EntrySearcher, pagenumber : Int, resultsPerPage : Int){
