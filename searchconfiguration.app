@@ -7,13 +7,14 @@ analyzer standard{
   tokenfilter = StopFilter
 }
 
-analyzer filename_analyzer{
+analyzer filename_analyzer{  
   tokenizer = PatternTokenizer(pattern="([^\\.]+)\\.", group="1")
   tokenfilter = LowerCaseFilter
 }
 
 analyzer extension_analyzer{
-  tokenizer = PatternTokenizer(pattern="[^\\.]+$", group="0")
+  charfilter = PatternReplaceCharFilter(pattern="^([^\\.]+)$", replacement="$1\\.(no ext)")
+  tokenizer = PatternTokenizer(pattern="\\.([^\\.]+)$", group="1")
   tokenfilter = LowerCaseFilter
 }
 

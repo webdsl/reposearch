@@ -13,16 +13,15 @@ define page search(namespace:String, q:String){
   <script>
     setupcompletion("~source");
   </script>
+  
 
   form {
-    <div class="ui-widget">
+  	<div class="ui-widget">
     input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()]
-  submit action{return search(namespace,query);} {"search"}
-  </div>    
+	submit action{return search(namespace,query);} {"search"}
+	</div>    
   }  
-  
-  table{row{column{placeholder suggestionsOutputPh{} } } }
-  
+    
   action updateResults(){
     searcher := toSearcher(query,namespace); //update with entered query
     
@@ -30,7 +29,12 @@ define page search(namespace:String, q:String){
     //HTML5 feature, replace url without causing page reload
     runscript("window.history.replaceState('','','"+navigate(search(namespace,query))+"');");
   }
-  placeholder resultAndfacetArea paginatedTemplate(searcher, 10, namespace)
+  
+  placeholder resultAndfacetArea{
+	  if (q.length() > 0){
+	  	 paginatedTemplate(searcher, 10, namespace)
+	  }
+  }
 }
 
 //[focus] 
@@ -53,25 +57,15 @@ service autocompleteService(namespace:String, term : String){
   return jsonArray;
 }
 
-function toSearcher(q:String, namespace:String) : EntrySearcher{
-  var searcher := EntrySearcher();
-  var patchedUserQuery := EntrySearcher.escapeQuery(q);	  
-  if (namespace.length() > 0) {
-      searcher.enableFaceting("file_ext", 20);
+function toSearcher(q:String, ns:String) : EntrySearcher{
+  var serialnumber := "1234123";
+  var searcher := search Entry matching q in namespace ns [nolucene, strict matching];
+   
+  if (ns.length() > 0) {
+      ~searcher with facets (file_ext, 20);
   }
-  return searcher.defaultAnd().setNamespace(namespace).allowLuceneSyntax(false).query(q);
+  return searcher;
 }
-  
-define ajax viewAutoComplete(suggestions : List<String>, namespace:String){
-  if(suggestions.length > 0) {
-    list{
-      for(sug : String in suggestions){
-        listitem{ navigate(search(namespace,sug)){output(sug)} }
-      }
-    }
-  }
-}
-
 
 define highlightedResult(cf : Entry, searcher : EntrySearcher){
   //var code : String := rendertemplate(output(searcher.highlight("code",cf.code,"$OHL$","$CHL$"))).replace("\n","<br/>").replace(" ","&nbsp;").replace("$OHL$","<b>").replace("$CHL$","</b>")
@@ -84,8 +78,8 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   <br/>
 }
 
-function highlightedResult(line:Entry,searcher : EntrySearcher):List<String>{
-  var raw := searcher.highlight("content",line.content,"$OHL$","$CHL$");
+function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
+  var raw := highlight entry.content for searcher on content surround with ("$OHL$","$CHL$");
   var highlighted := rendertemplate(output(raw)).replace(" ","&nbsp;").replace("$OHL$","<b>").replace("$CHL$","</b>");
   var splitted := highlighted.split("\n");
   var list := List<String>();
@@ -99,89 +93,94 @@ function highlightedResult(line:Entry,searcher : EntrySearcher):List<String>{
   return list;
 }
 
-  define ajax paginatedTemplate(sq :EntrySearcher, resultsPerPage : Int, namespace : String){
-   if(sq.query().length() > 0) {
-      viewFacets(sq, resultsPerPage, namespace)
-    }
-  placeholder resultArea{
-    paginatedResults(sq,1,resultsPerPage)
-  }
+  define ajax paginatedTemplate(searcher :EntrySearcher, resultsPerPage : Int, namespace : String){
+  		if(searcher.query().length() > 0) {
+  			viewFacets(searcher, resultsPerPage, namespace)
+  		}
+	    placeholder resultArea{
+	        paginatedResults(searcher,1,resultsPerPage)
+	    }
+    
   }
   
-  define viewFacets(sq :EntrySearcher, resultsPerPage : Int, namespace : String){
-    if (namespace.length() > 0) {
-      <i>"Filter on file extension:"</i>
-      table{
-        row {			
-            for(f : Facet in sq.getFacets("file_ext")) {
-              column {
-                if(f.isSelected()) {	          		
-                  div{
-                    submitlink action{replace(resultAndfacetArea, paginatedTemplate(sq.filterByFacet(f), resultsPerPage, namespace));}{<b>output(f.getValue()) " (" output(f.getCount()) ")"</b>}
-                    submitlink action{return search(namespace, sq.query());}{"[x]"}
-                  }
-                } else {
-                  div{submitlink action{replace(resultAndfacetArea, paginatedTemplate(sq.filterByFacet(f), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}}
-                }
-             }
-            }        
-            
-        }
-      }
-    }
+  define viewFacets(searcher :EntrySearcher, resultsPerPage : Int, namespace : String){
+  	if (namespace.length() > 0) {
+  		<i>"Filter on file extension:"</i>
+	  	table{
+	  		row {			
+	          for(f : Facet in get facets(searcher, file_ext) ) {
+	          	column {
+		          	if(f.isSelected()) {	          		
+		          		div{
+		          			submitlink action{replace(resultAndfacetArea, paginatedTemplate((~searcher where f), resultsPerPage, namespace));}{<b>output(f.getValue()) " (" output(f.getCount()) ")"</b>}
+		          			submitlink action{return search(namespace, searcher.query());}{"[x]"}
+		          		}
+		          	} else {
+		          		div{
+		          			submitlink action{replace(resultAndfacetArea, paginatedTemplate((~searcher where f), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
+		          			"["submitlink action{replace(resultAndfacetArea, paginatedTemplate( (~searcher where f.mustnot() ), resultsPerPage, namespace));}{"-"}"]"
+		          		}
+		          		
+		          	}
+		         }
+	          }        
+	          
+	      }
+	    }
+  	}
   }
 
-  define ajax paginatedResults(query : EntrySearcher, pagenumber : Int, resultsPerPage : Int){
-    var resultList := query.firstResult((pagenumber - 1) * resultsPerPage).maxResults(resultsPerPage).list();
-    var size := query.resultSize();
+  define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, resultsPerPage : Int){
+    var resultList := get results(~searcher start ((pagenumber - 1) * resultsPerPage) limit resultsPerPage);
+    var size := get size(searcher);
     var lastResult := size;
     init{
       if(size > pagenumber*resultsPerPage){
         lastResult := pagenumber * resultsPerPage;
       }
     }
-    if(query.query().length()>0){
+    if(searcher.query().length()>0){
       par{
-        output(size) " results found in " output(query.searchTimeAsString()) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
+        output(size) " results found in " output(get searchtime(searcher)) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
       }
       list{
       for (e : Entry in resultList){
-        listitem{ highlightedResult(e, query)} 
+        listitem{ highlightedResult(e, searcher)} 
       }}
       par{
-        resultIndex(query, pagenumber, resultsPerPage)
+        resultIndex(searcher, pagenumber, resultsPerPage)
       }
     }
   }
   
-  define resultIndex (query: EntrySearcher, pagenumber : Int, resultsPerPage : Int){  		
-    var totalPages := (query.resultSize().floatValue() / resultsPerPage.floatValue()).ceil()
+  define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int){  		
+    var totalPages := (get size(searcher).floatValue() / resultsPerPage.floatValue()).ceil()
     var start : Int := SearchHelper.firstIndexLink(pagenumber,totalPages, 9) //9 index links at most
     var end : Int := SearchHelper.lastIndexLink(pagenumber,totalPages, 9)
   if(totalPages > 1){
       if (pagenumber > 1){
-        submit("|<<", showResultsPage(query, 1, resultsPerPage))
-        submit("<", showResultsPage(query, pagenumber-1, resultsPerPage))
+        submit("|<<", showResultsPage(searcher, 1, resultsPerPage))
+        submit("<", showResultsPage(searcher, pagenumber-1, resultsPerPage))
       }	
       for(pagenum:Int from start to pagenumber){
-       gotoresultpage(query, pagenum, resultsPerPage)
+       gotoresultpage(searcher, pagenum, resultsPerPage)
       }
       "-"output(pagenumber)"-"  	
       for(pagenum:Int from pagenumber+1 to end+1){
-       gotoresultpage(query, pagenum, resultsPerPage)	
+       gotoresultpage(searcher, pagenum, resultsPerPage)	
       }	 
       if(pagenumber < totalPages){
-        submit(">", showResultsPage(query, pagenumber+1, resultsPerPage))
-        submit(">>|", showResultsPage(query, totalPages, resultsPerPage))
+        submit(">", showResultsPage(searcher, pagenumber+1, resultsPerPage))
+        submit(">>|", showResultsPage(searcher, totalPages, resultsPerPage))
       }
     }
-    action showResultsPage(query: EntrySearcher, pagenumber : Int, resultsPerPage : Int){replace(resultArea, paginatedResults(query, pagenumber, resultsPerPage));}
+    action showResultsPage(searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int){replace(resultArea, paginatedResults(searcher, pagenumber, resultsPerPage));}
   }
   
-  define gotoresultpage(query: EntrySearcher, pagenum: Int, resultsPerPage: Int){
-    submit(pagenum, showResultsPage(query, pagenum, resultsPerPage))
-    action showResultsPage(query: EntrySearcher, pagenumber : Int, resultsPerPage : Int){
-      replace(resultArea, paginatedResults(query, pagenumber, resultsPerPage));
+  define gotoresultpage(searcher: EntrySearcher, pagenum: Int, resultsPerPage: Int){
+    submit(pagenum, showResultsPage(searcher, pagenum, resultsPerPage))
+    action showResultsPage(searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int){
+      replace(resultArea, paginatedResults(searcher, pagenumber, resultsPerPage));
     }	
   } 
 

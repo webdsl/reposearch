@@ -2,7 +2,9 @@ package svn;
 
 
 import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -118,7 +120,12 @@ public class Svn {
                         list.add(c);
                         c.setNameNoEventsOrValidation(f.getName());
                         //System.out.println("file name: "+f.getName());
-                        c.setContentNoEventsOrValidation(Files.toString(f,Charset.defaultCharset()));
+                        
+                        //We use a File property instead of String property
+                        //to workaround encoding exceptions.
+                        utils.File webdslFile = new utils.File();
+                        webdslFile.setContentStream(new FileInputStream(f));
+                        c.setFileNoEventsOrValidation(webdslFile);
                         //System.out.println("file contents: "+Files.toString(f,Charset.defaultCharset()));
                         c.setUrlNoEventsOrValidation(repo+dir+f.getName());
                         //System.out.println("file url: "+repo+dir+f.getName());
@@ -237,7 +244,14 @@ public class Svn {
                 c.setNameNoEventsOrValidation(o.getName());
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 repo.getFile(dir+o.getName(), latestRevision, null, out);
-                c.setContentNoEventsOrValidation(out.toString());
+                //Use utils.File as container for converting to String with proper encoding
+                utils.File f = new utils.File();
+                try{
+                    f.setContentStream(new ByteArrayInputStream(out.toByteArray()));
+                } catch( IOException ex){
+            	    ex.printStackTrace();
+                }
+                c.setFileNoEventsOrValidation(f);
                 c.setUrlNoEventsOrValidation(o.getURL().toString());
             }
         }

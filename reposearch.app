@@ -67,7 +67,8 @@ application svnsearch
 
   entity Entry{
     name :: String
-    content :: Text
+    file :: File
+    content :: String := file.getContentAsString()
     url :: URL
     projectname :: String
     repo -> Repo
@@ -105,7 +106,7 @@ application svnsearch
     }
     <br/>
     for(pr:Project){
-      div{"Project: " output(pr.name) " [" submitlink("remove", removeProject(pr))"]"}
+      div{"Project: " <b>output(pr.name)</b> " [" submitlink("remove", removeProject(pr))"]"}
       div{
         "Repositories: "
         for(r:Repo in pr.repos){
