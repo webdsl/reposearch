@@ -58,24 +58,25 @@ service autocompleteService(namespace:String, term : String){
 }
 
 function toSearcher(q:String, ns:String) : EntrySearcher{
-  var serialnumber := "1234123";
   var searcher := search Entry matching q in namespace ns [nolucene, strict matching];
    
   if (ns.length() > 0) {
-      ~searcher with facets (file_ext, 20);
+      ~searcher with facets (file_ext, 60);
   }
   return searcher;
 }
 
 define highlightedResult(cf : Entry, searcher : EntrySearcher){
   //var code : String := rendertemplate(output(searcher.highlight("code",cf.code,"$OHL$","$CHL$"))).replace("\n","<br/>").replace(" ","&nbsp;").replace("$OHL$","<b>").replace("$CHL$","</b>")
-  div{ output(cf.url) }
+  var linkText : String := cf.url;
+   div[class="searchresultlink"]{ navigate(url(cf.url)){ output(linkText) } }
+   div[class="searchresulthighlight"]{ 
     //for(line:Entry in cf.lines){
       for(s:String in highlightedResult(cf,searcher)){
         div { rawoutput(s) }
       }
     //} 
-  <br/>
+    }
 }
 
 function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
@@ -94,6 +95,8 @@ function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
 }
 
   define ajax paginatedTemplate(searcher :EntrySearcher, resultsPerPage : Int, namespace : String){
+  		// searcher := search Entry matching q
+
   		if(searcher.query().length() > 0) {
   			viewFacets(searcher, resultsPerPage, namespace)
   		}
@@ -104,30 +107,43 @@ function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
   }
   
   define viewFacets(searcher :EntrySearcher, resultsPerPage : Int, namespace : String){
-  	if (namespace.length() > 0) {
-  		<i>"Filter on file extension:"</i>
-	  	table{
-	  		row {			
-	          for(f : Facet in get facets(searcher, file_ext) ) {
-	          	column {
-		          	if(f.isSelected()) {	          		
-		          		div{
-		          			submitlink action{replace(resultAndfacetArea, paginatedTemplate((~searcher where f), resultsPerPage, namespace));}{<b>output(f.getValue()) " (" output(f.getCount()) ")"</b>}
-		          			submitlink action{return search(namespace, searcher.query());}{"[x]"}
-		          		}
-		          	} else {
-		          		div{
-		          			submitlink action{replace(resultAndfacetArea, paginatedTemplate((~searcher where f), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
-		          			"["submitlink action{replace(resultAndfacetArea, paginatedTemplate( (~searcher where f.mustnot() ), resultsPerPage, namespace));}{"-"}"]"
-		          		}
-		          		
-		          	}
-		         }
-	          }        
-	          
-	      }
-	    }
-  	}
+  	var hasSelection := [f | f : Facet in searcher.getFilteredFacets() where !f.isMustNot() ].length > 0;
+   	if (namespace.length() > 0) {
+		div[id="facet-selection"]{
+  			div{<i>"Filter on file extension:"</i>}
+	  		//div[class="facetarea"] 	
+	        for(f : Facet in get all facets(searcher, file_ext) ) {
+	        	// div[class="facetinside"]{
+			        if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
+			        	div[class="excludedFacet"]{
+				        	if(f.isSelected()) {
+				        		submitlink action{replace(resultAndfacetArea, paginatedTemplate(searcher.removeFilteredFacet(f), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
+				          	} else {
+				          		submitlink action{replace(resultAndfacetArea, paginatedTemplate((~searcher where f.should()), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
+				          	}				          	
+			         	}
+			         } else {
+			         	div[class="includedFacet"]{
+			         		if(f.isSelected()) {
+			          			submitlink action{replace(resultAndfacetArea, paginatedTemplate(searcher.removeFilteredFacet(f), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ") " minusimage}
+			          		} else {
+			          			submitlink action{replace(resultAndfacetArea, paginatedTemplate((~searcher where f.should()), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
+			          			" " submitlink action{replace(resultAndfacetArea, paginatedTemplate( (~searcher where f.mustNot() ), resultsPerPage, namespace));}{minusimage}
+			          		}
+			          	}        	
+			        }
+		   		// }
+	        }
+  	 	}
+  	 }
+  }
+  
+  define minusimage(){
+  	<div class="minus-image">"x"</div>
+  	
+  }
+  define plusimage(){
+  	<div class="plus-image"></div>
   }
 
   define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, resultsPerPage : Int){
@@ -139,14 +155,15 @@ function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
         lastResult := pagenumber * resultsPerPage;
       }
     }
+    
     if(searcher.query().length()>0){
-      par{
+      div{
         output(size) " results found in " output(get searchtime(searcher)) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
       }
-      list{
+      //list{
       for (e : Entry in resultList){
-        listitem{ highlightedResult(e, searcher)} 
-      }}
+        highlightedResult(e, searcher) 
+      }//}
       par{
         resultIndex(searcher, pagenumber, resultsPerPage)
       }
