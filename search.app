@@ -68,8 +68,13 @@ function toSearcher(q:String, ns:String) : EntrySearcher{
 
 define highlightedResult(cf : Entry, searcher : EntrySearcher){
   //var code : String := rendertemplate(output(searcher.highlight("code",cf.code,"$OHL$","$CHL$"))).replace("\n","<br/>").replace(" ","&nbsp;").replace("$OHL$","<b>").replace("$CHL$","</b>")
-  var linkText : String := cf.url;
-   div[class="searchresultlink"]{ navigate(url(cf.url)){ output(linkText) } }
+  var linkText : String := cf.name;
+  var location : String := cf.url.substring(0, cf.url.length() - cf.name.length() );
+  
+  div[class="searchresultlink"]{
+    navigate(url(cf.url)){ div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b> } 
+    
+  }
    div[class="searchresulthighlight"]{ 
     //for(line:Entry in cf.lines){
       for(s:String in highlightedResult(cf,searcher)){
@@ -80,18 +85,38 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
 }
 
 function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
-  var raw := highlight entry.content for searcher on content surround with ("$OHL$","$CHL$");
+  var i : Int := 0;
+  var contentLine := addLines(entry.content);
+  var raw := highlight contentLine for searcher on content surround with ("$OHL$","$CHL$");
+  // var highlighted := rendertemplate(output(raw)).replace(" ","&nbsp;").replace("$OHL$","<b>").replace("$CHL$","</b>").replace("$LNO$","<div class=\"linenumber\">").replace("$LNC$","</div>");
   var highlighted := rendertemplate(output(raw)).replace(" ","&nbsp;").replace("$OHL$","<b>").replace("$CHL$","</b>");
   var splitted := highlighted.split("\n");
   var list := List<String>();
   var previous := "";
+  var toAdd : String;
   for(s:String in splitted){
     if(s!=""&&s.contains("<b>")){
-      list.add(/*previous+"<br/>"+*/s);
+      toAdd := /^\d+:/.replaceAll("<div class=\"linenumber\">$0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>",s);
+      list.add(/*previous+"<br/>"+*/toAdd);
     }
     previous := s;
   }
   return list;
+}
+
+function addLines(content : String) : String{
+	var lines  := /\n/.split(content);
+	var currentLine : String;
+	var number : Int := 1;
+	var toReturn := "";
+	for(l : String in lines){
+		// currentLine := "$LNO$" + number + ":$LNC$      " + l;		
+		currentLine := number + ":" + l;
+		toReturn := toReturn + currentLine + "\n";
+		number := number + 1; 
+	}
+	
+	return toReturn;
 }
 
   define ajax paginatedTemplate(searcher :EntrySearcher, resultsPerPage : Int, namespace : String){
@@ -110,40 +135,39 @@ function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
   	var hasSelection := [f | f : Facet in searcher.getFilteredFacets() where !f.isMustNot() ].length > 0;
    	if (namespace.length() > 0) {
 		div[id="facet-selection"]{
-  			div{<i>"Filter on file extension:"</i>}
-	  		//div[class="facetarea"] 	
+  			div{<i>"Filter on file extension:"</i>}	
 	        for(f : Facet in get all facets(searcher, file_ext) ) {
-	        	// div[class="facetinside"]{
-			        if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
-			        	div[class="excludedFacet"]{
-				        	if(f.isSelected()) {
-				        		submitlink action{replace(resultAndfacetArea, paginatedTemplate(searcher.removeFilteredFacet(f), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
-				          	} else {
-				          		submitlink action{replace(resultAndfacetArea, paginatedTemplate((~searcher where f.should()), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
-				          	}				          	
-			         	}
-			         } else {
-			         	div[class="includedFacet"]{
-			         		if(f.isSelected()) {
-			          			submitlink action{replace(resultAndfacetArea, paginatedTemplate(searcher.removeFilteredFacet(f), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ") " minusimage}
-			          		} else {
-			          			submitlink action{replace(resultAndfacetArea, paginatedTemplate((~searcher where f.should()), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
-			          			" " submitlink action{replace(resultAndfacetArea, paginatedTemplate( (~searcher where f.mustNot() ), resultsPerPage, namespace));}{minusimage}
-			          		}
-			          	}        	
-			        }
-		   		// }
+		        if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
+		        	div[class="excludedFacet"]{
+			        	if(f.isSelected()) {
+			        		includeFacetSym()
+			        		submitlink action{replace(resultAndfacetArea, paginatedTemplate(searcher.removeFilteredFacet(f), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
+			          	} else {
+			          		includeFacetSym()
+			          		submitlink action{replace(resultAndfacetArea, paginatedTemplate((~searcher where f.should()), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
+			          	}				          	
+		         	}
+		         } else {
+		         	div[class="includedFacet"]{
+		         		if(f.isSelected()) {
+		          			submitlink action{replace(resultAndfacetArea, paginatedTemplate(searcher.removeFilteredFacet(f), resultsPerPage, namespace));}{excludeFacetSym output(f.getValue()) " (" output(f.getCount()) ") "}
+		          		} else {
+		          			submitlink action{replace(resultAndfacetArea, paginatedTemplate( (~searcher where f.mustNot() ), resultsPerPage, namespace));}{excludeFacetSym}
+		          			submitlink action{replace(resultAndfacetArea, paginatedTemplate((~searcher where f.should()), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
+		          			" " 
+		          		}
+		          	}        	
+		        }
 	        }
   	 	}
   	 }
   }
   
-  define minusimage(){
-  	<div class="minus-image">"x"</div>
-  	
+  define excludeFacetSym(){
+  	<div class="excludefacetsym">"x"</div>  	
   }
-  define plusimage(){
-  	<div class="plus-image"></div>
+  define includeFacetSym(){
+  	<div class="includefacetsym">"v"</div>
   }
 
   define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, resultsPerPage : Int){
@@ -206,5 +230,17 @@ native class org.webdsl.search.SearchHelper as SearchHelper {
      static lastIndexLink(Int, Int, Int): Int
   }
 
+
+ // define page showFile(e:Entry){
+ //   output(/\n/.replaceAll("<br />", e.content))
+ //   <br/>
+ //   <br/>
+ //   var c := /\n/.split(e.content)
+ //   for(i:Int from 0 to c.length){
+ //     div{
+ //       output(i+1) " : " output(c[i])
+ //     }
+ //   }
+ // }
 
 

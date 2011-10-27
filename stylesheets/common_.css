@@ -33,16 +33,16 @@ body {
 }
 .excludedFacet {
     background-color: LightSteelBlue;
-    border-radius: 15px 15px 15px 15px;
+    border-radius: 5px 5px 5px 5px;
     color: #8F8F8F;
     float: left;
     font-size: 12px;
     margin: 4px 5px;
-    padding: 0 3px;
+    padding: 0 0 0 3px;
 }
 .includedFacet {
     background-color: White;
-    border-radius: 15px 15px 15px 15px;
+    border-radius: 5px 5px 5px 5px;
     color: black;
     float: left;
     font-size: 12px;
@@ -57,25 +57,31 @@ body {
     color: black;
     text-decoration: none;
 }
-.minus-image {
+.excludefacetsym {
     background-color: LightSlateGray;
-    border-radius: 0 15px 15px 0;
+    border-radius: 0 5px 5px 0;
     color: white;
     float: right;
     font-size: 12px;
     margin: 0 0 0 1px;
     padding: 0 3px;
 }
+
+.includefacetsym {
+    background-color: LightSlateGray;
+    border-radius: 0 5px 5px 0;
+    color: white;
+    float: right;
+    font-size: 12px;
+    margin: 0 0 0 1px;
+    padding: 0 3px;
+    visibility: hidden;
+}
+
 .includedFacet.minus-image a:link, .includedFacet.minus-image a:visited {
     color: red;
 }
-.plus-image {
-    background-image: url("../images/plus16.png");
-    display: block;
-    float: left;
-    height: 16px;
-    width: 16px;
-}
+
 .searchresulthighlight {
     border: 1px solid LightSlateGrey;
     border-radius: 0 0 5px 5px;
@@ -90,6 +96,7 @@ body {
     background-color: LightSlateGrey;
     border: 1px solid LightSlateGrey;
     border-radius: 5px 5px 0 0;
+    font-size: 13px;
     margin: 4px 4px 0 0;
     padding: 4px;
 }
@@ -97,4 +104,17 @@ input.button {
     background-color: LightSlateGray;
     color: white;
     font-weight: normal;
+}
+.searchresultlocation {
+    color: white;
+    float: right;
+    font-size: 13px;
+    margin: 0px 4px 0 0;
+}
+
+.linenumber {
+    color: gray;
+    font-size: 11px;
+    float: left;
+    padding: 3px 0px 0px 0px;
 }
