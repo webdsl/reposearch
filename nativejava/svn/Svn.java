@@ -124,8 +124,20 @@ public class Svn {
                         //We use a File property instead of String property
                         //to workaround encoding exceptions.
                         utils.File webdslFile = new utils.File();
-                        webdslFile.setContentStream(new FileInputStream(f));
-                        c.setFileNoEventsOrValidation(webdslFile);
+                        FileInputStream fis = null;
+                        try{
+                        	fis= new FileInputStream(f);
+                        	webdslFile.setContentStream(fis);
+                            c.setFileNoEventsOrValidation(webdslFile);
+                        } finally{
+                        	try{
+                        		if(fis != null)
+                        			fis.close();
+                        	} catch (java.io.IOException ex){
+                        		System.out.println("file close exception during svn checkout reposearch 1:");
+                        		ex.printStackTrace();
+                        	}
+                        }                        
                         //System.out.println("file contents: "+Files.toString(f,Charset.defaultCharset()));
                         c.setUrlNoEventsOrValidation(repo+dir+f.getName());
                         //System.out.println("file url: "+repo+dir+f.getName());
@@ -246,10 +258,23 @@ public class Svn {
                 repo.getFile(dir+o.getName(), latestRevision, null, out);
                 //Use utils.File as container for converting to String with proper encoding
                 utils.File f = new utils.File();
+                ByteArrayInputStream in = null;                
                 try{
-                    f.setContentStream(new ByteArrayInputStream(out.toByteArray()));
+                	in = new ByteArrayInputStream(out.toByteArray());
+                    f.setContentStream(in);
                 } catch( IOException ex){
             	    ex.printStackTrace();
+                } finally {
+                	try{
+                		if (in != null)
+                			in.close();
+                		if(out != null)
+                			out.close();
+                	} catch (java.io.IOException ex){
+                		System.out.println("file close exception during svn checkout reposearch 2:");
+                		ex.printStackTrace();
+                	}
+                		
                 }
                 c.setFileNoEventsOrValidation(f);
                 c.setUrlNoEventsOrValidation(o.getURL().toString());
