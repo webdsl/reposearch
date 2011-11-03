@@ -47,12 +47,11 @@ define page search(namespace:String, q:String){
 
 service autocompleteService(namespace:String, term : String){ 
 
-  var jsonArray := JSONArray();//<Entity> autoCompleteSuggest contentcase;  "213content"
+  var jsonArray := JSONArray();
   var results := EntrySearcher.autoCompleteSuggest(term,namespace,["contentcase","filename_autocomplete"], 10);
     
   for(sug : String in results){
     jsonArray.put(sug);    
-    //jsonArray.put(sug.replace(term, "<b>"+term+"</b>"));
   }  
   return jsonArray;
 }
@@ -66,40 +65,62 @@ function toSearcher(q:String, ns:String) : EntrySearcher{
   return searcher;
 }
 
+define navWithAnchor(n:String,a:String){
+    rawoutput{
+    	<a all attributes href=n+"#"+a>
+      	elements
+    	</a>
+    }
+  }
+  
+define raw(n : String){
+	rawoutput()
+}
+
 define highlightedResult(cf : Entry, searcher : EntrySearcher){
-  //var code : String := rendertemplate(output(searcher.highlight("code",cf.code,"$OHL$","$CHL$"))).replace("\n","<br/>").replace(" ","&nbsp;").replace("$OHL$","<b>").replace("$CHL$","</b>")
-  var linkText : String := cf.name;
-  var location : String := cf.url.substring(0, cf.url.length() - cf.name.length() );
+  var highlightedContent : List<String>;
+  var linkText : String;
+  var location : String;
+  var ruleOffset : String;
+  
+  
+  init{
+  	highlightedContent := highlightedResult(cf, searcher);
+  	linkText := cf.name;
+  	location := cf.url.substring(0, cf.url.length() - cf.name.length() );
+  	ruleOffset := "";
+  	if(highlightedContent.length > 0){
+  		ruleOffset := /\D+(\d+)\D*/.replaceAll("$1",highlightedContent[0]);
+  	}
+  	if(ruleOffset.length() > 5 && highlightedContent.length > 1){
+  		ruleOffset := /\D+(\d+)\D*/.replaceAll("$1",highlightedContent[1]);
+  	}
+  	
+  }
   
   div[class="searchresultlink"]{
-    navigate(url(cf.url)){ div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b> } 
-    
+  	navWithAnchor(navigate(showFile(searcher, cf)), ruleOffset){div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b>}    
   }
    div[class="searchresulthighlight"]{ 
-    //for(line:Entry in cf.lines){
-      for(s:String in highlightedResult(cf,searcher)){
-        div { rawoutput(s) }
-      }
-    //} 
+      // for(s:String in highlightedContent){
+      //   div { rawoutput(s + "<br />") }
+      // }
+      div { rawoutput(highlightedContent.concat("<br />")) }
     }
 }
 
 function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
   var i : Int := 0;
-  var contentLine := addLines(entry.content);
-  var raw := highlight contentLine for searcher on content surround with ("$OHL$","$CHL$");
-  // var highlighted := rendertemplate(output(raw)).replace(" ","&nbsp;").replace("$OHL$","<b>").replace("$CHL$","</b>").replace("$LNO$","<div class=\"linenumber\">").replace("$LNC$","</div>");
-  var highlighted := rendertemplate(output(raw)).replace(" ","&nbsp;").replace("$OHL$","<b>").replace("$CHL$","</b>");
+  //var raw := highlight entry.content for searcher on content surround with ("$OHL$","$CHL$");
+  var raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", 2, 150, "\n");
+  var highlighted := rendertemplate(output(raw)).replace(" ","&nbsp;").replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>").replace("\t","&nbsp;&nbsp;&nbsp;&nbsp;");
   var splitted := highlighted.split("\n");
   var list := List<String>();
-  var previous := "";
-  var toAdd : String;
+  var toAdd : String;  
   for(s:String in splitted){
-    if(s!=""&&s.contains("<b>")){
-      toAdd := /^\d+:/.replaceAll("<div class=\"linenumber\">$0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>",s);
-      list.add(/*previous+"<br/>"+*/toAdd);
-    }
-    previous := s;
+  	  //If highlighted text doesnt contain the linenumber at the beginning, put ... as line number
+      toAdd := /^\D/.replaceAll("<div class=\"linenumber\">...</div>$0", s);
+      list.add(/^\d+/.replaceAll("<div class=\"linenumber\">$0</div>", toAdd));
   }
   return list;
 }
@@ -109,8 +130,7 @@ function addLines(content : String) : String{
 	var currentLine : String;
 	var number : Int := 1;
 	var toReturn := "";
-	for(l : String in lines){
-		// currentLine := "$LNO$" + number + ":$LNC$      " + l;		
+	for(l : String in lines){	
 		currentLine := number + ":" + l;
 		toReturn := toReturn + currentLine + "\n";
 		number := number + 1; 
@@ -184,10 +204,9 @@ function addLines(content : String) : String{
       div{
         output(size) " results found in " output(get searchtime(searcher)) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
       }
-      //list{
       for (e : Entry in resultList){
         highlightedResult(e, searcher) 
-      }//}
+      }
       par{
         resultIndex(searcher, pagenumber, resultsPerPage)
       }
@@ -198,7 +217,7 @@ function addLines(content : String) : String{
     var totalPages := (get size(searcher).floatValue() / resultsPerPage.floatValue()).ceil()
     var start : Int := SearchHelper.firstIndexLink(pagenumber,totalPages, 9) //9 index links at most
     var end : Int := SearchHelper.lastIndexLink(pagenumber,totalPages, 9)
-  if(totalPages > 1){
+    if(totalPages > 1){
       if (pagenumber > 1){
         submit("|<<", showResultsPage(searcher, 1, resultsPerPage))
         submit("<", showResultsPage(searcher, pagenumber-1, resultsPerPage))
@@ -215,7 +234,9 @@ function addLines(content : String) : String{
         submit(">>|", showResultsPage(searcher, totalPages, resultsPerPage))
       }
     }
-    action showResultsPage(searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int){replace(resultArea, paginatedResults(searcher, pagenumber, resultsPerPage));}
+    action showResultsPage(searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int){
+      replace(resultArea, paginatedResults(searcher, pagenumber, resultsPerPage));
+    } 
   }
   
   define gotoresultpage(searcher: EntrySearcher, pagenum: Int, resultsPerPage: Int){
@@ -230,17 +251,23 @@ native class org.webdsl.search.SearchHelper as SearchHelper {
      static lastIndexLink(Int, Int, Int): Int
   }
 
-
- // define page showFile(e:Entry){
- //   output(/\n/.replaceAll("<br />", e.content))
- //   <br/>
- //   <br/>
- //   var c := /\n/.split(e.content)
- //   for(i:Int from 0 to c.length){
- //     div{
- //       output(i+1) " : " output(c[i])
- //     }
- //   }
- // }
-
+define page showFile(searcher : EntrySearcher, cf : Entry){
+  var linkText : String;
+  var location : String;
+  var highlighted : String;
+  init{
+  	linkText := cf.name;
+    location := cf.url.substring(0, cf.url.length() - cf.name.length() );
+    highlighted := searcher.highlight("content", cf.content, "$OHL$","$CHL$", 1, 1000000, " ");
+    if( highlighted.length() == 0 ){
+    	highlighted := cf.content;
+    }
+  }
+  div[class="searchresultlink"]{
+    navigate(url(cf.url)){ div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b> } 
+  }
+  div[class="searchresulthighlight"]{ 
+    rawoutput( /(^|\n)(\d+)([^\r\n$])/.replaceAll("<br /><span class=\"linenumber\"><a name=\"$2\"></a>$2</span>$3", rendertemplate(output(highlighted)).replace(" ","&nbsp;").replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>").replace("\t","&nbsp;&nbsp;&nbsp;&nbsp;")))
+  }
+}
 

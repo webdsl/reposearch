@@ -66,7 +66,6 @@ body {
     margin: 0 0 0 1px;
     padding: 0 3px;
 }
-
 .includefacetsym {
     background-color: LightSlateGray;
     border-radius: 0 5px 5px 0;
@@ -77,16 +76,16 @@ body {
     padding: 0 3px;
     visibility: hidden;
 }
-
 .includedFacet.minus-image a:link, .includedFacet.minus-image a:visited {
     color: red;
 }
-
 .searchresulthighlight {
     border: 1px solid LightSlateGrey;
     border-radius: 0 0 5px 5px;
+    font-family: monospace,Helvetica,sans-serif;
+    font-size: 13px;
     margin: 0 4px 4px 0;
-    padding: 5px;
+    padding: 5px 0px 16px 0px;
 }
 .searchresultlink a:link, .searchresultlink a:visited {
     color: white;
@@ -109,12 +108,18 @@ input.button {
     color: white;
     float: right;
     font-size: 13px;
-    margin: 0px 4px 0 0;
+    margin: 0 4px 0 0;
 }
-
 .linenumber {
     color: gray;
-    font-size: 11px;
     float: left;
-    padding: 3px 0px 0px 0px;
+    font-size: 9px;
+    padding: 3px 0 0;
+    width: 40px;
+}
+.highlight {
+    background-color: GreenYellow;
+}
+.skippedfileslink a:link, .searchresultlink a:visited {
+    text-decoration: none;
 }

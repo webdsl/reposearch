@@ -67,8 +67,7 @@ application svnsearch
 
   entity Entry{
     name :: String
-    file :: File
-    content :: String := file.getContentAsString()
+    content :: Text
     url :: URL
     projectname :: String
     repo -> Repo
@@ -173,7 +172,12 @@ application svnsearch
     }
     div{
       submit action{p.repos.remove(r);deleteRepoEntries(r);} {"Remove"}
+      submit action{return skippedFiles(r);}{"skipped files"}
     }
+  }
+  
+  define page skippedFiles(r : Repo){
+  	rawoutput(r.skippedFiles)
   }
   
   entity Project {
@@ -185,6 +189,7 @@ application svnsearch
     refresh :: Bool
     refreshSVN :: Bool
     error::Bool
+    skippedFiles :: Text
   }
   entity SvnRepo : Repo{
     url :: URL  	
@@ -215,6 +220,7 @@ application svnsearch
   
   function queryRepoTask(){
     var repos := from Repo where refresh=true;
+    var skippedFiles := List<String>();
     if(repos.length > 0){
       var r := repos[0];
       var col : List<Entry>;
@@ -228,9 +234,13 @@ application svnsearch
       if(col != null){ 
         deleteRepoEntries(r);
         for(c: Entry in col){
-          c.projectname := r.project.name;
-          c.repo := r;
-          c.save();
+          if(c.content == "BINFILE"){
+          	skippedFiles.add("<a href=\"" + c.url + "\">"+c.name+"</a>");
+          } else {
+	          c.projectname := r.project.name;
+	          c.repo := r;
+	          c.save();
+          }
         }
         r.error := false;
       } 
@@ -241,6 +251,7 @@ application svnsearch
       if(!settings.reindex){
         settings.reindex := true;
       }
+      r.skippedFiles := skippedFiles.concat("<br />");
     }
   }
   
