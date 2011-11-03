@@ -72,10 +72,6 @@ define navWithAnchor(n:String,a:String){
     	</a>
     }
   }
-  
-define raw(n : String){
-	rawoutput()
-}
 
 define highlightedResult(cf : Entry, searcher : EntrySearcher){
   var highlightedContent : List<String>;
@@ -90,10 +86,10 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   	location := cf.url.substring(0, cf.url.length() - cf.name.length() );
   	ruleOffset := "";
   	if(highlightedContent.length > 0){
-  		ruleOffset := /\D+(\d+)\D*/.replaceAll("$1",highlightedContent[0]);
+  		ruleOffset := /\D+(\d+).*/.replaceFirst("$1",highlightedContent[0]);
   	}
   	if(ruleOffset.length() > 5 && highlightedContent.length > 1){
-  		ruleOffset := /\D+(\d+)\D*/.replaceAll("$1",highlightedContent[1]);
+  		ruleOffset := /\D+(\d+).*/.replaceFirst("$1",highlightedContent[1]);
   	}
   	
   }
@@ -140,7 +136,6 @@ function addLines(content : String) : String{
 }
 
   define ajax paginatedTemplate(searcher :EntrySearcher, resultsPerPage : Int, namespace : String){
-  		// searcher := search Entry matching q
 
   		if(searcher.query().length() > 0) {
   			viewFacets(searcher, resultsPerPage, namespace)
