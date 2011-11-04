@@ -88,8 +88,13 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   	if(highlightedContent.length > 0){
   		ruleOffset := /\D+(\d+).*/.replaceFirst("$1",highlightedContent[0]);
   	}
-  	if(ruleOffset.length() > 5 && highlightedContent.length > 1){
-  		ruleOffset := /\D+(\d+).*/.replaceFirst("$1",highlightedContent[1]);
+  	if(ruleOffset.length() > 5){
+  		if(highlightedContent.length > 1){
+  			ruleOffset := /\D+(\d+).*/.replaceFirst("$1",highlightedContent[1]);
+  		}
+  		if(ruleOffset.length() > 5) {
+  			ruleOffset := "";
+  		}
   	}
   	
   }
@@ -98,10 +103,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   	navWithAnchor(navigate(showFile(searcher, cf)), ruleOffset){div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b>}    
   }
    div[class="searchresulthighlight"]{ 
-      // for(s:String in highlightedContent){
-      //   div { rawoutput(s + "<br />") }
-      // }
-      div { rawoutput(highlightedContent.concat("<br />")) }
+      <pre>rawoutput(highlightedContent.concat("<br />"))</pre>
     }
 }
 
@@ -109,7 +111,7 @@ function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
   var i : Int := 0;
   //var raw := highlight entry.content for searcher on content surround with ("$OHL$","$CHL$");
   var raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", 2, 150, "\n");
-  var highlighted := rendertemplate(output(raw)).replace(" ","&nbsp;").replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>").replace("\t","&nbsp;&nbsp;&nbsp;&nbsp;");
+  var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>");
   var splitted := highlighted.split("\n");
   var list := List<String>();
   var toAdd : String;  
@@ -119,6 +121,7 @@ function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
       list.add(/^\d+/.replaceAll("<div class=\"linenumber\">$0</div>", toAdd));
   }
   return list;
+  // return splitted;
 }
 
 function addLines(content : String) : String{
@@ -262,7 +265,7 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
     navigate(url(cf.url)){ div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b> } 
   }
   div[class="searchresulthighlight"]{ 
-    rawoutput( /(^|\n)(\d+)([^\r\n$])/.replaceAll("<br /><span class=\"linenumber\"><a name=\"$2\"></a>$2</span>$3", rendertemplate(output(highlighted)).replace(" ","&nbsp;").replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>").replace("\t","&nbsp;&nbsp;&nbsp;&nbsp;")))
+    <pre>rawoutput( /(^|\n)(\d+)([^\r\n$])/.replaceAll("$1<span class=\"linenumber\"><a name=\"$2\"></a>$2</span>$3", rendertemplate(output(highlighted)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>")))</pre>
   }
 }
 
