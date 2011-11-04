@@ -10,6 +10,12 @@ function setupcompletion(url){
   $(function() {
     $( "#searchfield" ).autocomplete({
       autoFocus: true,
+      select: function(event, ui) {
+        if(ui.item){
+            $(this).val(ui.item.value);
+            $(this).keyup();
+        }
+      },
       source: 
         function( request, response ) {
           $.ajax({
@@ -32,6 +38,6 @@ function setupcompletion(url){
         },
       minLength: 1,
       delay: 200
-    });
+    }) 
   });
 }
