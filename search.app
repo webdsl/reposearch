@@ -48,7 +48,7 @@ define page search(namespace:String, q:String){
 service autocompleteService(namespace:String, term : String){ 
 
   var jsonArray := JSONArray();
-  var results := EntrySearcher.autoCompleteSuggest(term,namespace,["contentcase","filename_autocomplete"], 10);
+  var results := EntrySearcher.autoCompleteSuggest(term,namespace,["contentcase","filename_autocomplete"], 20);
     
   for(sug : String in results){
     jsonArray.put(sug);    
@@ -86,11 +86,11 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   	location := cf.url.substring(0, cf.url.length() - cf.name.length() );
   	ruleOffset := "";
   	if(highlightedContent.length > 0){
-  		ruleOffset := /\D+(\d+).*/.replaceFirst("$1",highlightedContent[0]);
+  		ruleOffset := /\D+>(\d+).*/.replaceFirst("$1",highlightedContent[0]);
   	}
   	if(ruleOffset.length() > 5){
   		if(highlightedContent.length > 1){
-  			ruleOffset := /\D+(\d+).*/.replaceFirst("$1",highlightedContent[1]);
+  			ruleOffset := /\D+\>(\d+).*/.replaceFirst("$1",highlightedContent[1]);
   		}
   		if(ruleOffset.length() > 5) {
   			ruleOffset := "";
