@@ -117,8 +117,8 @@ function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
   var toAdd : String;  
   for(s:String in splitted){
   	  //If highlighted text doesnt contain the linenumber at the beginning, put ... as line number
-      toAdd := /^\D/.replaceAll("<div class=\"linenumber\">...</div>$0", s);
-      list.add(/^\d+/.replaceAll("<div class=\"linenumber\">$0</div>", toAdd));
+      toAdd := /^\D\s?/.replaceAll("<div class=\"nolinenumber\">...</div>$0", s);
+      list.add(/(^\d+)\s?/.replaceAll("<div class=\"linenumber\">$1</div>", toAdd));
   }
   return list;
   // return splitted;
@@ -256,7 +256,7 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
   init{
   	linkText := cf.name;
     location := cf.url.substring(0, cf.url.length() - cf.name.length() );
-    highlighted := searcher.highlight("content", cf.content, "$OHL$","$CHL$", 1, 1000000, " ");
+    highlighted := searcher.highlight("content", cf.content, "$OHL$","$CHL$", 1, 9000000, " ");
     if( highlighted.length() == 0 ){
     	highlighted := cf.content;
     }
@@ -265,7 +265,7 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
     navigate(url(cf.url)){ div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b> } 
   }
   div[class="searchresulthighlight"]{ 
-    <pre>rawoutput( /(^|\n)(\d+)([^\r\n$])/.replaceAll("$1<span class=\"linenumber\"><a name=\"$2\"></a>$2</span>$3", rendertemplate(output(highlighted)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>")))</pre>
+    <pre>rawoutput( /(^|\n)(\d+)\s?([^\r\n$])/.replaceAll("$1<span class=\"linenumber\"><a name=\"$2\"></a>$2</span>$3", rendertemplate(output(highlighted)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>")))</pre>
   }
 }
 

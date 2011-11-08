@@ -85,7 +85,7 @@ body {
     font-family: monospace,Helvetica,sans-serif;
     font-size: 13px;
     margin: 0 4px 4px 0;
-    padding: 5px 0px 16px 0px;
+    padding: 5px 0 16px;
 }
 .searchresultlink a:link, .searchresultlink a:visited {
     color: white;
@@ -114,12 +114,34 @@ input.button {
     color: gray;
     float: left;
     font-size: 9px;
-    padding: 3px 0 0;
-    width: 40px;
+    padding: 2px 0px 2px 0px;
+    width: 29px;
+    background-color: AliceBlue;
+    text-align: center;
+    margin: 0 9px 0 2px;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    user-select: none;
 }
+.nolinenumber{
+    color: gray;
+    float: left;
+    font-size: 9px;
+    padding: 2px 0px 2px 0px;
+    width: 29px;
+    background-color: AliceBlue;
+    text-align: center;
+    margin: 0 9px 0 2px;
+}
+
+
+
 .highlight {
     background-color: GreenYellow;
 }
 .skippedfileslink a:link, .searchresultlink a:visited {
     text-decoration: none;
 }
+
