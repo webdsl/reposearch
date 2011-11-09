@@ -37,16 +37,7 @@ define page search(namespace:String, q:String){
   }
 }
 
-//[focus] 
-//autocomplete service Entry contentcase
-//AutoComplete(ent,props) ->  where props van ent
-//declare:  service autocompleteServiceEnt(namespace:String,term : String)
-//override autocomplete:
-//balabl { <x>.autoocomplet  }
-// principal is User with credentials username
-
-service autocompleteService(namespace:String, term : String){ 
-
+service autocompleteService(namespace:String, term : String){
   var jsonArray := JSONArray();
   var results := EntrySearcher.autoCompleteSuggest(term,namespace,["contentcase","filename_autocomplete"], 20);
     
@@ -57,8 +48,7 @@ service autocompleteService(namespace:String, term : String){
 }
 
 function toSearcher(q:String, ns:String) : EntrySearcher{
-  var searcher := search Entry matching q in namespace ns [nolucene, strict matching];
-   
+  var searcher := search Entry matching q in namespace ns [nolucene, strict matching];   
   if (ns.length() > 0) {
       ~searcher with facets (file_ext, 60);
   }
@@ -66,24 +56,17 @@ function toSearcher(q:String, ns:String) : EntrySearcher{
 }
 
 define navWithAnchor(n:String,a:String){
-    rawoutput{
-    	<a all attributes href=n+"#"+a>
-      	elements
-    	</a>
-    }
+    rawoutput{ <a all attributes href=n+"#"+a>	elements </a> }
   }
 
 define highlightedResult(cf : Entry, searcher : EntrySearcher){
   var highlightedContent : List<String>;
-  var linkText : String;
-  var location : String;
-  var ruleOffset : String;
-  
+  var ruleOffset : String; 
+  var linkText := cf.name;
+  var location := cf.url.substring(0, cf.url.length() - cf.name.length() );
   
   init{
   	highlightedContent := highlightedResult(cf, searcher);
-  	linkText := cf.name;
-  	location := cf.url.substring(0, cf.url.length() - cf.name.length() );
   	ruleOffset := "";
   	if(highlightedContent.length > 0){
   		ruleOffset := /\D+>(\d+).*/.replaceFirst("$1",highlightedContent[0]);
@@ -103,39 +86,39 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   	navWithAnchor(navigate(showFile(searcher, cf)), ruleOffset){div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b>}    
   }
    div[class="searchresulthighlight"]{ 
-      <pre>rawoutput(highlightedContent.concat("<br />"))</pre>
+      <pre>rawoutput(highlightedContent.concat("\n"))</pre>
     }
 }
 
+
 function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
-  var i : Int := 0;
-  //var raw := highlight entry.content for searcher on content surround with ("$OHL$","$CHL$");
   var raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", 2, 150, "\n");
   var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>");
   var splitted := highlighted.split("\n");
   var list := List<String>();
-  var toAdd : String;  
+  var alt := false;
+  var style := "b";
   for(s:String in splitted){
-  	  //If highlighted text doesnt contain the linenumber at the beginning, put ... as line number
-      toAdd := /^\D\s?/.replaceAll("<div class=\"nolinenumber\">...</div>$0", s);
-      list.add(/(^\d+)\s?/.replaceAll("<div class=\"linenumber\">$1</div>", toAdd));
+  	//If highlighted text doesnt contain the linenumber at the beginning, put ... as line number
+  	//We alternate between style a and b for different fragments
+  	  if(/^\D/.find(s)){
+  	  	if(list.length == 0){
+  	  		list.add("<div class=\"linenumber" + style +"\"> </div>" + s);
+  	  	} else {
+	  	  	if(alt) {
+	  	  		style := "b";
+	  	  		alt := false;
+	  	  	} else {
+	  	  		alt := true;
+	  	  		style := "a";
+	  	  	}
+	  	  	list.add("<div class=\"nolinenumber" + style +"\">...</div>\n<div class=\"linenumber" + style +"\"> </div>" + s);
+	    }
+  	  } else {
+  	  	list.add(/(^\d+)\s?/.replaceAll("<div class=\"linenumber" + style +"\">$1</div>", s));
+  	  }  	  
   }
   return list;
-  // return splitted;
-}
-
-function addLines(content : String) : String{
-	var lines  := /\n/.split(content);
-	var currentLine : String;
-	var number : Int := 1;
-	var toReturn := "";
-	for(l : String in lines){	
-		currentLine := number + ":" + l;
-		toReturn := toReturn + currentLine + "\n";
-		number := number + 1; 
-	}
-	
-	return toReturn;
 }
 
   define ajax paginatedTemplate(searcher :EntrySearcher, resultsPerPage : Int, namespace : String){
@@ -200,7 +183,11 @@ function addLines(content : String) : String{
     
     if(searcher.query().length()>0){
       div{
-        output(size) " results found in " output(get searchtime(searcher)) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
+        if(size > 0) {	      
+	      output(size) " results found in " output(get searchtime(searcher)) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
+        } else {
+      	  "no results found"
+      	}
       }
       for (e : Entry in resultList){
         highlightedResult(e, searcher) 
@@ -265,7 +252,7 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
     navigate(url(cf.url)){ div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b> } 
   }
   div[class="searchresulthighlight"]{ 
-    <pre>rawoutput( /(^|\n)(\d+)\s?([^\r\n$])/.replaceAll("$1<span class=\"linenumber\"><a name=\"$2\"></a>$2</span>$3", rendertemplate(output(highlighted)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>")))</pre>
+    <pre>rawoutput( /(^|\n)(\d+)\s?([^\r\n$])/.replaceAll("$1<span class=\"linenumberb\"><a name=\"$2\"></a>$2</span>$3", rendertemplate(output(highlighted)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>")))</pre>
   }
 }
 

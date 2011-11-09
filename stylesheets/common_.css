@@ -110,7 +110,7 @@ input.button {
     font-size: 13px;
     margin: 0 4px 0 0;
 }
-.linenumber {
+.linenumbera {
     color: gray;
     float: left;
     font-size: 9px;
@@ -125,7 +125,25 @@ input.button {
     -o-user-select: none;
     user-select: none;
 }
-.nolinenumber{
+.nolinenumbera{
+    /* gecko based browsers */
+    background: -moz-linear-gradient(top, #F0F8FF , #D8DFE6);
+
+    /* webkit based browsers */
+    background: -webkit-gradient(linear, left top, left bottom, from(#F0F8FF), to(#D8DFE6));
+    color: black;
+    float: left;
+    font-size: 9px;
+    padding: 2px 0px 2px 0px;
+    width: 29px;
+    background-color: #CEDAE6;
+    text-align: center;
+    position: relative;
+    left: 0px;
+    width: 100%;
+}
+
+.linenumberb {
     color: gray;
     float: left;
     font-size: 9px;
@@ -134,14 +152,35 @@ input.button {
     background-color: AliceBlue;
     text-align: center;
     margin: 0 9px 0 2px;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}
+.nolinenumberb{
+    /* gecko based browsers */
+    background: -moz-linear-gradient(top, #F0F8FF , #D8DFE6);
+
+    /* webkit based browsers */
+    background: -webkit-gradient(linear, left top, left bottom, from(#F0F8FF), to(#D8DFE6));
+    color: black;
+    float: left;
+    font-size: 9px;
+    padding: 2px 0px 2px 0px;
+    width: 29px;
+    background-color: #CEDAE6;
+    text-align: center;
+    position: relative;
+    left: 0px;
+    width: 100%;
 }
 
 
 
 .highlight {
-    background-color: GreenYellow;
+    background-color: #CCFF66;
 }
 .skippedfileslink a:link, .searchresultlink a:visited {
     text-decoration: none;
 }
-
