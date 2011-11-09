@@ -252,7 +252,7 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
     navigate(url(cf.url)){ div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b> } 
   }
   div[class="searchresulthighlight"]{ 
-    <pre>rawoutput( /(^|\n)(\d+)\s?([^\r\n$])/.replaceAll("$1<span class=\"linenumberb\"><a name=\"$2\"></a>$2</span>$3", rendertemplate(output(highlighted)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>")))</pre>
+    <pre>rawoutput( /(^|\n)(\d+)\s?([^\r\n$])/.replaceAll("$1<div class=\"linenumberb\"><a name=\"$2\"></a>$2</div>$3", rendertemplate(output(highlighted)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>")))</pre>
   }
 }
 
