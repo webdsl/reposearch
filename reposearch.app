@@ -1,63 +1,27 @@
-application svnsearch
+application reposearch
 
   imports search
   imports searchconfiguration
+  imports ac
 
   define page root(){
-    /*submit action{ 
-      var col := Svn.getCommits("https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail"); 
-      for(ce:Commit in col){
-        ce.save();
-      } 
-    } 
-    {"load"}*/
-    /*
-    submit action{ 
-      var col := Svn.getFiles("https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac"); 
-      for(c: Entry in col){
-        c.save();
-      } 
-    } 
-    {"load"}
-    submit action{ 
-      for(ce:Commit){
-        ce.delete(); 
-      }  
-    } 
-    {"delete"}		
     
-    for(c:Commit in from Commit as co order by co.rev desc){
-      div{ output(c.rev) }	
-      div{ rawoutput(rendertemplate(output(c.message)).replace("\n","<br>")) }	
-      divsmall{ output(c.author) }	
-      divsmall{ output(c.date) }	
-    }
-    for(c: Entry){
-        div{ output(c.name) }	
-        div{ rawoutput(rendertemplate(output(c.content)).replace("\n","<br>")) }
-    } */
-    /*
-    init{
-      return search("");
-    }
-    */
     navigate(search("", "")){"Search all projects"}
       <br/>
     for(p:Project){
       navigate(search(p.name, "")){"Search " output(p.name)}
       <br/>
     }
-    navigate(manage()){"Manage"}
+    <br/>navigate(manage()){"Manage"}<br/><br/>
+    navigate(dologin()){"log in/out"}
   }
-  
-  
-  
     
   define divsmall(){
     <div style="font-size:10px;">
       elements()
     </div>
   }
+  
   entity Commit{
     rev :: Long
     author :: String
@@ -97,7 +61,7 @@ application svnsearch
     var n :URL
     var gu:String
     var gr:String
-    
+        
     navigate(root()){"return to home"}
     form{
       input(p)
@@ -138,6 +102,16 @@ application svnsearch
       settings.reindex := true;
       return manage();
     }
+    
+    <br /><br /><br />
+    submit action{ 
+    	for(pr:Project){
+    		for(r:Repo in pr.repos){
+    			queryRepo(r);
+    		}
+    	}
+    	return manage();
+    	 } {"REFRESH ALL REPOSITORIES (with checkout)"}
   }
   
   define showrepo(p:Project, r:Repo){
