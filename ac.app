@@ -36,6 +36,27 @@ page dologin(){
 	authentication()
 }
 
+page renewAdmin(){
+  var user    := securityContext.principal;
+  var newName := user.name;
+  var newPass : Secret;
+  	
+	form {
+	
+	  label("new username:"){ input(newName) }
+	  label("new password:"){ input(newPass) }
+	
+	  submit save() { "save" }
+	}
+	action save(){
+	  logout();
+	  user.name := newName;
+	  user.password := newPass.digest();
+	  user.save();
+	  return root();
+	}
+}
+
   access control rules
 
     rule page root(){true}
@@ -48,6 +69,7 @@ page dologin(){
 	rule page autocompleteService(*){true}
 	rule page init(*){true}
 	rule page dologin(){true}
+	rule page renewAdmin(){loggedIn()}
 
 
 
