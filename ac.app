@@ -29,6 +29,7 @@ page init(){
 	    name := name 
 	    password := pass.digest()
 	  }.save();
+	  return root();
 	}
 }
 

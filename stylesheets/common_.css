@@ -85,7 +85,11 @@ body {
     font-family: monospace,Helvetica,sans-serif;
     font-size: 13px;
     margin: 0 4px 4px 0;
-    padding: 5px 0 16px;
+    padding: 5px 0px 5px 0px;
+    overflow: auto;
+    position: relative;
+    outline: medium none;
+    z-index: 1;
 }
 .searchresultlink a:link, .searchresultlink a:visited {
     color: white;
@@ -113,12 +117,10 @@ input.button {
 .linenumbera {
     color: gray;
     float: left;
-    font-size: 9px;
-    padding: 2px 0px 2px 0px;
     width: 29px;
     background-color: AliceBlue;
     text-align: center;
-    margin: 0 9px 0 2px;
+    margin: 0 9px 0 0;
     -webkit-user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
@@ -133,30 +135,29 @@ input.button {
     background: -webkit-gradient(linear, left top, left bottom, from(#F0F8FF), to(#D8DFE6));
     color: black;
     float: left;
-    font-size: 9px;
-    padding: 2px 0px 2px 0px;
     width: 29px;
     background-color: #CEDAE6;
-    text-align: center;
-    position: relative;
     left: 0px;
+    line-height: 1.25em;
+    margin: 0 9px 0 0;
+    position: absolute;
+    text-align: center;
     width: 100%;
 }
 
 .linenumberb {
     color: gray;
     float: left;
-    font-size: 9px;
-    padding: 2px 0px 2px 0px;
     width: 29px;
     background-color: AliceBlue;
     text-align: center;
-    margin: 0 9px 0 2px;
+    margin: 0 9px 0 0;
     -webkit-user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
     -o-user-select: none;
     user-select: none;
+    line-height: 1.25em;
 }
 .nolinenumberb{
     /* gecko based browsers */
@@ -166,21 +167,47 @@ input.button {
     background: -webkit-gradient(linear, left top, left bottom, from(#F0F8FF), to(#D8DFE6));
     color: black;
     float: left;
-    font-size: 9px;
-    padding: 2px 0px 2px 0px;
     width: 29px;
     background-color: #CEDAE6;
-    text-align: center;
-    position: relative;
     left: 0px;
+    line-height: 1.25em;
+    margin: 0 9px 0 0;
+    position: absolute;
+    text-align: center;
     width: 100%;
 }
 
 
+.linenumberarea{
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+    line-height: 1.25em;
+}
 
+.codearea{
+    line-height: 1.25em;
+    display: block;
+    top: 4px;
+    position: absolute;
+
+}
+.codeline {
+    display: block;
+}
 .highlight {
     background-color: #CCFF66;
 }
 .skippedfileslink a:link, .searchresultlink a:visited {
     text-decoration: none;
 }
+pre {
+
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+}
+

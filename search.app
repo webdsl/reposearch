@@ -1,15 +1,25 @@
 module search
 
-define page search(namespace:String, q:String){
-  var query := q;
-  var searcher := toSearcher(query, namespace);
+define page search(namespace:String, q:String){  
 
+  searchBar(toSearcher(q, namespace), namespace)
+}
+
+define override page search(searcher : EntrySearcher, namespace:String){
+	searchBar(searcher, namespace)
+}
+
+define searchBar (entrySearcher : EntrySearcher, namespace : String){
   navigate(root()){"return to home"}
   includeJS("jquery-1.5.min.js")
   includeJS("jquery-ui-1.8.9.custom.min.js")
   includeCSS("jquery-ui.css")
-  var source := "/autocompleteService"+"/"+namespace;
   includeJS("completion.js")
+  var source := "/autocompleteService"+"/"+namespace;
+  var searcher := entrySearcher;
+  var query := searcher.query();
+  
+  
   <script>
     setupcompletion("~source");
   </script>
@@ -25,14 +35,14 @@ define page search(namespace:String, q:String){
   action updateResults(){
     searcher := toSearcher(query,namespace); //update with entered query
     
-    replace(resultAndfacetArea, paginatedTemplate(searcher,10,namespace));
+    replace(resultAndfacetArea, paginatedTemplate(searcher, 10, 1, namespace));
     //HTML5 feature, replace url without causing page reload
     runscript("window.history.replaceState('','','"+navigate(search(namespace,query))+"');");
   }
   
   placeholder resultAndfacetArea{
-	  if (q.length() > 0){
-	  	 paginatedTemplate(searcher, 10, namespace)
+	  if (query.length() > 0){
+	  	 paginatedTemplate(searcher, 10, 1, namespace)
 	  }
   }
 }
@@ -60,20 +70,20 @@ define navWithAnchor(n:String,a:String){
   }
 
 define highlightedResult(cf : Entry, searcher : EntrySearcher){
-  var highlightedContent : List<String>;
+  var highlightedContent : List<List<String>>;
   var ruleOffset : String; 
   var linkText := cf.name;
   var location := cf.url.substring(0, cf.url.length() - cf.name.length() );
   
   init{
-  	highlightedContent := highlightedResult(cf, searcher);
+  	highlightedContent := highlightedCodeLineLists(searcher, cf, 150, 2);
   	ruleOffset := "";
   	if(highlightedContent.length > 0){
-  		ruleOffset := /\D+>(\d+).*/.replaceFirst("$1",highlightedContent[0]);
+  		ruleOffset := /\D+>(\d+).*/.replaceFirst("$1",highlightedContent[0][0]);
   	}
   	if(ruleOffset.length() > 5){
   		if(highlightedContent.length > 1){
-  			ruleOffset := /\D+\>(\d+).*/.replaceFirst("$1",highlightedContent[1]);
+  			ruleOffset := /\D+\>(\d+).*/.replaceFirst("$1",highlightedContent[0][1]);
   		}
   		if(ruleOffset.length() > 5) {
   			ruleOffset := "";
@@ -85,54 +95,25 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   div[class="searchresultlink"]{
   	navWithAnchor(navigate(showFile(searcher, cf)), ruleOffset){div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b>}    
   }
-   div[class="searchresulthighlight"]{ 
-      <pre>rawoutput(highlightedContent.concat("\n"))</pre>
-    }
+   <div class="searchresulthighlight">
+   	 <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(highlightedContent[0].concat("<br />"))</div>
+   	 <div class="codearea" style="left: 3.1em;"><pre style="WHITE-SPACE: pre">rawoutput(highlightedContent[1].concat("<br />"))</pre></div>
+   </ div>
+   
 }
 
-
-function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
-  var raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", 2, 150, "\n");
-  var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>");
-  var splitted := highlighted.split("\n");
-  var list := List<String>();
-  var alt := false;
-  var style := "b";
-  for(s:String in splitted){
-  	//If highlighted text doesnt contain the linenumber at the beginning, put ... as line number
-  	//We alternate between style a and b for different fragments
-  	  if(/^\D/.find(s)){
-  	  	if(list.length == 0){
-  	  		list.add("<div class=\"linenumber" + style +"\"> </div>" + s);
-  	  	} else {
-	  	  	if(alt) {
-	  	  		style := "b";
-	  	  		alt := false;
-	  	  	} else {
-	  	  		alt := true;
-	  	  		style := "a";
-	  	  	}
-	  	  	list.add("<div class=\"nolinenumber" + style +"\">...</div>\n<div class=\"linenumber" + style +"\"> </div>" + s);
-	    }
-  	  } else {
-  	  	list.add(/(^\d+)\s?/.replaceAll("<div class=\"linenumber" + style +"\">$1</div>", s));
-  	  }  	  
-  }
-  return list;
-}
-
-  define ajax paginatedTemplate(searcher :EntrySearcher, resultsPerPage : Int, namespace : String){
+  define ajax paginatedTemplate(searcher :EntrySearcher, resultsPerPage : Int, pageNum : Int, namespace : String){
 
   		if(searcher.query().length() > 0) {
   			viewFacets(searcher, resultsPerPage, namespace)
   		}
 	    placeholder resultArea{
-	        paginatedResults(searcher,1,resultsPerPage)
+	        paginatedResults(searcher, pageNum, resultsPerPage)
 	    }
     
   }
   
-  define viewFacets(searcher :EntrySearcher, resultsPerPage : Int, namespace : String){
+  define viewFacets(searcher : EntrySearcher, resultsPerPage : Int, namespace : String){
   	var hasSelection := [f | f : Facet in searcher.getFilteredFacets() where !f.isMustNot() ].length > 0;
    	if (namespace.length() > 0) {
 		div[id="facet-selection"]{
@@ -142,19 +123,19 @@ function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
 		        	div[class="excludedFacet"]{
 			        	if(f.isSelected()) {
 			        		includeFacetSym()
-			        		submitlink action{replace(resultAndfacetArea, paginatedTemplate(searcher.removeFilteredFacet(f), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
+			        		submitlink updateResults(searcher.removeFilteredFacet(f)){output(f.getValue()) " (" output(f.getCount()) ")"}
 			          	} else {
 			          		includeFacetSym()
-			          		submitlink action{replace(resultAndfacetArea, paginatedTemplate((~searcher where f.should()), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
+			          		submitlink updateResults(~searcher where f.should()){output(f.getValue()) " (" output(f.getCount()) ")"}
 			          	}				          	
 		         	}
 		         } else {
 		         	div[class="includedFacet"]{
 		         		if(f.isSelected()) {
-		          			submitlink action{replace(resultAndfacetArea, paginatedTemplate(searcher.removeFilteredFacet(f), resultsPerPage, namespace));}{excludeFacetSym output(f.getValue()) " (" output(f.getCount()) ") "}
+		          			submitlink updateResults(searcher.removeFilteredFacet(f)){excludeFacetSym output(f.getValue()) " (" output(f.getCount()) ") "}
 		          		} else {
-		          			submitlink action{replace(resultAndfacetArea, paginatedTemplate( (~searcher where f.mustNot() ), resultsPerPage, namespace));}{excludeFacetSym}
-		          			submitlink action{replace(resultAndfacetArea, paginatedTemplate((~searcher where f.should()), resultsPerPage, namespace));}{output(f.getValue()) " (" output(f.getCount()) ")"}
+		          			submitlink updateResults(~searcher where f.mustNot() ) {excludeFacetSym}
+		          			submitlink updateResults(~searcher where f.should()  ) {output(f.getValue()) " (" output(f.getCount()) ")"}
 		          			" " 
 		          		}
 		          	}        	
@@ -162,6 +143,13 @@ function highlightedResult(entry:Entry,searcher : EntrySearcher):List<String>{
 	        }
   	 	}
   	 }
+  	 
+  	action updateResults(searcher : EntrySearcher){  		    
+	    replace(resultAndfacetArea, paginatedTemplate(searcher, 10, 1, namespace));
+	    //HTML5 feature, replace url without causing page reload
+	    runscript("window.history.replaceState('','','"+navigate(search(searcher, namespace))+"');");
+    }
+  
   }
   
   define excludeFacetSym(){
@@ -237,22 +225,78 @@ native class org.webdsl.search.SearchHelper as SearchHelper {
   }
 
 define page showFile(searcher : EntrySearcher, cf : Entry){
-  var linkText : String;
-  var location : String;
-  var highlighted : String;
+  var linkText    : String;
+  var location    : String;
+  var lineNumbers : String;
+  var codeLines   : String;  
+  var highlighted : List<List<String>>;
+  
   init{
   	linkText := cf.name;
     location := cf.url.substring(0, cf.url.length() - cf.name.length() );
-    highlighted := searcher.highlight("content", cf.content, "$OHL$","$CHL$", 1, 9000000, " ");
-    if( highlighted.length() == 0 ){
-    	highlighted := cf.content;
-    }
+    highlighted := highlightedCodeLineLists( searcher, cf, 1000000, 2 );
+    if( highlighted[0].length != 0 ){
+    	lineNumbers := highlighted[0].concat("<br />");
+    	codeLines := highlighted[1].concat("<br />");
+    	
+    	//add anchors
+    	lineNumbers := />(\d+)</.replaceAll( "><a name=\"$1\">$1</a><", lineNumbers );
+    } else {
+    	lineNumbers := "";
+    	codeLines := cf.content;
+    }    
   }
   div[class="searchresultlink"]{
     navigate(url(cf.url)){ div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b> } 
   }
-  div[class="searchresulthighlight"]{ 
-    <pre>rawoutput( /(^|\n)(\d+)\s?([^\r\n$])/.replaceAll("$1<div class=\"linenumberb\"><a name=\"$2\"></a>$2</div>$3", rendertemplate(output(highlighted)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>")))</pre>
-  }
+  <div class="searchresulthighlight">
+   	 <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(lineNumbers)</div>
+   	 <div class="codearea" style="left: 3.1em;"><pre style="WHITE-SPACE: pre">rawoutput(codeLines)</pre></div>
+   </ div>
 }
 
+function highlightedCodeLineLists(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int) : List<List<String>>{
+  var raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%newFragment%\n");
+  var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>");
+  var splitted := highlighted.split("\n");
+  var listCode := List<String>();
+  var listLines := List<String>();
+  var lists := List<List<String>>();
+  var lineNum : String;
+  var alt := false;
+  var style := "b";
+  for(s:String in splitted){
+  	//We alternate between style a and b for different fragments
+    if(/^%newFragment%/.find(s)){
+	  if(alt) {
+	  	style := "b";
+	  	alt := false;
+	  } else {
+	  	alt := true;
+	  	style := "a";
+	  }
+	  listLines.add("<div class=\"nolinenumber" + style +"\">...</div>" );
+	  listCode.add("");  	  	
+	} else {
+	  //If highlighted text doesnt contain the linenumber at the beginning, put a hyphen as line number
+	  if(/^\D/.find(s)){
+	    listLines.add("<div class=\"linenumber" + style + "\">-</div>");
+	    listCode.add(s);
+	  } else {
+	    // code with a line number at line start are in form:
+	  	// '34 foo:bar '
+	  	//, where the first whitespace belongs to the line number
+	  	lineNum := /^(\d+).*/.replaceFirst("$1", s);
+	  	listLines.add("<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + lineNum + "</div>" );
+	  	if (s.length() != lineNum.length()){
+	  	  listCode.add(s.substring(lineNum.length() + 1));
+	    } else {
+	  	  listCode.add("");
+	  	}
+	  } 
+	}
+  }
+  lists.add(listLines);
+  lists.add(listCode);
+  return lists;	
+}

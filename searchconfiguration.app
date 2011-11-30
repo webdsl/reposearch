@@ -19,13 +19,13 @@ analyzer extension_analyzer{
 }
 
 default analyzer code_analyzer{
-  charfilter = PatternReplaceCharFilter(pattern="^\\d+\\s", replacement="")
+  charfilter = PatternReplaceCharFilter(pattern="^\\d+\\s", replacement="") //strip off line numbers
   tokenizer = PatternTokenizer(pattern="[a-zA-Z0-9\\_]+|[!-/:-@\\[-\\^{-~`]", group="0")
   tokenfilter = LowerCaseFilter
 }
 
 analyzer code_analyzer_casesensitive{
-  charfilter = PatternReplaceCharFilter(pattern="^\\d+\\s", replacement="")
+  charfilter = PatternReplaceCharFilter(pattern="^\\d+\\s", replacement="") //strip off line numbers
   tokenizer = PatternTokenizer(pattern="[a-zA-Z0-9\\-\\_]+|[!-/:-@\\[-\\^{-~`]", group="0")
 }
 
