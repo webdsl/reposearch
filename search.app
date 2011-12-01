@@ -1,11 +1,10 @@
 module search
 
-define page search(namespace:String, q:String){  
-
+define page search(namespace:String, q:String){
   searchBar(toSearcher(q, namespace), namespace)
 }
 
-define override page search(searcher : EntrySearcher, namespace:String){
+define page doSearch(searcher : EntrySearcher, namespace:String){
 	searchBar(searcher, namespace)
 }
 
@@ -17,13 +16,11 @@ define searchBar (entrySearcher : EntrySearcher, namespace : String){
   includeJS("completion.js")
   var source := "/autocompleteService"+"/"+namespace;
   var searcher := entrySearcher;
-  var query := searcher.query();
-  
+  var query := searcher.query();  
   
   <script>
     setupcompletion("~source");
-  </script>
-  
+  </script>  
 
   form {
   	<div class="ui-widget">
@@ -31,13 +28,17 @@ define searchBar (entrySearcher : EntrySearcher, namespace : String){
 	submit action{return search(namespace,query);} {"search"}
 	</div>    
   }  
-    
+  
   action updateResults(){
-    searcher := toSearcher(query,namespace); //update with entered query
-    
-    replace(resultAndfacetArea, paginatedTemplate(searcher, 10, 1, namespace));
-    //HTML5 feature, replace url without causing page reload
-    runscript("window.history.replaceState('','','"+navigate(search(namespace,query))+"');");
+  	if(query.length() > 0){
+  		
+	    searcher := toSearcher(query,namespace); //update with entered query
+	    
+	    replace(resultAndfacetArea, paginatedTemplate(searcher, 10, 1, namespace));
+	    //HTML5 feature, replace url without causing page reload
+	    log("window.history.replaceState(\"\",\"\",\"" + navigate(doSearch(searcher, namespace) ) + "\");");
+	    runscript("window.history.replaceState(\"\",\"\",\"" + navigate(doSearch(searcher, namespace) ) + "\");");
+    }
   }
   
   placeholder resultAndfacetArea{
@@ -115,6 +116,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   
   define viewFacets(searcher : EntrySearcher, resultsPerPage : Int, namespace : String){
   	var hasSelection := [f | f : Facet in searcher.getFilteredFacets() where !f.isMustNot() ].length > 0;
+  	
    	if (namespace.length() > 0) {
 		div[id="facet-selection"]{
   			div{<i>"Filter on file extension:"</i>}	
@@ -126,13 +128,14 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
 			        		submitlink updateResults(searcher.removeFilteredFacet(f)){output(f.getValue()) " (" output(f.getCount()) ")"}
 			          	} else {
 			          		includeFacetSym()
-			          		submitlink updateResults(~searcher where f.should()){output(f.getValue()) " (" output(f.getCount()) ")"}
+			          		submitlink updateResults(bla(~searcher where f.should())){output(f.getValue()) " (" output(f.getCount()) ")"}
 			          	}				          	
 		         	}
 		         } else {
 		         	div[class="includedFacet"]{
 		         		if(f.isSelected()) {
-		          			submitlink updateResults(searcher.removeFilteredFacet(f)){excludeFacetSym output(f.getValue()) " (" output(f.getCount()) ") "}
+		          			 submitlink updateResults(searcher.removeFilteredFacet(f)){excludeFacetSym output(f.getValue()) " (" output(f.getCount()) ") "}
+		          			//submitlink updateResults(searcher){excludeFacetSym output(f.getValue()) " (" output(f.getCount()) ") "}
 		          		} else {
 		          			submitlink updateResults(~searcher where f.mustNot() ) {excludeFacetSym}
 		          			submitlink updateResults(~searcher where f.should()  ) {output(f.getValue()) " (" output(f.getCount()) ")"}
@@ -147,9 +150,13 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   	action updateResults(searcher : EntrySearcher){  		    
 	    replace(resultAndfacetArea, paginatedTemplate(searcher, 10, 1, namespace));
 	    //HTML5 feature, replace url without causing page reload
-	    runscript("window.history.replaceState('','','"+navigate(search(searcher, namespace))+"');");
+	    runscript("window.history.pushState('"+navigate(doSearch(searcher, namespace))+"','"+navigate(doSearch(searcher, namespace))+"','"+navigate(doSearch(searcher, namespace))+"');");
     }
   
+  }
+  
+  function bla(searcher : EntrySearcher):EntrySearcher{
+  	return searcher;
   }
   
   define excludeFacetSym(){

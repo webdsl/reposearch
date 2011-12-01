@@ -71,6 +71,7 @@ page renewAdmin(){
 	rule page init(*){true}
 	rule page dologin(){true}
 	rule page renewAdmin(){loggedIn()}
+	rule page doSearch(*){ true }
 
 
 
