@@ -1,14 +1,14 @@
 module search
 
 define page search(namespace:String, q:String){
-  searchBar(toSearcher(q, namespace), namespace)
+  showSearch(toSearcher(q, namespace), namespace, 1)
 }
 
-define page doSearch(searcher : EntrySearcher, namespace:String){
-	searchBar(searcher, namespace)
+define page doSearch(searcher : EntrySearcher, namespace:String, pageNum: Int){
+	showSearch(searcher, namespace, pageNum)
 }
 
-define searchBar (entrySearcher : EntrySearcher, namespace : String){
+define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: Int){
   navigate(root()){"return to home"}
   includeJS("jquery-1.5.min.js")
   includeJS("jquery-ui-1.8.9.custom.min.js")
@@ -30,20 +30,17 @@ define searchBar (entrySearcher : EntrySearcher, namespace : String){
   }  
   
   action updateResults(){
-  	if(query.length() > 0){
-  		
-	    searcher := toSearcher(query,namespace); //update with entered query
-	    
-	    replace(resultAndfacetArea, paginatedTemplate(searcher, 10, 1, namespace));
+  	if(query.length() > 0){  		  		
+	    searcher := toSearcher(query,namespace); //update with entered query	      
+	    replace(resultAndfacetArea, paginatedTemplate(searcher, 10, 1, namespace));	    
 	    //HTML5 feature, replace url without causing page reload
-	    log("window.history.replaceState(\"\",\"\",\"" + navigate(doSearch(searcher, namespace) ) + "\");");
-	    runscript("window.history.replaceState(\"\",\"\",\"" + navigate(doSearch(searcher, namespace) ) + "\");");
+	    runscript("window.history.replaceState('','','" + navigate(doSearch(searcher, namespace, 1) ) + "');");
     }
   }
   
   placeholder resultAndfacetArea{
 	  if (query.length() > 0){
-	  	 paginatedTemplate(searcher, 10, 1, namespace)
+	  	 paginatedTemplate(searcher, 10, pageNum, namespace)
 	  }
   }
 }
@@ -56,14 +53,6 @@ service autocompleteService(namespace:String, term : String){
     jsonArray.put(sug);    
   }  
   return jsonArray;
-}
-
-function toSearcher(q:String, ns:String) : EntrySearcher{
-  var searcher := search Entry matching q in namespace ns [nolucene, strict matching];   
-  if (ns.length() > 0) {
-      ~searcher with facets (file_ext, 60);
-  }
-  return searcher;
 }
 
 define navWithAnchor(n:String,a:String){
@@ -103,13 +92,13 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
    
 }
 
-  define ajax paginatedTemplate(searcher :EntrySearcher, resultsPerPage : Int, pageNum : Int, namespace : String){
+  define ajax paginatedTemplate(searcher :EntrySearcher, resultsPerPage : Int, pageNum : Int, ns : String){
 
   		if(searcher.query().length() > 0) {
-  			viewFacets(searcher, resultsPerPage, namespace)
+  			viewFacets(searcher, resultsPerPage, ns)
   		}
 	    placeholder resultArea{
-	        paginatedResults(searcher, pageNum, resultsPerPage)
+	        paginatedResults(searcher, pageNum, resultsPerPage, ns)
 	    }
     
   }
@@ -128,14 +117,13 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
 			        		submitlink updateResults(searcher.removeFilteredFacet(f)){output(f.getValue()) " (" output(f.getCount()) ")"}
 			          	} else {
 			          		includeFacetSym()
-			          		submitlink updateResults(bla(~searcher where f.should())){output(f.getValue()) " (" output(f.getCount()) ")"}
+			          		submitlink updateResults(~searcher where f.should()){output(f.getValue()) " (" output(f.getCount()) ")"}
 			          	}				          	
 		         	}
 		         } else {
 		         	div[class="includedFacet"]{
 		         		if(f.isSelected()) {
 		          			 submitlink updateResults(searcher.removeFilteredFacet(f)){excludeFacetSym output(f.getValue()) " (" output(f.getCount()) ") "}
-		          			//submitlink updateResults(searcher){excludeFacetSym output(f.getValue()) " (" output(f.getCount()) ") "}
 		          		} else {
 		          			submitlink updateResults(~searcher where f.mustNot() ) {excludeFacetSym}
 		          			submitlink updateResults(~searcher where f.should()  ) {output(f.getValue()) " (" output(f.getCount()) ")"}
@@ -148,15 +136,9 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   	 }
   	 
   	action updateResults(searcher : EntrySearcher){  		    
-	    replace(resultAndfacetArea, paginatedTemplate(searcher, 10, 1, namespace));
-	    //HTML5 feature, replace url without causing page reload
-	    runscript("window.history.pushState('"+navigate(doSearch(searcher, namespace))+"','"+navigate(doSearch(searcher, namespace))+"','"+navigate(doSearch(searcher, namespace))+"');");
+	    return doSearch(searcher, namespace, 1);
     }
   
-  }
-  
-  function bla(searcher : EntrySearcher):EntrySearcher{
-  	return searcher;
   }
   
   define excludeFacetSym(){
@@ -166,7 +148,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   	<div class="includefacetsym">"v"</div>
   }
 
-  define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, resultsPerPage : Int){
+  define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, resultsPerPage : Int, namespace : String){
     var resultList := get results(~searcher start ((pagenumber - 1) * resultsPerPage) limit resultsPerPage);
     var size := get size(searcher);
     var lastResult := size;
@@ -175,7 +157,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
         lastResult := pagenumber * resultsPerPage;
       }
     }
-    
+        
     if(searcher.query().length()>0){
       div{
         if(size > 0) {	      
@@ -188,12 +170,12 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
         highlightedResult(e, searcher) 
       }
       par{
-        resultIndex(searcher, pagenumber, resultsPerPage)
+        resultIndex(searcher, pagenumber, resultsPerPage, namespace)
       }
     }
   }
   
-  define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int){  		
+  define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int, ns : String){  		
     var totalPages := (get size(searcher).floatValue() / resultsPerPage.floatValue()).ceil()
     var start : Int := SearchHelper.firstIndexLink(pagenumber,totalPages, 9) //9 index links at most
     var end : Int := SearchHelper.lastIndexLink(pagenumber,totalPages, 9)
@@ -203,11 +185,11 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
         submit("<", showResultsPage(searcher, pagenumber-1, resultsPerPage))
       }	
       for(pagenum:Int from start to pagenumber){
-       gotoresultpage(searcher, pagenum, resultsPerPage)
+       gotoresultpage(searcher, pagenum, resultsPerPage, ns)
       }
       "-"output(pagenumber)"-"  	
       for(pagenum:Int from pagenumber+1 to end+1){
-       gotoresultpage(searcher, pagenum, resultsPerPage)	
+       gotoresultpage(searcher, pagenum, resultsPerPage, ns)	
       }	 
       if(pagenumber < totalPages){
         submit(">", showResultsPage(searcher, pagenumber+1, resultsPerPage))
@@ -215,15 +197,12 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
       }
     }
     action showResultsPage(searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int){
-      replace(resultArea, paginatedResults(searcher, pagenumber, resultsPerPage));
+      replace(resultArea, paginatedResults(searcher, pagenumber, resultsPerPage, ns));
     } 
   }
   
-  define gotoresultpage(searcher: EntrySearcher, pagenum: Int, resultsPerPage: Int){
-    submit(pagenum, showResultsPage(searcher, pagenum, resultsPerPage))
-    action showResultsPage(searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int){
-      replace(resultArea, paginatedResults(searcher, pagenumber, resultsPerPage));
-    }	
+  define gotoresultpage(searcher: EntrySearcher, pagenum: Int, resultsPerPage: Int, ns : String){
+    submit action{return doSearch(searcher, ns, pagenum);}{output(pagenum)}
   } 
 
 native class org.webdsl.search.SearchHelper as SearchHelper {
@@ -244,9 +223,8 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
     highlighted := highlightedCodeLineLists( searcher, cf, 1000000, 2 );
     if( highlighted[0].length != 0 ){
     	lineNumbers := highlighted[0].concat("<br />");
-    	codeLines := highlighted[1].concat("<br />");
-    	
-    	//add anchors
+    	codeLines := highlighted[1].concat("<br />");    	
+    	//add line number anchors
     	lineNumbers := />(\d+)</.replaceAll( "><a name=\"$1\">$1</a><", lineNumbers );
     } else {
     	lineNumbers := "";
@@ -262,8 +240,16 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
    </ div>
 }
 
+function toSearcher(q:String, ns:String) : EntrySearcher{
+  var searcher := search Entry matching q in namespace ns [nolucene, strict matching];   
+  if (ns.length() > 0) {
+      ~searcher with facets (file_ext, 60);
+  }
+  return searcher;
+}
+
 function highlightedCodeLineLists(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int) : List<List<String>>{
-  var raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%newFragment%\n");
+  var raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
   var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>");
   var splitted := highlighted.split("\n");
   var listCode := List<String>();
@@ -274,7 +260,7 @@ function highlightedCodeLineLists(searcher : EntrySearcher, entry : Entry, fragm
   var style := "b";
   for(s:String in splitted){
   	//We alternate between style a and b for different fragments
-    if(/^%newFragment%/.find(s)){
+    if(/^%frgmtsep%/.find(s)){
 	  if(alt) {
 	  	style := "b";
 	  	alt := false;
@@ -285,19 +271,21 @@ function highlightedCodeLineLists(searcher : EntrySearcher, entry : Entry, fragm
 	  listLines.add("<div class=\"nolinenumber" + style +"\">...</div>" );
 	  listCode.add("");  	  	
 	} else {
-	  //If highlighted text doesnt contain the linenumber at the beginning, put a hyphen as line number
+	  //If line number is stripped off by highlighting, put a hyphen as line number
 	  if(/^\D/.find(s)){
 	    listLines.add("<div class=\"linenumber" + style + "\">-</div>");
 	    listCode.add(s);
 	  } else {
-	    // code with a line number at line start are in form:
-	  	// '34 foo:bar '
-	  	//, where the first whitespace belongs to the line number
+	    // line numbers are added at the beginning of code lines followed by a whitespace 
+	    // original: 'foo:bar'
+	  	// modified: '34 foo:bar '
 	  	lineNum := /^(\d+).*/.replaceFirst("$1", s);
 	  	listLines.add("<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + lineNum + "</div>" );
+	  	
 	  	if (s.length() != lineNum.length()){
 	  	  listCode.add(s.substring(lineNum.length() + 1));
 	    } else {
+	      //if code line itself is an empty line, substring will encounter an empty string -> exception
 	  	  listCode.add("");
 	  	}
 	  } 
