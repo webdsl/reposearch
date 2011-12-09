@@ -68,11 +68,11 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   init{
   	highlightedContent := highlightedCodeLineLists(searcher, cf, 150, 2);
   	ruleOffset := "";
-  	if(highlightedContent.length > 0){
+  	if(highlightedContent[0].length > 0){
   		ruleOffset := /\D+>(\d+).*/.replaceFirst("$1",highlightedContent[0][0]);
   	}
   	if(ruleOffset.length() > 5){
-  		if(highlightedContent.length > 1){
+  		if(highlightedContent[0].length > 1){
   			ruleOffset := /\D+\>(\d+).*/.replaceFirst("$1",highlightedContent[0][1]);
   		}
   		if(ruleOffset.length() > 5) {
@@ -106,34 +106,34 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   define viewFacets(searcher : EntrySearcher, resultsPerPage : Int, namespace : String){
   	var hasSelection := [f | f : Facet in searcher.getFilteredFacets() where !f.isMustNot() ].length > 0;
   	
-   	if (namespace.length() > 0) {
-		div[id="facet-selection"]{
-  			div{<i>"Filter on file extension:"</i>}	
-	        for(f : Facet in get all facets(searcher, file_ext) ) {
-		        if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
-		        	div[class="excludedFacet"]{
-			        	if(f.isSelected()) {
-			        		includeFacetSym()
-			        		submitlink updateResults(searcher.removeFilteredFacet(f)){output(f.getValue()) " (" output(f.getCount()) ")"}
-			          	} else {
-			          		includeFacetSym()
-			          		submitlink updateResults(~searcher where f.should()){output(f.getValue()) " (" output(f.getCount()) ")"}
-			          	}				          	
-		         	}
-		         } else {
-		         	div[class="includedFacet"]{
-		         		if(f.isSelected()) {
-		          			 submitlink updateResults(searcher.removeFilteredFacet(f)){excludeFacetSym output(f.getValue()) " (" output(f.getCount()) ") "}
-		          		} else {
-		          			submitlink updateResults(~searcher where f.mustNot() ) {excludeFacetSym}
-		          			submitlink updateResults(~searcher where f.should()  ) {output(f.getValue()) " (" output(f.getCount()) ")"}
-		          			" " 
-		          		}
-		          	}        	
-		        }
+
+	div[id="facet-selection"]{
+		div{<i>"Filter on file extension:"</i>}	
+        for(f : Facet in get all facets(searcher, file_ext) ) {
+	        if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
+	        	div[class="excludedFacet"]{
+		        	if(f.isSelected()) {
+		        		includeFacetSym()
+		        		submitlink updateResults(searcher.removeFilteredFacet(f)){output(f.getValue()) " (" output(f.getCount()) ")"}
+		          	} else {
+		          		includeFacetSym()
+		          		submitlink updateResults(~searcher where f.should()){output(f.getValue()) " (" output(f.getCount()) ")"}
+		          	}				          	
+	         	}
+	         } else {
+	         	div[class="includedFacet"]{
+	         		if(f.isSelected()) {
+	          			 submitlink updateResults(searcher.removeFilteredFacet(f)){excludeFacetSym output(f.getValue()) " (" output(f.getCount()) ") "}
+	          		} else {
+	          			submitlink updateResults(~searcher where f.mustNot() ) {excludeFacetSym}
+	          			submitlink updateResults(~searcher where f.should()  ) {output(f.getValue()) " (" output(f.getCount()) ")"}
+	          			" " 
+	          		}
+	          	}        	
 	        }
-  	 	}
-  	 }
+        }
+ 	}
+
   	 
   	action updateResults(searcher : EntrySearcher){  		    
 	    return doSearch(searcher, namespace, 1);
@@ -241,16 +241,13 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
 }
 
 function toSearcher(q:String, ns:String) : EntrySearcher{
-  var searcher := search Entry matching q in namespace ns [nolucene, strict matching];   
-  if (ns.length() > 0) {
-      ~searcher with facets (file_ext, 60);
-  }
+  var searcher := search Entry matching q in namespace ns with facets (file_ext, 120) [nolucene, strict matching];   
   return searcher;
 }
 
 function highlightedCodeLineLists(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int) : List<List<String>>{
   var raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
-  var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>");
+  var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>");//.replace("\r", "");
   var splitted := highlighted.split("\n");
   var listCode := List<String>();
   var listLines := List<String>();
@@ -269,7 +266,7 @@ function highlightedCodeLineLists(searcher : EntrySearcher, entry : Entry, fragm
 	  	style := "a";
 	  }
 	  listLines.add("<div class=\"nolinenumber" + style +"\">...</div>" );
-	  listCode.add("");  	  	
+	  listCode.add("");
 	} else {
 	  //If line number is stripped off by highlighting, put a hyphen as line number
 	  if(/^\D/.find(s)){
@@ -281,7 +278,6 @@ function highlightedCodeLineLists(searcher : EntrySearcher, entry : Entry, fragm
 	  	// modified: '34 foo:bar '
 	  	lineNum := /^(\d+).*/.replaceFirst("$1", s);
 	  	listLines.add("<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + lineNum + "</div>" );
-	  	
 	  	if (s.length() != lineNum.length()){
 	  	  listCode.add(s.substring(lineNum.length() + 1));
 	    } else {

@@ -326,6 +326,7 @@ public class Svn {
     }
     
     private static String addLines(String content){
+    	  content = content.replaceAll("\n\r|\r\n|\r", "\n");
     	  String[] lines = content.split("\n");
     	  StringBuilder sb = new StringBuilder();
     	  int cnt = 1;
