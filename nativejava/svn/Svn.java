@@ -66,6 +66,7 @@ public class Svn {
         List<Entry> list;
         try {
             dst = Files.createTempDir();
+            System.out.println("Checking out repo: " + repo1);
             System.out.println("temp dir: " + dst);
             SVNURL svnurl = SVNURL.parseURIEncoded(repo1);
 
