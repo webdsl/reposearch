@@ -76,10 +76,10 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   			ruleOffset := /\D+\>(\d+).*/.replaceFirst("$1",highlightedContent[0][1]);
   		}
   		if(ruleOffset.length() > 5) {
-  			ruleOffset := "";
+  			ruleOffset := "1";
   		}
   	}
-  	
+  	ruleOffset := "" + (ruleOffset.parseInt() - 3);
   }
   
   div[class="searchresultlink"]{
@@ -181,27 +181,27 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
     var end : Int := SearchHelper.lastIndexLink(pagenumber,totalPages, 9)
     if(totalPages > 1){
       if (pagenumber > 1){
-        submit("|<<", showResultsPage(searcher, 1, resultsPerPage))
-        submit("<", showResultsPage(searcher, pagenumber-1, resultsPerPage))
+        submit("|<<", showResultsPage(searcher, 1))
+        submit("<", showResultsPage(searcher, pagenumber-1))
       }	
       for(pagenum:Int from start to pagenumber){
-       gotoresultpage(searcher, pagenum, resultsPerPage, ns)
+       gotoresultpage(searcher, pagenum, ns)
       }
       "-"output(pagenumber)"-"  	
       for(pagenum:Int from pagenumber+1 to end+1){
-       gotoresultpage(searcher, pagenum, resultsPerPage, ns)	
+       gotoresultpage(searcher, pagenum, ns)	
       }	 
       if(pagenumber < totalPages){
-        submit(">", showResultsPage(searcher, pagenumber+1, resultsPerPage))
-        submit(">>|", showResultsPage(searcher, totalPages, resultsPerPage))
+        submit(">", showResultsPage(searcher, pagenumber+1))
+        submit(">>|", showResultsPage(searcher, totalPages))
       }
     }
-    action showResultsPage(searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int){
-      replace(resultArea, paginatedResults(searcher, pagenumber, resultsPerPage, ns));
+    action showResultsPage(searcher: EntrySearcher, pagenumber : Int){
+      return doSearch(searcher, ns, pagenumber);
     } 
   }
   
-  define gotoresultpage(searcher: EntrySearcher, pagenum: Int, resultsPerPage: Int, ns : String){
+  define gotoresultpage(searcher: EntrySearcher, pagenum: Int, ns : String){
     submit action{return doSearch(searcher, ns, pagenum);}{output(pagenum)}
   } 
 
