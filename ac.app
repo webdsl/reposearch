@@ -66,6 +66,9 @@ page renewAdmin(){
     rule page manage(){loggedIn()}    
     rule ajaxtemplate paginatedTemplate(*){true}
 	rule ajaxtemplate paginatedResults(*){true}
+	rule ajaxtemplate addRepo(*){true}
+	rule ajaxtemplate addRepoBtn(*){true}
+	rule ajaxtemplate showRepos(*){true}
 	rule page skippedFiles(*){true}
 	rule page autocompleteService(*){true}
 	rule page init(*){true}

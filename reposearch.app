@@ -7,8 +7,8 @@ application reposearch
   define page root(){
     
     navigate(search("", "")){"Search all projects"}
-      <br/>
-    for(p:Project){
+      <br/> <br/>
+    for(p:Project order by p.name){
       navigate(search(p.name, "")){"Search " output(p.name)}
       <br/>
     }
@@ -58,9 +58,8 @@ application reposearch
   
   define page manage(){
     var p := ""
-    var n :URL
-    var gu:String
-    var gr:String
+
+
         
     navigate(root()){"return to home"}
     form{
@@ -69,30 +68,18 @@ application reposearch
     }
     <br/>
     for(pr:Project){
-      div{"Project: " <b>output(pr.name)</b> " [" submitlink("remove", removeProject(pr))"]"}
-      div{
-        "Repositories: "
-        for(r:Repo in pr.repos){
-          showrepo(pr,r)
-        }
-      }
-      div{
-        form{
-          "SVN: "
-          input(n)
-          submit action{ pr.repos.add(SvnRepo{url:=n}); } {"Add repository"}
-        }
-        form{
-          "Github user: "
-          input(gu)
-          " repository: "
-          input(gr)
-          submit action{ pr.repos.add(GithubRepo{user:=gu repo:=gr}); } {"Add repository"}
-        }
-      }
-      <br/>
+      
+      div[class="top-container"]{"Project: " <b>output(pr.name)</b> " [" submitlink("remove", removeProject(pr))"]"}
+      div[class="main-container"]{
+      	  placeholder reposPH{
+	        showRepos(pr)
+          }     
+	      placeholder addRepoPH{
+	      	addRepoBtn(pr)
+	      }
+	  }
     }
-    
+        
     action removeProject(pr : Project){
     	for(r:Repo in pr.repos){
     		deleteRepoEntries(r);
@@ -114,8 +101,41 @@ application reposearch
     	 } {"REFRESH ALL REPOSITORIES (with checkout)"}
   }
   
+  define ajax addRepoBtn(pr : Project){
+  	submit action{ replace(addRepoPH, addRepo(pr));} {"Add repository"}
+  }
+  
+  define ajax showRepos(pr : Project){
+  	for(r:Repo in pr.repos){
+	  showrepo(pr,r)
+	}
+  }
+  
+  define ajax addRepo(pr : Project){
+  	var gu:String
+    var gr:String
+    var n :URL
+  	div[class="new-repo"]{
+	        form{
+	          "SVN: "
+	          input(n)
+	          submit action{ pr.repos.add(SvnRepo{url:=n}); replace(addRepoPH, addRepoBtn(pr)); replace(reposPH, showRepos(pr));} {"Add repository"}
+	        }
+	        form{
+	          "Github user: "
+	          input(gu)
+	          " repository: "
+	          input(gr)
+	          submit action{ pr.repos.add(GithubRepo{user:=gu repo:=gr}); replace(addRepoPH, addRepoBtn(pr)); replace(reposPH, showRepos(pr)); } {"Add repository"}
+	        }
+	}
+	div{
+		submit action{ replace(addRepoPH, addRepoBtn(pr));} {"Cancel"}
+	}
+  }
+  
   define showrepo(p:Project, r:Repo){
-    div{
+    div[class="show-repo"]{
       if(r isa SvnRepo){
         "SVN: " 
         output((r as SvnRepo).url)
@@ -126,28 +146,27 @@ application reposearch
         " " 
         output((r as GithubRepo).repo)
       }
-    }
-    div{
+      div{
+	      if(r.refresh){
+	        "REFRESH SCHEDULED"
+	        submit action{cancelQueryRepo(r);} {"Cancel refresh"}  
+	      }
+	      else{
+	        submit action{queryRepo(r);} {"Refresh (checkout)"}  
+	        if(r isa SvnRepo){  	
+	          submit action{queryRepoSVN(r);} {"Refresh (no checkout)"}  
+	        }	
+	      }
+	      submit action{p.repos.remove(r);deleteRepoEntries(r); replace(reposPH, showRepos(p));} {"Remove"}
+	      submit action{return skippedFiles(r);}{"skipped files"}
+      }
       if(r.error){
-        "ERROR OCCURRED DURING REFRESH"
+      	div{
+      	  "ERROR OCCURRED DURING REFRESH"
+      	}
       }
     }
-    div{
-      if(r.refresh){
-        "REFRESH SCHEDULED"
-        submit action{cancelQueryRepo(r);} {"Cancel refresh"}  
-      }
-      else{
-        submit action{queryRepo(r);} {"Refresh with checkout"}  
-        if(r isa SvnRepo){  	
-          submit action{queryRepoSVN(r);} {"Refresh SVN without checkout"}  
-        }  	
-      }
-    }
-    div{
-      submit action{p.repos.remove(r);deleteRepoEntries(r);} {"Remove"}
-      submit action{return skippedFiles(r);}{"skipped files"}
-    }
+    
   }
   
   define page skippedFiles(r : Repo){

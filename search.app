@@ -25,7 +25,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
   form {
   	<div class="ui-widget">
     input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()]
-	submit action{return search(namespace,query);} {"search"}
+	submit action{return search(namespace,query);} {"search " output(namespace)}
 	</div>    
   }  
   
@@ -66,7 +66,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   var location := cf.url.substring(0, cf.url.length() - cf.name.length() );
   
   init{
-  	highlightedContent := highlightedCodeLineLists(searcher, cf, 150, 2);
+  	highlightedContent := highlightCodeLines(searcher, cf, 150, 2);
   	ruleOffset := "";
   	if(highlightedContent[0].length > 0){
   		ruleOffset := /\D+>(\d+).*/.replaceFirst("$1",highlightedContent[0][0]);
@@ -82,12 +82,12 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   	ruleOffset := "" + (ruleOffset.parseInt() - 3);
   }
   
-  div[class="searchresultlink"]{
-  	navWithAnchor(navigate(showFile(searcher, cf)), ruleOffset){div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b>}    
+  div[class="search-result-link"]{
+  	navWithAnchor(navigate(showFile(searcher, cf)), ruleOffset){div[class="search-result-location"]{ output(location) } <b>output(linkText)</b>}    
   }
-   <div class="searchresulthighlight">
+   <div class="search-result-highlight">
    	 <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(highlightedContent[0].concat("<br />"))</div>
-   	 <div class="codearea" style="left: 3.1em;"><pre style="WHITE-SPACE: pre">rawoutput(highlightedContent[1].concat("<br />"))</pre></div>
+   	 <div class="code-area" style="left: 3.1em;"><pre style="WHITE-SPACE: pre">rawoutput(highlightedContent[1].concat("<br />"))</pre></div>
    </ div>
    
 }
@@ -97,7 +97,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   		if(searcher.query().length() > 0) {
   			viewFacets(searcher, resultsPerPage, ns)
   		}
-	    placeholder resultArea{
+	    div[class="main-container"]{
 	        paginatedResults(searcher, pageNum, resultsPerPage, ns)
 	    }
     
@@ -107,11 +107,11 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   	var hasSelection := [f | f : Facet in searcher.getFilteredFacets() where !f.isMustNot() ].length > 0;
   	
 
-	div[id="facet-selection"]{
+	div[class="top-container"]{
 		div{<i>"Filter on file extension:"</i>}	
         for(f : Facet in get all facets(searcher, file_ext) ) {
 	        if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
-	        	div[class="excludedFacet"]{
+	        	div[class="excluded-facet"]{
 		        	if(f.isSelected()) {
 		        		includeFacetSym()
 		        		submitlink updateResults(searcher.removeFilteredFacet(f)){output(f.getValue()) " (" output(f.getCount()) ")"}
@@ -121,11 +121,11 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
 		          	}				          	
 	         	}
 	         } else {
-	         	div[class="includedFacet"]{
+	         	div[class="included-facet"]{
 	         		if(f.isSelected()) {
-	          			 submitlink updateResults(searcher.removeFilteredFacet(f)){excludeFacetSym output(f.getValue()) " (" output(f.getCount()) ") "}
+	          			 submitlink updateResults(searcher.removeFilteredFacet(f)){excludeFacetSym() output(f.getValue()) " (" output(f.getCount()) ") "}
 	          		} else {
-	          			submitlink updateResults(~searcher where f.mustNot() ) {excludeFacetSym}
+	          			submitlink updateResults(~searcher where f.mustNot() ) {excludeFacetSym()}
 	          			submitlink updateResults(~searcher where f.should()  ) {output(f.getValue()) " (" output(f.getCount()) ")"}
 	          			" " 
 	          		}
@@ -142,10 +142,10 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   }
   
   define excludeFacetSym(){
-  	<div class="excludefacetsym">"x"</div>  	
+  	<div class="exclude-facet-sym">"x"</div>  	
   }
   define includeFacetSym(){
-  	<div class="includefacetsym">"v"</div>
+  	<div class="include-facet-sym">"v"</div>
   }
 
   define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, resultsPerPage : Int, namespace : String){
@@ -220,7 +220,7 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
   init{
   	linkText := cf.name;
     location := cf.url.substring(0, cf.url.length() - cf.name.length() );
-    highlighted := highlightedCodeLineLists( searcher, cf, 1000000, 2 );
+    highlighted := highlightCodeLines( searcher, cf, 1000000, 2 );
     if( highlighted[0].length != 0 ){
     	lineNumbers := highlighted[0].concat("<br />");
     	codeLines := highlighted[1].concat("<br />");    	
@@ -231,12 +231,12 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
     	codeLines := cf.content;
     }    
   }
-  div[class="searchresultlink"]{
-    navigate(url(cf.url)){ div[class="searchresultlocation"]{ output(location) } <b>output(linkText)</b> } 
+  div[class="search-result-link"]{
+    navigate(url(cf.url)){ div[class="search-result-location"]{ output(location) } <b>output(linkText)</b> } 
   }
-  <div class="searchresulthighlight">
+  <div class="search-result-highlight">
    	 <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(lineNumbers)</div>
-   	 <div class="codearea" style="left: 3.1em;"><pre style="WHITE-SPACE: pre">rawoutput(codeLines)</pre></div>
+   	 <div class="code-area" style="left: 3.1em;"><pre style="WHITE-SPACE: pre">rawoutput(codeLines)</pre></div>
    </ div>
 }
 
@@ -245,7 +245,7 @@ function toSearcher(q:String, ns:String) : EntrySearcher{
   return searcher;
 }
 
-function highlightedCodeLineLists(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int) : List<List<String>>{
+function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int) : List<List<String>>{
   var raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
   var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>");//.replace("\r", "");
   var splitted := highlighted.split("\n");

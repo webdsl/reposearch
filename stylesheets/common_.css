@@ -10,13 +10,14 @@ body {
 }
 .facetarea {
 }
-#facet-selection {
+.top-container {
     background-color: LightSteelBlue;
     border-radius: 15px 15px 0 0;
     margin-right: 10px;
+    margin-top: 3px;
     padding: 10px 10px 15px;
 }
-#resultArea {
+.main-container {
     background-color: white;
     border: 1px solid LightSteelBlue;
     border-radius: 0 0 15px 15px;
@@ -24,14 +25,14 @@ body {
     margin-right: 10px;
     padding: 5px 5px 0 7px;
 }
-#facet-selection:after {
+.top-container:after {
     clear: both;
     content: ".";
     display: block;
     height: 0;
     visibility: hidden;
 }
-.excludedFacet {
+.excluded-facet {
     background-color: LightSteelBlue;
     border-radius: 5px 5px 5px 5px;
     color: #8F8F8F;
@@ -40,7 +41,7 @@ body {
     margin: 4px 5px;
     padding: 0 0 0 3px;
 }
-.includedFacet {
+.included-facet {
     background-color: White;
     border-radius: 5px 5px 5px 5px;
     color: black;
@@ -49,15 +50,15 @@ body {
     margin: 4px 5px;
     padding: 0 0 0 3px;
 }
-.includedFacet a:link, .includedFacet a:visited {
+.included-facet a:link, .included-facet a:visited {
     color: black;
     text-decoration: none;
 }
-.excludedFacet a:link, .excludedFacet a:visited {
+.excluded-facet a:link, .excluded-facet a:visited {
     color: black;
     text-decoration: none;
 }
-.excludefacetsym {
+.exclude-facet-sym {
     background-color: LightSlateGray;
     border-radius: 0 5px 5px 0;
     color: white;
@@ -66,7 +67,7 @@ body {
     margin: 0 0 0 1px;
     padding: 0 3px;
 }
-.includefacetsym {
+.include-facet-sym {
     background-color: LightSlateGray;
     border-radius: 0 5px 5px 0;
     color: white;
@@ -76,10 +77,10 @@ body {
     padding: 0 3px;
     visibility: hidden;
 }
-.includedFacet.minus-image a:link, .includedFacet.minus-image a:visited {
+.included-facet.minus-image a:link, .included-facet.minus-image a:visited {
     color: red;
 }
-.searchresulthighlight {
+.search-result-highlight {
     border: 1px solid LightSlateGrey;
     border-radius: 0 0 5px 5px;
     font-family: monospace,Helvetica,sans-serif;
@@ -91,11 +92,11 @@ body {
     outline: medium none;
     z-index: 1;
 }
-.searchresultlink a:link, .searchresultlink a:visited {
+.search-result-link a:link, .search-result-link a:visited {
     color: white;
     text-decoration: none;
 }
-.searchresultlink {
+.search-result-link {
     background-color: LightSlateGrey;
     border: 1px solid LightSlateGrey;
     border-radius: 5px 5px 0 0;
@@ -105,10 +106,11 @@ body {
 }
 input.button {
     background-color: LightSlateGray;
-    color: white;
+    color: White;
     font-weight: normal;
+    font-family: cursive;
 }
-.searchresultlocation {
+.search-result-location {
     color: white;
     float: right;
     font-size: 13px;
@@ -187,21 +189,25 @@ input.button {
     line-height: 1.25em;
 }
 
-.codearea{
+.code-area{
     line-height: 1.25em;
     display: block;
     top: 4px;
     position: absolute;
 
 }
-.codeline {
+.code-line {
     display: block;
 }
 .highlight {
     background-color: #CCFF66;
 }
-.skippedfileslink a:link, .searchresultlink a:visited {
+.skipped-files-link a:link, .search-result-link a:visited {
     text-decoration: none;
+}
+a:link, a:visited {
+    font-family: Helvetica;
+    color: Black;
 }
 pre {
 
@@ -211,3 +217,49 @@ pre {
     margin-top: 0;
 }
 
+.show-repo {
+    border: 1px solid LightSlateGrey;
+    border-radius: 0 0 5px 5px;
+    font-family: monospace,Helvetica,sans-serif;
+    font-size: 13px;
+    margin: 0 4px 4px 0;
+    outline: medium none;
+    overflow: auto;
+    padding: 5px 0;
+    position: relative;
+    z-index: 1;
+    background: AliceBlue;
+}
+.main-container input.button {
+    background-color: Linen;
+    color: black;
+    float: none;
+    font-family: cursive;
+    font-size: 11px;
+    font-weight: normal;
+    margin: 2px;
+    padding: 0;
+}
+.new-repo {
+    border: 1px solid LightSteelBlue;
+    border-radius: 0 0 5px 5px;
+    font-family: monospace,Helvetica,sans-serif;
+    font-size: 13px;
+    margin: 0 4px 4px 0;
+    outline: medium none;
+    overflow: auto;
+    padding: 5px 0;
+    position: relative;
+    z-index: 1;
+    background: HoneyDew;
+}
+#addRepoPH input.button {
+    background-color: HoneyDew;
+    color: Black;
+    float: none;
+    font-family: cursive;
+    font-size: 11px;
+    font-weight: normal;
+    margin: 0px 0px 4px 3px;
+    padding: 0;
+}
