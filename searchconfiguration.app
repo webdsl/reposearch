@@ -20,14 +20,14 @@ analyzer extension_analyzer{
 
 default analyzer code_analyzer{
   //The line number pattern is first matched as token, and then filtered out by the tokenfilter: ((\n|^)\\d+\\s)
-  tokenizer = PatternTokenizer(pattern="((\n|^)\\d+\\s)|[a-zA-Z0-9\\_]+|[!-/:-@\\[-\\^{-~`]", group="0")
+  tokenizer = PatternTokenizer(pattern="((\n|^)\\d+\\s)|[a-zA-Z0-9\\_]+|[!-,\\./:-@\\[\\^{-~`]", group="0")
   tokenfilter = PatternReplaceFilter(pattern="(\n|^)\\d+\\s", replacement="", replace="all")
   tokenfilter = LowerCaseFilter  
 }
 
 analyzer code_analyzer_casesensitive{
-  //The line number pattern is first matched as token, and then filtered out by the tokenfilter: ((\n|^)\\d+\\s)  
-  tokenizer = PatternTokenizer(pattern="((\n|^)\\d+\\s)|[a-zA-Z0-9\\_]+|[!-/:-@\\[-\\^{-~`]", group="0")
+  //The line number pattern is first matched as token, and then filtered out by the tokenfilter: ((\n|^)\\d+\\s)
+  tokenizer = PatternTokenizer(pattern="((\n|^)\\d+\\s)|[a-zA-Z0-9\\_\\-]+|[!-,\\./:-@\\[\\^{-~`]", group="0")
   tokenfilter = PatternReplaceFilter(pattern="(\n|^)\\d+\\s", replacement="", replace="all")  
 }
 

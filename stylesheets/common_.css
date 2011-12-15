@@ -108,7 +108,7 @@ input.button {
     background-color: LightSlateGray;
     color: White;
     font-weight: normal;
-    font-family: cursive;
+    font-family: sans-serif;
 }
 .search-result-location {
     color: white;
@@ -234,7 +234,7 @@ pre {
     background-color: Linen;
     color: black;
     float: none;
-    font-family: cursive;
+    font-family: sans-serif;
     font-size: 11px;
     font-weight: normal;
     margin: 2px;
@@ -257,7 +257,7 @@ pre {
     background-color: HoneyDew;
     color: Black;
     float: none;
-    font-family: cursive;
+    font-family: sans-serif;
     font-size: 11px;
     font-weight: normal;
     margin: 0px 0px 4px 3px;
