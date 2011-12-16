@@ -22,13 +22,30 @@ application reposearch
     </div>
   }
   
+  entity Project {
+    name :: String (id)
+    repos -> List<Repo>
+  }
+  entity Repo{
+    project -> Project (inverse=Project.repos)
+    refresh :: Bool
+    refreshSVN :: Bool
+    error::Bool
+    skippedFiles :: Text
+  }
+  entity SvnRepo : Repo{
+    url :: URL  	
+  }
+  entity GithubRepo : Repo{
+    user::String
+    repo::String
+  }  
   entity Commit{
     rev :: Long
     author :: String
     message :: Text
     date :: DateTime
   }
-
   entity Entry{
     name :: String
     content :: Text
@@ -37,7 +54,7 @@ application reposearch
     repo -> Repo
     searchmapping{
       + content
-      + content as contentcase using code_analyzer_casesensitive * 4.0 (autocomplete)
+      + content as contentcase using code_analyzer_cs_hyphen * 4.0 (autocomplete)
       + name using filename_analyzer
       name using kw as filename_autocomplete (autocomplete)
       name using extension_analyzer as file_ext
@@ -173,24 +190,6 @@ application reposearch
   	rawoutput(r.skippedFiles)
   }
   
-  entity Project {
-    name :: String (id)
-    repos -> List<Repo>
-  }
-  entity Repo{
-    project -> Project (inverse=Project.repos)
-    refresh :: Bool
-    refreshSVN :: Bool
-    error::Bool
-    skippedFiles :: Text
-  }
-  entity SvnRepo : Repo{
-    url :: URL  	
-  }
-  entity GithubRepo : Repo{
-    user::String
-    repo::String
-  }
   init{
     Project{name:="WebDSL" repos:=[(SvnRepo{url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac"} as Repo)]}.save();
   }
