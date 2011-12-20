@@ -53,11 +53,11 @@ application reposearch
     projectname :: String
     repo -> Repo
     searchmapping{
-      + content
-      + content as contentcase using code_analyzer_cs_hyphen * 4.0 (autocomplete)
-      + name using filename_analyzer
-      name using kw as filename_autocomplete (autocomplete)
-      name using extension_analyzer as file_ext
+      + content using code_identifiers_nohyphen_symbols      
+      + content using code_identifiers_hyphen_symbols as contentHyphenSym
+      + content using code_identifiers_hyphen_cs      as contentHyphenCase  * 4.0 (autocomplete)      
+      + name    using filename_analyzer               as file_name (autocomplete)
+      name      using extension_analyzer              as file_ext
       namespace by projectname      
     }
   }
