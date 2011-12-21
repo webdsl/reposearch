@@ -170,9 +170,9 @@ application reposearch
 	      }
 	      else{
 	        submit action{queryRepo(r);} {"Refresh (checkout)"}  
-	        if(r isa SvnRepo){  	
+	        if(r isa SvnRepo){
 	          submit action{queryRepoSVN(r);} {"Refresh (no checkout)"}  
-	        }	
+	        }
 	      }
 	      submit action{p.repos.remove(r);deleteRepoEntries(r); replace(reposPH, showRepos(p));} {"Remove"}
 	      submit action{return skippedFiles(r);}{"skipped files"}

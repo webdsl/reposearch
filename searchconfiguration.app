@@ -8,7 +8,7 @@ analyzer standard{
 }
 
 analyzer filename_analyzer{  
-  tokenizer = PatternTokenizer(pattern="([^\\.]+)\\.", group="1")
+  tokenizer = PatternTokenizer(pattern="[^\\.]+", group="0")
   tokenfilter = LowerCaseFilter
 }
 

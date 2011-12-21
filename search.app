@@ -248,7 +248,7 @@ function toSearcher(q:String, ns:String) : EntrySearcher{
 function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int) : List<List<String>>{
   var raw := searcher.highlight("contentHyphenSym", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
   if(raw.length() < 1){
-  	//search field content does not match anything (no fragment from highlighting), try highlighting on less restrictive searchfield
+  	//search field contentHyphenSym does not match anything (no fragment from highlighting), try highlighting on less restrictive searchfield
   	raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
   }
   var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>");//.replace("\r", "");
