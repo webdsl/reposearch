@@ -35,6 +35,8 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
 	    replace(resultAndfacetArea, paginatedTemplate(searcher, 10, 1, namespace));	    
 	    //HTML5 feature, replace url without causing page reload
 	    runscript("window.history.replaceState('','','" + navigate(doSearch(searcher, namespace, 1) ) + "');");
+    } else {
+    	clear(resultAndfacetArea);
     }
   }
   
