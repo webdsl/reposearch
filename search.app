@@ -72,19 +72,20 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   	if(linkText.length() < 1){
   		linkText := cf.name;
   	}  	
-  	highlightedContent := highlightCodeLines(searcher, cf, 150, 2);
+  	highlightedContent := highlightCodeLines(searcher, cf, 150, 2, false);
   	ruleOffset := "";
-  	if(highlightedContent[0].length > 0){
+  	if(highlightedContent[0].length < 1){
+  		ruleOffset := "1";
+  	} else {
   		ruleOffset := /\D+>(\d+).*/.replaceFirst("$1",highlightedContent[0][0]);
-  	}
-  	if(ruleOffset.length() > 5){
-  		if(highlightedContent[0].length > 1){
+  		
+  		if( !(/^\d+$/.match(ruleOffset))  && highlightedContent[0].length > 1){
   			ruleOffset := /\D+\>(\d+).*/.replaceFirst("$1",highlightedContent[0][1]);
-  		}
-  		if(ruleOffset.length() > 5) {
-  			ruleOffset := "1";
-  		}
-  	}
+        }
+        if( !(/^\d+$/.match(ruleOffset)) ) {
+		    ruleOffset := "1";
+	    }
+  	}	
   	ruleOffset := "" + (ruleOffset.parseInt() - 3);
   }
   
@@ -229,16 +230,11 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
   		linkText := cf.name;
   	}
     location := cf.url.substring(0, cf.url.length() - cf.name.length() );
-    highlighted := highlightCodeLines( searcher, cf, 1000000, 2 );
-    if( highlighted[0].length != 0 ){
-    	lineNumbers := highlighted[0].concat("<br />");
-    	codeLines := highlighted[1].concat("<br />");    	
-    	//add line number anchors
-    	lineNumbers := />(\d+)</.replaceAll( "><a name=\"$1\">$1</a><", lineNumbers );
-    } else {
-    	lineNumbers := "";
-    	codeLines := cf.content;
-    }    
+    highlighted := highlightCodeLines( searcher, cf, 1000000, 2, true);
+	lineNumbers := highlighted[0].concat("<br />");
+	codeLines := highlighted[1].concat("<br />");    	
+	//add line number anchors
+	lineNumbers := />(\d+)</.replaceAll( "><a name=\"$1\">$1</a><", lineNumbers );
   }
   div[class="search-result-link"]{
     navigate(url(cf.url)){ div[class="search-result-location"]{ output(location) } <b>rawoutput(linkText)</b> } 
@@ -254,11 +250,14 @@ function toSearcher(q:String, ns:String) : EntrySearcher{
   return searcher;
 }
 
-function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int) : List<List<String>>{
+function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int, fullContentFallback: Bool) : List<List<String>>{
   var raw := searcher.highlight("contentHyphenSym", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
   if(raw.length() < 1){
   	//search field contentHyphenSym does not match anything (no fragment from highlighting), try highlighting on less restrictive searchfield
   	raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
+  	if(fullContentFallback && raw.length() < 1) {
+  		raw := entry.content;
+  	}
   }
   var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"hlcontent\">").replace("$CHL$","</span>");//.replace("\r", "");
   var splitted := highlighted.split("\n");
