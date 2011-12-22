@@ -64,10 +64,14 @@ define navWithAnchor(n:String,a:String){
 define highlightedResult(cf : Entry, searcher : EntrySearcher){
   var highlightedContent : List<List<String>>;
   var ruleOffset : String; 
-  var linkText := cf.name;
+  var linkText := "";
   var location := cf.url.substring(0, cf.url.length() - cf.name.length() );
   
   init{
+  	linkText := searcher.highlight("file_name", cf.name, "<u>","</u>", 1, 256, "");
+  	if(linkText.length() < 1){
+  		linkText := cf.name;
+  	}  	
   	highlightedContent := highlightCodeLines(searcher, cf, 150, 2);
   	ruleOffset := "";
   	if(highlightedContent[0].length > 0){
@@ -213,14 +217,17 @@ native class org.webdsl.search.SearchHelper as SearchHelper {
   }
 
 define page showFile(searcher : EntrySearcher, cf : Entry){
-  var linkText    : String;
+  var linkText    := "";
   var location    : String;
   var lineNumbers : String;
   var codeLines   : String;  
   var highlighted : List<List<String>>;
   
   init{
-  	linkText := cf.name;
+  	linkText := searcher.highlight("file_name", cf.name, "<u>","</u>", 1, 256, "");
+  	if(linkText.length() < 1){
+  		linkText := cf.name;
+  	}
     location := cf.url.substring(0, cf.url.length() - cf.name.length() );
     highlighted := highlightCodeLines( searcher, cf, 1000000, 2 );
     if( highlighted[0].length != 0 ){
@@ -234,7 +241,7 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
     }    
   }
   div[class="search-result-link"]{
-    navigate(url(cf.url)){ div[class="search-result-location"]{ output(location) } <b>output(linkText)</b> } 
+    navigate(url(cf.url)){ div[class="search-result-location"]{ output(location) } <b>rawoutput(linkText)</b> } 
   }
   <div class="search-result-highlight">
    	 <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(lineNumbers)</div>
@@ -253,7 +260,7 @@ function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLen
   	//search field contentHyphenSym does not match anything (no fragment from highlighting), try highlighting on less restrictive searchfield
   	raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
   }
-  var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"highlight\">").replace("$CHL$","</span>");//.replace("\r", "");
+  var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"hlcontent\">").replace("$CHL$","</span>");//.replace("\r", "");
   var splitted := highlighted.split("\n");
   var listCode := List<String>();
   var listLines := List<String>();

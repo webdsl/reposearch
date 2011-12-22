@@ -199,7 +199,7 @@ input.button {
 .code-line {
     display: block;
 }
-.highlight {
+.hlcontent {
     background-color: #CCFF66;
 }
 .skipped-files-link a:link, .search-result-link a:visited {
