@@ -69,6 +69,10 @@ page renewAdmin(){
 	rule ajaxtemplate addRepo(*){true}
 	rule ajaxtemplate addRepoBtn(*){true}
 	rule ajaxtemplate showRepos(*){true}
+	rule ajaxtemplate showRequests(*){true}
+	rule ajaxtemplate req(*){true}
+	rule ajaxtemplate addProject(*){true}
+	rule page pendingRequests(*){true}
 	rule page skippedFiles(*){true}
 	rule page autocompleteService(*){true}
 	rule page init(*){true}

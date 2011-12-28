@@ -1,25 +1,86 @@
 application reposearch
 
+  imports manage
   imports search
   imports searchconfiguration
   imports ac
 
   define page root(){
-    
-    navigate(search("", "")){"Search all projects"}
+  	title { "Reposearch" }
+    <span class="home-text">"Search within project or " navigate(search("", "")){"all"} " projects:"</span>
       <br/> <br/>
     for(p:Project order by p.name){
-      navigate(search(p.name, "")){"Search " output(p.name)}
+      navigate(search(p.name, "")){output(p.name)}
       <br/>
     }
+    <br/><br/><br/>
+    placeholder requestPH{ req("") }
     <br/>navigate(manage()){"Manage"}<br/><br/>
-    navigate(dologin()){"log in/out"}
+    navigate(dologin()){<span class="login">"Admin log in/out"</span>}
   }
     
   define divsmall(){
     <div style="font-size:10px;">
       elements()
     </div>
+  }
+  
+  define ajax req(msg : String){
+  	<span class="home-text">output(msg)</span><br />
+  	submit action{replace(requestPH, addProject());}{"Add your project/repository?"}
+  }
+  define ajax addProject(){
+  	var p := "";
+  	var gu := "";
+    var gr := "";
+    var n : URL := "";
+    var r : Request := Request{};
+    
+  	"Add your project/repository! ("submitlink openPendingRequests(){"pending requests"}")"
+    form{
+      table {
+        row { column{"Project name: "}     column{input(p)} }
+        row { column{"SVN: "}              column{input(n)}	}
+        row { column{<span class="home-text">"or"</span>} column{}	}           
+        row { column{"Github user: "}      column{input(gu)} }
+        row { column{"Github repository: "}column{input(gr)} }
+      }
+      submit action{replace("requestPH", req(""));} {"cancel"}
+      submit action{
+      	//TODO FIXME: validate doesnt work atm:
+			// exception occured while handling request URL: http://localhost:8080/reposearch/addProject
+			// exception message: could not initialize proxy - no Session
+			// org.hibernate.LazyInitializationException: could not initialize proxy - no Session
+			// ...
+      	// validate(/[A-Za-z0-9]+[A-Za-z0-9\-_\.\s][A-Za-z0-9]+/.match(p), "Project name should be at least 3 characters (allowed chars: a-z,A-Z,0-9,-,_, ,.)"); 
+      	// validate( (n.length() > 0 || (gu.length() > 0 && gr.length() > 0) ), "Please specify an SVN repository url or Github user and repository"); 	
+      	
+      	r.project:=p; r.svn:=n; r.gu:=gu; r.gr:=gr; r.save(); replace("requestPH", req("Your request is sent to the administrators. Please allow some time to process your request"));} {"add request"}
+    }
+    
+    action openPendingRequests(){return pendingRequests();}
+  }
+  
+  define page pendingRequests(){
+  	title { "Pending requests - Reposearch" }
+  	navigate(root()){"return to home"}
+  	for(r:Request order by r.project){
+      div[class="top-container-green"]{ output(r.project) " (project name)"}
+      div[class="main-container"]{
+      	list{
+      	  listitem{"SVN: '" output(r.svn) "'"}
+      	  listitem{"Github user: '" output(r.gu) "'"}
+      	  listitem{"Github repo: '" output(r.gr) "'"}
+        }
+      }
+    }
+  }
+  
+  entity Request {
+  	project :: String
+  	svn :: URL
+  	gu  :: String
+  	gr  :: String
   }
   
   entity Project {
@@ -61,207 +122,18 @@ application reposearch
       namespace by projectname      
     }
   }
-  
+  define override logout() {
+      "Logged in as: " output(securityContext.principal.name)
+      form{ 
+        submitlink signoffAction() {"Logout"}        
+      }
+      action signoffAction() { logout(); return root(); }
+    }
 
   native class svn.Svn as Svn{
     //static getCommits(String):List<Commit>
     static getFiles(String):List<Entry>
     static checkoutSvn(String):List<Entry>
     static checkoutGithub(String,String):List<Entry>
-  }
-    
-  //todo:configurable filter on file extension
-  //jar zip tbl png jpg bmp
-  
-  define page manage(){
-    var p := ""
-
-
-        
-    navigate(root()){"return to home"}
-    form{
-      input(p)
-      submit action{Project{name:=p}.save();} {"Add project"}
-    }
-    <br/>
-    for(pr:Project){
-      
-      div[class="top-container"]{"Project: " <b>output(pr.name)</b> " [" submitlink("remove", removeProject(pr))"]"}
-      div[class="main-container"]{
-      	  placeholder reposPH{
-	        showRepos(pr)
-          }     
-	      placeholder addRepoPH{
-	      	addRepoBtn(pr)
-	      }
-	  }
-    }
-        
-    action removeProject(pr : Project){
-    	for(r:Repo in pr.repos){
-    		deleteRepoEntries(r);
-    		r.delete();
-    	}
-      pr.delete();
-      settings.reindex := true;
-      return manage();
-    }
-    
-    <br /><br /><br />
-    submit action{ 
-    	for(pr:Project){
-    		for(r:Repo in pr.repos){
-    			queryRepo(r);
-    		}
-    	}
-    	return manage();
-    	 } {"REFRESH ALL REPOSITORIES (with checkout)"}
-  }
-  
-  define ajax addRepoBtn(pr : Project){
-  	submit action{ replace(addRepoPH, addRepo(pr));} {"Add repository"}
-  }
-  
-  define ajax showRepos(pr : Project){
-  	for(r:Repo in pr.repos){
-	  showrepo(pr,r)
-	}
-  }
-  
-  define ajax addRepo(pr : Project){
-  	var gu:String
-    var gr:String
-    var n :URL
-  	div[class="new-repo"]{
-	        form{
-	          "SVN: "
-	          input(n)
-	          submit action{ pr.repos.add(SvnRepo{url:=n}); replace(addRepoPH, addRepoBtn(pr)); replace(reposPH, showRepos(pr));} {"Add repository"}
-	        }
-	        form{
-	          "Github user: "
-	          input(gu)
-	          " repository: "
-	          input(gr)
-	          submit action{ pr.repos.add(GithubRepo{user:=gu repo:=gr}); replace(addRepoPH, addRepoBtn(pr)); replace(reposPH, showRepos(pr)); } {"Add repository"}
-	        }
-	}
-	div{
-		submit action{ replace(addRepoPH, addRepoBtn(pr));} {"Cancel"}
-	}
-  }
-  
-  define showrepo(p:Project, r:Repo){
-    div[class="show-repo"]{
-      if(r isa SvnRepo){
-        "SVN: " 
-        output((r as SvnRepo).url)
-      }
-      if(r isa GithubRepo){
-        "Github: " 
-        output((r as GithubRepo).user) 
-        " " 
-        output((r as GithubRepo).repo)
-      }
-      div{
-	      if(r.refresh){
-	        "REFRESH SCHEDULED"
-	        submit action{cancelQueryRepo(r);} {"Cancel refresh"}  
-	      }
-	      else{
-	        submit action{queryRepo(r);} {"Refresh (checkout)"}  
-	        if(r isa SvnRepo){
-	          submit action{queryRepoSVN(r);} {"Refresh (no checkout)"}  
-	        }
-	      }
-	      submit action{p.repos.remove(r);deleteRepoEntries(r); replace(reposPH, showRepos(p));} {"Remove"}
-	      submit action{return skippedFiles(r);}{"skipped files"}
-      }
-      if(r.error){
-      	div{
-      	  "ERROR OCCURRED DURING REFRESH"
-      	}
-      }
-    }
-    
-  }
-  
-  define page skippedFiles(r : Repo){
-  	rawoutput(r.skippedFiles)
-  }
-  
-  init{
-    Project{name:="WebDSL" repos:=[(SvnRepo{url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac"} as Repo)]}.save();
-  }
-  
-  function cancelQueryRepo(r:Repo){
-    r.refresh := false;
-    r.refreshSVN := false;
-  }
-  
-  function queryRepo(r:Repo){
-    r.refresh := true;
-  }
-  
-  function queryRepoSVN(r:Repo){
-    r.refresh := true;
-    r.refreshSVN := true;
-  }
-  
-  invoke queryRepoTask() every 30 seconds
-  
-  function queryRepoTask(){
-    var repos := from Repo where refresh=true;
-    var skippedFiles := List<String>();
-    if(repos.length > 0){
-      var r := repos[0];
-      var col : List<Entry>;
-      if(r.refreshSVN){
-        col := Svn.getFiles((r as SvnRepo).url);
-      }
-      else{
-        if(r isa SvnRepo){ col := Svn.checkoutSvn((r as SvnRepo).url); }
-        if(r isa GithubRepo){ col := Svn.checkoutGithub((r as GithubRepo).user,(r as GithubRepo).repo); }
-      }
-      if(col != null){ 
-        deleteRepoEntries(r);
-        for(c: Entry in col){
-          if(c.content == "BINFILE"){
-          	skippedFiles.add("<a href=\"" + c.url + "\">"+c.name+"</a>");
-          } else {
-	          c.projectname := r.project.name;
-	          c.repo := r;
-	          c.save();
-          }
-        }
-        r.error := false;
-      } 
-      else{
-        r.error := true;	
-      }
-      r.refresh:=false;
-      if(!settings.reindex){
-        settings.reindex := true;
-      }
-      r.skippedFiles := skippedFiles.concat("<br />");
-    }
-  }
-  
-  invoke invokeCheckReindex() every 60 seconds
-  
-  function invokeCheckReindex(){
-    if(settings.reindex){
-      IndexManager.indexSuggestions();
-    }
-    settings.reindex := false;
-  }
-
-  entity Settings{
-    reindex :: Bool
-  }
-  var settings := Settings{} 
-  
-  function deleteRepoEntries(r:Repo){
-    for(e:Entry where e.repo == r){e.delete();}
   }
   

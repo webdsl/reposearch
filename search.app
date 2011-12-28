@@ -1,10 +1,13 @@
 module search
 
 define page search(namespace:String, q:String){
+  title { output(q + " - Reposearch") }
+  
   showSearch(toSearcher(q, namespace), namespace, 1)
 }
 
 define page doSearch(searcher : EntrySearcher, namespace:String, pageNum: Int){
+	title { output("Reposearch - '" + searcher.query() +  "' in " + namespace) }
 	showSearch(searcher, namespace, pageNum)
 }
 
@@ -218,6 +221,7 @@ native class org.webdsl.search.SearchHelper as SearchHelper {
   }
 
 define page showFile(searcher : EntrySearcher, cf : Entry){
+  title { output(cf.name + " - Reposearch") }
   var linkText    := "";
   var location    : String;
   var lineNumbers : String;

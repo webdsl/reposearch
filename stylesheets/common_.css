@@ -17,6 +17,13 @@ body {
     margin-top: 3px;
     padding: 10px 10px 15px;
 }
+.top-container-green {
+    background-color: LightGreen;
+    border-radius: 15px 15px 0 0;
+    margin-right: 10px;
+    margin-top: 3px;
+    padding: 10px 10px 15px;
+}
 .main-container {
     background-color: white;
     border: 1px solid LightSteelBlue;
@@ -83,7 +90,7 @@ body {
 .search-result-highlight {
     border: 1px solid LightSlateGrey;
     border-radius: 0 0 5px 5px;
-    font-family: monospace,Helvetica,sans-serif;
+    font-family: monospace, Helvetica, sans-serif;
     font-size: 13px;
     margin: 0 4px 4px 0;
     padding: 5px 0px 5px 0px;
@@ -105,10 +112,21 @@ body {
     padding: 4px;
 }
 input.button {
-    background-color: LightSlateGray;
-    color: White;
+    background-color: AliceBlue;
+    border-radius: 8px 8px 8px 8px;
+    color: Black;    
     font-weight: normal;
     font-family: sans-serif;
+}
+.login {
+    bottom: 0;
+    float: left;
+    font-size: 10px;
+    position: absolute;
+}
+.home-text{
+    font-family: Helvetica;
+    color: Black;
 }
 .search-result-location {
     color: white;
@@ -231,11 +249,12 @@ pre {
     background: AliceBlue;
 }
 .main-container input.button {
-    background-color: Linen;
+    background-color: Ivory;
+    border-radius: 0 0 0 0;
     color: black;
     float: none;
     font-family: sans-serif;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: normal;
     margin: 2px;
     padding: 0;
