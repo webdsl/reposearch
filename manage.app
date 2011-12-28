@@ -3,6 +3,7 @@ module manage
   define page manage(){
   	title { "Manage - Reposearch" }
     var p := ""
+    var fr := (from Repo where project is null);
        
     navigate(root()){"return to home"}
     form{
@@ -46,7 +47,17 @@ module manage
     		}
     	}
     	return manage();
-    	 } {"REFRESH ALL REPOSITORIES (with checkout)"}
+    } {"REFRESH ALL REPOSITORIES (with checkout)"}
+    
+    if(fr.length > 0){
+	    <br />
+	    submit action{ 
+	    	for(r:Repo in fr){
+	    		r.delete();
+	    	}
+	    	return manage();
+	    } {"Remove foreign Repo's (" output(fr.length) ")"} " (Repo entities where project == null)"
+    }
   }
   
   define ajax addRepoBtn(pr : Project){
