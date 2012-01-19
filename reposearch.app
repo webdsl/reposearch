@@ -27,7 +27,8 @@ application reposearch
   
   define ajax req(msg : String){
   	<span class="home-text">output(msg)</span><br />
-  	submit action{replace(requestPH, addProject());}{"Add your project/repository?"}
+  	submit action{replace(requestPH, addProject());}{"Add your project/repository?"} <br />
+  	submitlink action{return pendingRequests();}{"pending requests"}
   }
   define ajax addProject(){
   	var p := "";
@@ -36,7 +37,7 @@ application reposearch
     var n : URL := "";
     var r : Request := Request{};
     
-  	"Add your project/repository! ("submitlink openPendingRequests(){"pending requests"}")"
+  	"Add your project/repository!"
     form{
       table {
         row { column{"Project name: "}     column{input(p)} }
@@ -57,6 +58,7 @@ application reposearch
       	
       	r.project:=p; r.svn:=n; r.gu:=gu; r.gr:=gr; r.save(); replace("requestPH", req("Your request is sent to the administrators. Please allow some time to process your request"));} {"add request"}
     }
+    submitlink openPendingRequests(){"pending requests"}
     
     action openPendingRequests(){return pendingRequests();}
   }
@@ -76,6 +78,17 @@ application reposearch
     }
   }
   
+  session searchSettings{
+  	resultsPerPage :: Int //(default=10)
+  	//default is broken atm, now using getter
+  	function getResultsPerPage() : Int{
+  		if (resultsPerPage == 0){
+  			return 10;
+  		} else {
+  			return resultsPerPage;
+  		}
+  	}
+  }
   entity Request {
   	project :: String
   	svn :: URL
@@ -119,12 +132,13 @@ application reposearch
       + content using code_identifiers_hyphen_cs      as contentHyphenCase  * 4.0 (autocomplete)      
       + name    using filename_analyzer               as file_name (autocomplete)
       name      using extension_analyzer              as file_ext
-      namespace by projectname      
+      url       using path_analyzer                   as repo_path
+      namespace by projectname
     }
   }
   define override logout() {
       "Logged in as: " output(securityContext.principal.name)
-      form{ 
+      form{
         submitlink signoffAction() {"Logout"}        
       }
       action signoffAction() { logout(); return root(); }

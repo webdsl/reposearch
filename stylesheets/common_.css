@@ -8,21 +8,24 @@ body {
     position: absolute;
     right: 0;
 }
-.facetarea {
+.facet-area {
+    font-style: italic;
+    clear: both;
+    padding-top: 8px;
 }
 .top-container {
     background-color: LightSteelBlue;
     border-radius: 15px 15px 0 0;
     margin-right: 10px;
     margin-top: 3px;
-    padding: 10px 10px 15px;
+    padding: 2px 8px;
 }
 .top-container-green {
     background-color: LightGreen;
     border-radius: 15px 15px 0 0;
     margin-right: 10px;
     margin-top: 3px;
-    padding: 10px 10px 15px;
+    padding: 2px 8px;
 }
 .main-container {
     background-color: white;
@@ -45,7 +48,7 @@ body {
     color: #8F8F8F;
     float: left;
     font-size: 12px;
-    margin: 4px 5px;
+    margin: 1px 3px;
     padding: 0 0 0 3px;
 }
 .included-facet {
@@ -54,7 +57,7 @@ body {
     color: black;
     float: left;
     font-size: 12px;
-    margin: 4px 5px;
+    margin: 1px 3px;
     padding: 0 0 0 3px;
 }
 .included-facet a:link, .included-facet a:visited {

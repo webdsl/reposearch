@@ -72,6 +72,7 @@ page renewAdmin(){
 	rule ajaxtemplate showRequests(*){true}
 	rule ajaxtemplate req(*){true}
 	rule ajaxtemplate addProject(*){true}
+	rule ajaxtemplate showpathfacets(*){true}
 	rule page pendingRequests(*){true}
 	rule page skippedFiles(*){true}
 	rule page autocompleteService(*){true}

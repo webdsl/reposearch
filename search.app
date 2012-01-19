@@ -35,7 +35,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
   action updateResults(){
   	if(query.length() > 0){  		  		
 	    searcher := toSearcher(query,namespace); //update with entered query	      
-	    replace(resultAndfacetArea, paginatedTemplate(searcher, 10, 1, namespace));	    
+	    replace(resultAndfacetArea, paginatedTemplate(searcher, 1, namespace));	    
 	    //HTML5 feature, replace url without causing page reload
 	    runscript("window.history.replaceState('','','" + navigate(doSearch(searcher, namespace, 1) ) + "');");
     } else {
@@ -45,7 +45,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
   
   placeholder resultAndfacetArea{
 	  if (query.length() > 0){
-	  	 paginatedTemplate(searcher, 10, pageNum, namespace)
+	  	 paginatedTemplate(searcher, pageNum, namespace)
 	  }
   }
 }
@@ -56,7 +56,8 @@ service autocompleteService(namespace:String, term : String){
     
   for(sug : String in results){
     jsonArray.put(sug);    
-  }  
+  }
+  
   return jsonArray;
 }
 
@@ -102,53 +103,92 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
    
 }
 
-  define ajax paginatedTemplate(searcher :EntrySearcher, resultsPerPage : Int, pageNum : Int, ns : String){
-
+  define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String){
   		if(searcher.query().length() > 0) {
-  			viewFacets(searcher, resultsPerPage, ns)
+  			viewFacets(searcher, ns)
   		}
 	    div[class="main-container"]{
-	        paginatedResults(searcher, pageNum, resultsPerPage, ns)
+	        paginatedResults(searcher, pageNum, ns)
 	    }
+	    
     
   }
   
-  define viewFacets(searcher : EntrySearcher, resultsPerPage : Int, namespace : String){
-  	var hasSelection := [f | f : Facet in searcher.getFilteredFacets() where !f.isMustNot() ].length > 0;
-  	
-
+  define viewFacets(searcher : EntrySearcher, namespace : String){
+  	var selected         := searcher.getFilteredFacets();
+  	var path_hasSel      := false;
+  	var ext_hasSel       := false;
+  	var path_selection   := List<Facet>();
+  	init {
+  		for ( f : Facet in selected ){
+  			
+  			if(f.getCount() == 0) {
+  				log("facet with count 0 :S:S:S");
+  			}
+  			
+  			if ( f.getFieldName() == "file_ext" && !f.isMustNot() ) {
+  				ext_hasSel := true;
+  			} else { if ( f.getFieldName() == "repo_path" ) {
+  				path_selection.add(f);
+  				if( !f.isMustNot() ) {
+  				  path_hasSel := true;
+  				}
+  			}}
+  		}
+  	}
 	div[class="top-container"]{
-		div{<i>"Filter on file extension:"</i>}	
-        for(f : Facet in get all facets(searcher, file_ext) ) {
-	        if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
-	        	div[class="excluded-facet"]{
-		        	if(f.isSelected()) {
-		        		includeFacetSym()
-		        		submitlink updateResults(searcher.removeFilteredFacet(f)){output(f.getValue()) " (" output(f.getCount()) ")"}
-		          	} else {
-		          		includeFacetSym()
-		          		submitlink updateResults(~searcher where f.should()){output(f.getValue()) " (" output(f.getCount()) ")"}
-		          	}				          	
-	         	}
-	         } else {
-	         	div[class="included-facet"]{
-	         		if(f.isSelected()) {
-	          			 submitlink updateResults(searcher.removeFilteredFacet(f)){excludeFacetSym() output(f.getValue()) " (" output(f.getCount()) ") "}
-	          		} else {
-	          			submitlink updateResults(~searcher where f.mustNot() ) {excludeFacetSym()}
-	          			submitlink updateResults(~searcher where f.should()  ) {output(f.getValue()) " (" output(f.getCount()) ")"}
-	          			" " 
-	          		}
-	          	}        	
-	        }
+		div[class="facet-area"]{"Filter on file extension:"}
+		div{
+	      for(f : Facet in get all facets(searcher, file_ext) ) {	showFacet(searcher, f, ext_hasSel, namespace) }
         }
- 	}
-
-  	 
+        div[class="facet-area"]{"Filter on file location:"}
+        for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace) <br /> }
+        placeholder repo_pathPh{       	  
+          showpathfacets(searcher, path_hasSel, namespace, false)
+        }
+ 	} 	 
+  }
+  
+  define ajax showpathfacets(searcher : EntrySearcher, hasSelection : Bool, namespace : String, show : Bool){
+  	
+  	if( show ){
+  	   submitlink action{replace(repo_pathPh, showpathfacets( searcher, hasSelection, namespace, false));}{"shrink"}
+  	  div{
+  	    for(f : Facet in get all facets(searcher, repo_path) ) {
+	      showFacet(searcher, f, hasSelection, namespace) <br />
+        }
+      }
+    } else {
+      submitlink action{replace(repo_pathPh, showpathfacets( searcher, hasSelection, namespace, true));}{"expand"}
+    }
+  }
+      
+  define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String) {
+    if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
+    	div[class="excluded-facet"]{
+        	if(f.isSelected()) {
+        		includeFacetSym()
+        		submitlink updateResults(searcher.removeFilteredFacet(f)){output(f.getValue()) " (" output(f.getCount()) ")"}
+          	} else {
+          		includeFacetSym()
+          		submitlink updateResults(~searcher where f.should()){output(f.getValue()) " (" output(f.getCount()) ")"}
+          	}				          	
+     	}
+     } else {
+     	div[class="included-facet"]{
+     		if(f.isSelected()) {
+      			submitlink updateResults(searcher.removeFilteredFacet(f)){excludeFacetSym() output(f.getValue()) " (" output(f.getCount()) ") "}
+      		} else {
+      			submitlink updateResults(~searcher where f.mustNot() ) {excludeFacetSym()}
+      			submitlink updateResults(~searcher where f.should()  ) {output(f.getValue()) " (" output(f.getCount()) ")"}
+      			" " 
+      		}
+      	}        	
+    }
+    
   	action updateResults(searcher : EntrySearcher){  		    
 	    return doSearch(searcher, namespace, 1);
     }
-  
   }
   
   define excludeFacetSym(){
@@ -158,23 +198,33 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   	<div class="include-facet-sym">"v"</div>
   }
 
-  define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, resultsPerPage : Int, namespace : String){
+  define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespace : String){
+  	var resultsPerPage := searchSettings.getResultsPerPage();
+  	var options := [5, 10, 25, 50, 100, 500];
     var resultList := get results(~searcher start ((pagenumber - 1) * resultsPerPage) limit resultsPerPage);
     var size := get size(searcher);
     var lastResult := size;
+    var current : Int;
     init{
       if(size > pagenumber*resultsPerPage){
         lastResult := pagenumber * resultsPerPage;
       }
-    }
-        
+    }        
     if(searcher.query().length()>0){
       div{
         if(size > 0) {	      
 	      output(size) " results found in " output(get searchtime(searcher)) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
+	      " [results per page: " 
+	      for(i : Int in options) {
+	      	if(resultsPerPage != i){ showOption(searcher, namespace, i) } else { output(i) } " "
+	      }
+	     "]"
         } else {
       	  "no results found"
       	}
+      }
+      par{
+        resultIndex(searcher, pagenumber, resultsPerPage, namespace)
       }
       for (e : Entry in resultList){
         highlightedResult(e, searcher) 
@@ -182,7 +232,12 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
       par{
         resultIndex(searcher, pagenumber, resultsPerPage, namespace)
       }
-    }
+    }    
+    
+  }
+  
+  define showOption(searcher : EntrySearcher, namespace : String, new : Int) {
+  	submitlink action{ searchSettings.resultsPerPage := new; return doSearch(searcher, namespace, 1); }{ output(new) }
   }
   
   define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int, ns : String){  		
@@ -250,7 +305,7 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
 }
 
 function toSearcher(q:String, ns:String) : EntrySearcher{
-  var searcher := search Entry matching q in namespace ns with facets (file_ext, 120) [nolucene, strict matching];   
+  var searcher := search Entry matching q in namespace ns with facets (file_ext, 120), (repo_path, 200) [nolucene, strict matching];   
   return searcher;
 }
 
