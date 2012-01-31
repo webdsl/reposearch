@@ -15,7 +15,8 @@ application reposearch
     }
     <br/><br/><br/>
     placeholder requestPH{ req("") }
-    <br/>navigate(manage()){"Manage"}<br/><br/>
+    <br/>navigate(manage()){"Manage"}
+    <br/>navigate(searchStats()){"Search statistics"}<br/><br/>
     navigate(dologin()){<span class="login">"Admin log in/out"</span>}
   }
     
@@ -120,13 +121,15 @@ application reposearch
     message :: Text
     date :: DateTime
   }
-  entity Entry{
+  
+  entity Entry {
     name :: String
     content :: Text
     url :: URL
     projectname :: String
     repo -> Repo
-    searchmapping{
+  }
+    searchmapping Entry {
       + content using code_identifiers_nohyphen_symbols      
       + content using code_identifiers_hyphen_symbols as contentHyphenSym
       + content using code_identifiers_hyphen_cs      as contentHyphenCase  * 4.0 (autocomplete)      
@@ -135,7 +138,7 @@ application reposearch
       url       using path_analyzer                   as repo_path
       namespace by projectname
     }
-  }
+
   define override logout() {
       "Logged in as: " output(securityContext.principal.name)
       form{

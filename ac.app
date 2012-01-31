@@ -80,6 +80,4 @@ page renewAdmin(){
 	rule page dologin(){true}
 	rule page renewAdmin(){loggedIn()}
 	rule page doSearch(*){ true }
-
-
-
+	rule page searchStats(*){ loggedIn() }

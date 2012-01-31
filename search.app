@@ -106,26 +106,21 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String){
   		if(searcher.query().length() > 0) {
   			viewFacets(searcher, ns)
-  		}
-	    div[class="main-container"]{
+	    	
+	    	div[class="main-container"]{
 	        paginatedResults(searcher, pageNum, ns)
-	    }
-	    
-    
+	        }
+        }
   }
   
   define viewFacets(searcher : EntrySearcher, namespace : String){
+  	var selected         := searcher.getFilteredFacets();
   	var selected         := searcher.getFilteredFacets();
   	var path_hasSel      := false;
   	var ext_hasSel       := false;
   	var path_selection   := List<Facet>();
   	init {
   		for ( f : Facet in selected ){
-  			
-  			if(f.getCount() == 0) {
-  				log("facet with count 0 :S:S:S");
-  			}
-  			
   			if ( f.getFieldName() == "file_ext" && !f.isMustNot() ) {
   				ext_hasSel := true;
   			} else { if ( f.getFieldName() == "repo_path" ) {
@@ -305,7 +300,8 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
 }
 
 function toSearcher(q:String, ns:String) : EntrySearcher{
-  var searcher := search Entry matching q in namespace ns with facets (file_ext, 120), (repo_path, 200) [nolucene, strict matching];   
+  var searcher := search Entry matching q in namespace ns with facets (file_ext, 120), (repo_path, 200) [nolucene, strict matching];
+  
   return searcher;
 }
 
@@ -361,4 +357,10 @@ function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLen
   lists.add(listLines);
   lists.add(listCode);
   return lists;	
+}
+
+page searchStats(){
+	title { output("Reposearch Search Statistics") }
+	showSearchStats()
+	submit action{SearchStatistics.clear();}{"Reset statistics"}
 }
