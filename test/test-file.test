@@ -1,0 +1,17 @@
+//meaningless file to test the used analyzers
+application{
+
+i++;
+i--;
+for(int x=0;x=<3;x++){
+<to-java-servlet> nonjava[x]
+}
+
+y+z=3
+
+
+1000-somevar
+
+<hello <+ goodbye +> error ?true:false>
+
+}
