@@ -86,17 +86,11 @@ application reposearch
     }
   }
 
-  session searchSettings{
-      resultsPerPage :: Int //(default=10)
-      //default is broken atm, now using getter
-      function getResultsPerPage() : Int{
-          if (resultsPerPage == 0){
-              return 10;
-          } else {
-              return resultsPerPage;
-          }
-      }
+  session SearchSettings{
+      resultsPerPage :: Int  (default=10)
+      caseSensitive  :: Bool (default=false)
   }
+
   entity Request {
       project :: String
       svn :: URL
@@ -139,12 +133,12 @@ application reposearch
     repo -> Repo
   }
     searchmapping Entry {
-      + content using code_identifiers_nohyphen_symbols
-      + content using code_identifiers_hyphen_symbols as contentHyphenSym
-      + content using code_identifiers_hyphen_cs      as contentHyphenCase  * 4.0 (autocomplete)
-      + name    using filename_analyzer               as file_name (autocomplete)
-      name      using extension_analyzer              as file_ext
-      url       using path_analyzer                   as repo_path
+      + content using keep_all_chars      as content
+      + content using keep_all_chars_cs   as contentCase * 10.0
+      content   using code_identifiers_cs as codeIdentifiers (autocomplete)
+      + name    using filename_analyzer   as fileName (autocomplete)
+      name      using extension_analyzer  as fileExt
+      url       using path_analyzer       as repoPath
       namespace by projectname
     }
 
