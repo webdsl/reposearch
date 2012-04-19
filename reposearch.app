@@ -86,9 +86,10 @@ application reposearch
     }
   }
 
-  session SearchSettings{
+  session SearchPrefs{
       resultsPerPage :: Int  (default=10)
       caseSensitive  :: Bool (default=false)
+      exactMatch     :: Bool (default=true)
   }
 
   entity Request {

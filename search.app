@@ -20,17 +20,26 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
   var source := "/autocompleteService"+"/"+namespace;
   var searcher := entrySearcher;
   var query := searcher.query();
-  var caseSensitive := SearchSettings.caseSensitive;
+  var caseSensitive := SearchPrefs.caseSensitive;
 
   <script>
     setupcompletion("~source");
+    //avoid too many request while typing in a field with onkeyup trigger
+    var onkeyupdelay = function(){
+        var timer = 0; //scoped inside this function block, triggering onkeyup again before timeout resets the timer for that particular action
+        return function(callback){
+            clearTimeout(timer);
+            timer = setTimeout(callback, 750);
+        }
+    }();
   </script>
 
   form {
-      <div class="ui-widget">
-    input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()]
-    submit action{return search(namespace,query);} {"search " output(namespace)}
-    input(SearchSettings.caseSensitive)[onclick=updateResults()]{"Case sensitive"}
+    <div class="ui-widget">
+      input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()]
+      submit action{return search(namespace,query);} {"search " output(namespace)}
+      <br /> input(SearchPrefs.caseSensitive)[onclick=updateResults(), title="Case sensitive search"]{"case sensitive"}
+      <br /> input(SearchPrefs.exactMatch)[onclick=updateResults(), title="If enabled, the exact sequence of characters is matched in that order (recommended)"]{"exact match"}
     </div>
   }
 
@@ -195,7 +204,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   }
 
   define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespace : String){
-    var resultsPerPage := SearchSettings.resultsPerPage;
+    var resultsPerPage := SearchPrefs.resultsPerPage;
     var options := [5, 10, 25, 50, 100, 500];
     var resultList := get results(~searcher start ((pagenumber - 1) * resultsPerPage) limit resultsPerPage);
     var size := get size(searcher);
@@ -233,7 +242,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   }
 
   define showOption(searcher : EntrySearcher, namespace : String, new : Int) {
-      submitlink action{ SearchSettings.resultsPerPage := new; return doSearch(searcher, namespace, 1); }{ output(new) }
+      submitlink action{ SearchPrefs.resultsPerPage := new; return doSearch(searcher, namespace, 1); }{ output(new) }
   }
 
   define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int, ns : String){
@@ -302,14 +311,15 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
 
 function toSearcher(q:String, ns:String) : EntrySearcher{
   var searcher := search Entry in namespace ns with facets (fileExt, 120), (repoPath, 200) [nolucene, strict matching];
-  if(SearchSettings.caseSensitive) { searcher:= ~searcher matching contentCase, fileName: q~0; }
-  else   { searcher:= ~searcher matching q~0; }
+  var slop := if(SearchPrefs.exactMatch) 0 else 100000;
+  if(SearchPrefs.caseSensitive) { searcher:= ~searcher matching contentCase, fileName: q~slop; }
+  else   { searcher:= ~searcher matching q~slop; }
   return searcher;
 }
 
 function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int, fullContentFallback: Bool) : List<List<String>>{
   var raw : String;
-  if(SearchSettings.caseSensitive){
+  if(SearchPrefs.caseSensitive){
     raw := searcher.highlight("contentCase", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
   } else{
     raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
