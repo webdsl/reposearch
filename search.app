@@ -12,16 +12,20 @@ define page doSearch(searcher : EntrySearcher, namespace:String, pageNum: Int){
 }
 
 define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: Int){
-  navigate(root()){"return to home"}
-  includeJS("jquery-1.5.min.js")
-  includeJS("jquery-ui-1.8.9.custom.min.js")
-  includeJS("completion.js")
-  includeCSS("jquery-ui.css")
   var source := "/autocompleteService"+"/"+namespace;
   var searcher := entrySearcher;
   var query := searcher.query();
   var caseSensitive := SearchPrefs.caseSensitive;
 
+
+  includeJS("jquery-1.5.min.js")
+  includeJS("jquery-ui-1.8.9.custom.min.js")
+  includeJS("completion.js")
+  includeCSS("jquery-ui.css")
+
+  //highlight code using google-code-prettify
+  includeCSS("prettify.css")
+  includeJS("prettify.js")
   <script>
     setupcompletion("~source");
     //avoid too many request while typing in a field with onkeyup trigger
@@ -33,6 +37,8 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
         }
     }();
   </script>
+
+  navigate(root()){"return to home"}
 
   form {
     <div class="ui-widget">
@@ -109,12 +115,14 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   }
    <div class="search-result-highlight">
         <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(highlightedContent[0].concat("<br />"))</div>
-        <div class="code-area" style="left: 3.1em;"><pre style="WHITE-SPACE: pre">rawoutput(highlightedContent[1].concat("<br />"))</pre></div>
+        <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(highlightedContent[1].concat("<br />"))</pre></div>
    </ div>
 
 }
 
   define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String){
+        //prettify code
+        <script>$(function(){prettyPrint();})</script>
           if(searcher.query().length() > 0) {
               viewFacets(searcher, ns)
             div[class="main-container"]{
@@ -300,12 +308,17 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
     //add line number anchors
     lineNumbers := />(\d+)</.replaceAll( "><a name=\"$1\">$1</a><", lineNumbers );
   }
+  //highlight code using google-code-prettify
+  includeCSS("prettify.css")
+  includeJS("prettify.js")
+  <script>$(function(){prettyPrint();})</script>
+
   div[class="search-result-link"]{
     navigate(url(cf.url)){ div[class="search-result-location"]{ output(location) } <b>rawoutput(linkText)</b> }
   }
   <div class="search-result-highlight">
         <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(lineNumbers)</div>
-        <div class="code-area" style="left: 3.1em;"><pre style="WHITE-SPACE: pre">rawoutput(codeLines)</pre></div>
+        <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(codeLines)</pre></div>
    </ div>
 }
 
