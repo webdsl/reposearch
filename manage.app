@@ -244,6 +244,7 @@ module manage
   function invokeCheckReindex(){
     if(settings.reindex){
       IndexManager.indexSuggestions();
+      IndexManager.renewFacetIndexReaders();
     }
     settings.reindex := false;
   }
