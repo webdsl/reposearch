@@ -9,11 +9,14 @@ application reposearch
       title { "Reposearch" }
     <span class="home-text">"Search within project or " navigate(search("", "")){"all"} " projects:"</span>
       <br/> <br/>
-    for(p:Project order by p.displayName ){
-      navigate(search(p.name, "")){output(p.displayName)}
-      <br/>
+    table{
+      for(p:Project order by p.displayName ){
+        row{
+          column{ navigate(search(p.name, "")){output(p.displayName)} } column{ placeholder "repos-"+p.displayName {showReposLink(p) }}
+        }
+      }
     }
-    <br/><br/><br/>
+    <br/><br/>
     placeholder requestPH{ req("") }
     <br/>navigate(manage()){"Manage"}
     <br/>navigate(searchStats()){"Search statistics"}<br/><br/>
@@ -24,6 +27,30 @@ application reposearch
     <div style="font-size:10px;">
       elements()
     </div>
+  }
+
+  define ajax showReposLink(p : Project){
+      "  [" submitlink action{replace("repos-"+p.displayName, repos(p));}{"show repos"} "]"
+  }
+
+  define ajax repos(p : Project){
+      "  ["submitlink action{replace("repos-"+p.displayName, showReposLink(p));}{"hide"}" "
+      if (p.repos.length > 1){ <br />}
+      for(r : Repo in p.repos){
+          if(r isa SvnRepo){
+            "SVN: "
+            output((r as SvnRepo).url)
+            " REV: " output(r.rev)
+          }
+          if(r isa GithubRepo){
+            "Github: "
+            output((r as GithubRepo).user)
+            " "
+            output((r as GithubRepo).repo)
+            " REV: " output(r.rev)
+          }
+      }separated-by{<br />}
+      " ]"
   }
 
   define ajax req(msg : String){
@@ -111,6 +138,7 @@ application reposearch
     refreshSVN :: Bool
     error::Bool
     skippedFiles :: Text
+    rev :: Long
   }
   entity SvnRepo : Repo{
     url :: URL
@@ -133,9 +161,9 @@ application reposearch
     projectname :: String
     repo -> Repo
   }
-    searchmapping Entry {
+    search mapping Entry {
       + content using keep_all_chars      as content
-      + content using keep_all_chars_cs   as contentCase * 10.0
+      + content using keep_all_chars_cs   as contentCase ^ 10.0
       content   using code_identifiers_cs as codeIdentifiers (autocomplete)
       + name    using filename_analyzer   as fileName (autocomplete)
       name      using extension_analyzer  as fileExt
@@ -153,7 +181,12 @@ application reposearch
 
   native class svn.Svn as Svn{
     //static getCommits(String):List<Commit>
-    static getFiles(String):List<Entry>
-    static checkoutSvn(String):List<Entry>
-    static checkoutGithub(String,String):List<Entry>
+    static getFiles(String):RepoCheckout
+    static checkoutSvn(String):RepoCheckout
+    static checkoutGithub(String,String):RepoCheckout
+  }
+
+  native class svn.RepoCheckout as RepoCheckout{
+      getRevision() : Long
+      getEntries()  : List<Entry>
   }

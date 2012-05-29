@@ -7,14 +7,14 @@ define page search(namespace:String, q:String){
 }
 
 define page doSearch(searcher : EntrySearcher, namespace:String, pageNum: Int){
-    title { output("Reposearch - '" + searcher.query() +  "' in " + namespace) }
+    title { output("Reposearch - '" + searcher.getQuery() +  "' in " + namespace) }
     showSearch(searcher, namespace, pageNum)
 }
 
 define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: Int){
   var source := "/autocompleteService"+"/"+namespace;
   var searcher := entrySearcher;
-  var query := searcher.query();
+  var query := searcher.getQuery();
   var caseSensitive := SearchPrefs.caseSensitive;
 
 
@@ -23,9 +23,6 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
   includeJS("completion.js")
   includeCSS("jquery-ui.css")
 
-  //highlight code using google-code-prettify
-  includeCSS("prettify.css")
-  includeJS("prettify.js")
   <script>
     setupcompletion("~source");
     //avoid too many request while typing in a field with onkeyup trigger
@@ -121,9 +118,12 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
 }
 
   define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String){
+      //highlight code using google-code-prettify
+      includeCSS("prettify.css")
+      includeJS("prettify.js")
         //prettify code
         <script>$(function(){prettyPrint();})</script>
-          if(searcher.query().length() > 0) {
+          if(searcher.getQuery().length() > 0) {
               viewFacets(searcher, ns)
             div[class="main-container"]{
             paginatedResults(searcher, pageNum, ns)
@@ -132,8 +132,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   }
 
   define viewFacets(searcher : EntrySearcher, namespace : String){
-      var selected         := searcher.getFilteredFacets();
-      var selected         := searcher.getFilteredFacets();
+      var selected         := searcher.getFacetSelection();
       var path_hasSel      := false;
       var ext_hasSel       := false;
       var path_selection   := List<Facet>();
@@ -152,7 +151,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
     div[class="top-container"]{
         div[class="facet-area"]{"Filter on file extension:"}
         div{
-          for(f : Facet in get all facets(searcher, fileExt) ) {    showFacet(searcher, f, ext_hasSel, namespace) }
+          for(f : Facet in all fileExt facets from searcher ) {    showFacet(searcher, f, ext_hasSel, namespace) }
         }
         div[class="facet-area"]{"Filter on file location:"}
         for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace) <br /> }
@@ -167,7 +166,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
       if( show ){
          submitlink action{replace(repoPathPh, showpathfacets( searcher, hasSelection, namespace, false));}{"shrink"}
         div{
-          for(f : Facet in get all facets(searcher, repoPath) ) {
+          for(f : Facet in all repoPath facets from searcher) {
           showFacet(searcher, f, hasSelection, namespace) <br />
         }
       }
@@ -181,19 +180,19 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
         div[class="excluded-facet"]{
             if(f.isSelected()) {
                 includeFacetSym()
-                submitlink updateResults(searcher.removeFilteredFacet(f)){output(f.getValue()) " (" output(f.getCount()) ")"}
+                submitlink updateResults(searcher.removeFacetSelection(f)){output(f.getValue()) " (" output(f.getCount()) ")"}
               } else {
                   includeFacetSym()
-                  submitlink updateResults(~searcher where f.should()){output(f.getValue()) " (" output(f.getCount()) ")"}
+                  submitlink updateResults(~searcher matching f.should()){output(f.getValue()) " (" output(f.getCount()) ")"}
               }
          }
      } else {
          div[class="included-facet"]{
              if(f.isSelected()) {
-                  submitlink updateResults(searcher.removeFilteredFacet(f)){excludeFacetSym() output(f.getValue()) " (" output(f.getCount()) ") "}
+                  submitlink updateResults(searcher.removeFacetSelection(f)){excludeFacetSym() output(f.getValue()) " (" output(f.getCount()) ") "}
               } else {
-                  submitlink updateResults(~searcher where f.mustNot() ) {excludeFacetSym()}
-                  submitlink updateResults(~searcher where f.should()  ) {output(f.getValue()) " (" output(f.getCount()) ")"}
+                  submitlink updateResults(~searcher matching f.mustNot() ) {excludeFacetSym()}
+                  submitlink updateResults(~searcher matching f.should()  ) {output(f.getValue()) " (" output(f.getCount()) ")"}
                   " "
               }
           }
@@ -214,8 +213,8 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespace : String){
     var resultsPerPage := SearchPrefs.resultsPerPage;
     var options := [5, 10, 25, 50, 100, 500];
-    var resultList := get results(~searcher start ((pagenumber - 1) * resultsPerPage) limit resultsPerPage);
-    var size := get size(searcher);
+    var resultList := results from (~searcher offset ((pagenumber - 1) * resultsPerPage) limit resultsPerPage);
+    var size := count from searcher;
     var lastResult := size;
     var current : Int;
     init{
@@ -223,10 +222,10 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
         lastResult := pagenumber * resultsPerPage;
       }
     }
-    if(searcher.query().length()>0){
+    if(searcher.getQuery().length()>0){
       div{
         if(size > 0) {
-          output(size) " results found in " output(get searchtime(searcher)) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
+          output(size) " results found in " output(searchtime from searcher) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
           " [results per page: "
           for(i : Int in options) {
               if(resultsPerPage != i){ showOption(searcher, namespace, i) } else { output(i) } " "
@@ -254,7 +253,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   }
 
   define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int, ns : String){
-    var totalPages := (get size(searcher).floatValue() / resultsPerPage.floatValue()).ceil()
+    var totalPages := ( (count from searcher).floatValue() / resultsPerPage.floatValue() ).ceil()
     var start : Int := SearchHelper.firstIndexLink(pagenumber,totalPages, 9) //9 index links at most
     var end : Int := SearchHelper.lastIndexLink(pagenumber,totalPages, 9)
     if(totalPages > 1){
@@ -323,7 +322,7 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
 }
 
 function toSearcher(q:String, ns:String) : EntrySearcher{
-  var searcher := search Entry in namespace ns with facets (fileExt, 120), (repoPath, 200) [nolucene, strict matching];
+  var searcher := search Entry in namespace ns with facets (fileExt, 120), (repoPath, 200) [no lucene, strict matching];
   var slop := if(SearchPrefs.exactMatch) 0 else 100000;
   if(SearchPrefs.caseSensitive) { searcher:= ~searcher matching contentCase, fileName: q~slop; }
   else   { searcher:= ~searcher matching q~slop; }

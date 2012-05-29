@@ -105,6 +105,7 @@ module manage
         " "
         output((r as GithubRepo).repo)
       }
+      " at revision " output(r.rev)
       div{
         if(r.refresh){
           "REFRESH SCHEDULED"
@@ -207,9 +208,10 @@ module manage
     var skippedFiles := List<String>();
     if(repos.length > 0){
       var r := repos[0];
-      var col : List<Entry>;
+      var col : RepoCheckout;
+      var rev : Long;
       if(r.refreshSVN){
-        col := Svn.getFiles((r as SvnRepo).url);
+        col := Svn.getFiles( (r as SvnRepo).url );
       }
       else{
         if(r isa SvnRepo){ col := Svn.checkoutSvn((r as SvnRepo).url); }
@@ -217,7 +219,7 @@ module manage
       }
       if(col != null){
         deleteRepoEntries(r);
-        for(c: Entry in col){
+        for(c: Entry in col.getEntries()){
           if(c.content == "BINFILE"){
               skippedFiles.add("<a href=\"" + c.url + "\">"+c.name+"</a>");
           } else {
@@ -226,6 +228,7 @@ module manage
               c.save();
           }
         }
+        r.rev := col.getRevision();
         r.error := false;
       }
       else{
