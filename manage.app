@@ -95,17 +95,7 @@ module manage
 
   define showrepo(pr:Project, r:Repo){
     div[class="show-repo"]{
-      if(r isa SvnRepo){
-        "SVN: "
-        output((r as SvnRepo).url)
-      }
-      if(r isa GithubRepo){
-        "Github: "
-        output((r as GithubRepo).user)
-        " "
-        output((r as GithubRepo).repo)
-      }
-      " at revision " output(r.rev)
+      output(r)
       div{
         if(r.refresh){
           "REFRESH SCHEDULED"
@@ -180,7 +170,10 @@ module manage
 
   define page skippedFiles(r : Repo){
       title { "Skipped files - Reposearch" }
-      rawoutput(r.skippedFiles)
+      "The following files are not indexed for repository [" output(r) "]:"
+      par{
+        rawoutput(r.skippedFiles)
+      }
   }
 
   init{

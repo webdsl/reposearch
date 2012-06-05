@@ -312,13 +312,15 @@ define page showFile(searcher : EntrySearcher, cf : Entry){
   includeJS("prettify.js")
   <script>$(function(){prettyPrint();})</script>
 
+  navigate(search(cf.projectname, ""))[target:="_blank"]{"new search"}
   div[class="search-result-link"]{
     navigate(url(cf.url)){ div[class="search-result-location"]{ output(location) } <b>rawoutput(linkText)</b> }
   }
   <div class="search-result-highlight">
         <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(lineNumbers)</div>
         <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(codeLines)</pre></div>
-   </ div>
+  </ div>
+  navigate(search(cf.projectname, ""))[target:="_blank"]{"new search"}
 }
 
 function toSearcher(q:String, ns:String) : EntrySearcher{

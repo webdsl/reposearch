@@ -30,27 +30,31 @@ application reposearch
   }
 
   define ajax showReposLink(p : Project){
-      "  [" submitlink action{replace("repos-"+p.displayName, repos(p));}{"show repos"} "]"
+      "  [" submitlink action{replace("repos-"+p.displayName, repos(p));}{"info"} "]"
+  }
+
+  define output(r : Repo){
+      if(r isa SvnRepo){
+          "SVN: "
+          output((r as SvnRepo).url)
+      } else { //Github repo
+          "Github: "
+          output((r as GithubRepo).user)
+          " "
+          output((r as GithubRepo).repo)
+      }
+      " at revision: " output(r.rev)
   }
 
   define ajax repos(p : Project){
       "  ["submitlink action{replace("repos-"+p.displayName, showReposLink(p));}{"hide"}" "
       if (p.repos.length > 1){ <br />}
       for(r : Repo in p.repos){
-          if(r isa SvnRepo){
-            "SVN: "
-            output((r as SvnRepo).url)
-            " REV: " output(r.rev)
-          }
-          if(r isa GithubRepo){
-            "Github: "
-            output((r as GithubRepo).user)
-            " "
-            output((r as GithubRepo).repo)
-            " REV: " output(r.rev)
-          }
+        output(r)
+        " (" navigate(skippedFiles(r))[target:="_blank"]{"skipped files"} ")"
       }separated-by{<br />}
-      " ]"
+      if (p.repos.length > 1){ <br />}
+      "]"
   }
 
   define ajax req(msg : String){
