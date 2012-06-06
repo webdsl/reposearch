@@ -186,6 +186,7 @@ application reposearch
   native class svn.Svn as Svn{
     //static getCommits(String):List<Commit>
     static getFiles(String):RepoCheckout
+    static getFilesIfNew(String,Long):RepoCheckout
     static checkoutSvn(String):RepoCheckout
     static checkoutGithub(String,String):RepoCheckout
   }

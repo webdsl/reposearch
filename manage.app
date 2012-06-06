@@ -41,13 +41,9 @@ module manage
     <br />"*Removal may take some time. Please wait until the repository or project disappears."
     <br /><br />
     submit action{
-      for(pr:Project){
-        for(r:Repo in pr.repos){
-           queryRepo(r);
-        }
-      }
+      refreshAllRepos();
       return manage();
-    } {"REFRESH ALL REPOSITORIES (with checkout)"}
+    } {"Refresh all repos where HEAD > indexed rev"}
 
     if(fr.length > 0){
       <br />
@@ -102,9 +98,9 @@ module manage
           submit action{cancelQueryRepo(r);} {"Cancel refresh"}
         }
         else{
-          submit action{queryRepo(r);} {"Refresh (checkout)"}
+          submit action{queryRepo(r);} {"Force checkout HEAD"}
           if(r isa SvnRepo){
-            submit action{queryRepoSVN(r);} {"Refresh (no checkout)"}
+            submit action{queryRepoSVN(r);} {"Checkout if head > r" output(r.rev)}
           }
         }
         submit action{pr.repos.remove(r);deleteRepoEntries(r); replace("reposPH" + pr.name, showRepos(pr));} {"Remove*"}
@@ -196,15 +192,30 @@ module manage
 
   invoke queryRepoTask() every 30 seconds
 
+  invoke refreshAllRepos() every 5 days
+
+  function refreshAllRepos(){
+      for(pr:Project){
+        for(r:Repo in pr.repos){
+           if(r isa SvnRepo){
+             queryRepoSVN(r);
+           } else {
+                queryRepo(r);
+           }
+        }
+      }
+  }
+
   function queryRepoTask(){
     var repos := from Repo where refresh=true;
     var skippedFiles := List<String>();
     if(repos.length > 0){
       var r := repos[0];
       var col : RepoCheckout;
+      var oldRev : Long := if(r.rev == null) -1 else r.rev;
       var rev : Long;
       if(r.refreshSVN){
-        col := Svn.getFiles( (r as SvnRepo).url );
+        col := Svn.getFilesIfNew( (r as SvnRepo).url, oldRev );
       }
       else{
         if(r isa SvnRepo){ col := Svn.checkoutSvn((r as SvnRepo).url); }

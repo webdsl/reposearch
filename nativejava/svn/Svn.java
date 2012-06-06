@@ -1,16 +1,12 @@
 package svn;
 
 
-import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -33,11 +29,10 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 
-import svn.RepoCheckout;
+import webdsl.generated.domain.Commit;
+import webdsl.generated.domain.Entry;
 
 import com.google.common.io.Files;
-
-import webdsl.generated.domain.*;
 
 public class Svn {
     public static void main(String[] args){
@@ -143,7 +138,7 @@ public class Svn {
                             contentFixed = fixEncoding( content );
 
                             if ( contentFixed.length() < 1 && !contentFixed.equals( content ) )
-                                c.setContentNoEventsOrValidation( "BINFILE" );
+                                c.setContentNoEventsOrValidation( addLines("BINFILE") );
                             else
                                 c.setContentNoEventsOrValidation( addLines( contentFixed ) );
 
@@ -220,12 +215,21 @@ public class Svn {
     private static final long latestRevision = -1;
 
     public static RepoCheckout getFiles(String repo) {
+        return getFilesIfNew(repo, -1);
+    }
+
+    //returns: RepoCheckout object if newer revision is available and files are checked out, null when given revision (rev) is newest
+    public static RepoCheckout getFilesIfNew(String repo, long rev) {
         String url = repo;
 
         setupLibrary();
         SVNRepository repository = null;
         try {
             repository = SVNRepositoryFactory.create(SVNURL.parseURIEncoded(url));
+            if (rev >= repository.getLatestRevision()) {
+                System.out.println("Skipped checkout for repo: " + repo + ". This one is already at head revision");
+                return null;
+            }
 
             SVNNodeKind nodeKind = repository.checkPath("", -1);
 
@@ -288,7 +292,7 @@ public class Svn {
                         content = f.getContentAsString();
                         contentFixed = fixEncoding( content );
                         if ( contentFixed.length() < 1 && !contentFixed.equals( content ) )
-                            c.setContentNoEventsOrValidation( "BINFILE" );
+                            c.setContentNoEventsOrValidation( addLines("BINFILE") );
                         else
                             c.setContentNoEventsOrValidation( addLines( contentFixed ) );
                     } catch( IOException ex){
