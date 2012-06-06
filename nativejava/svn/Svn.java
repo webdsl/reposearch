@@ -228,7 +228,7 @@ public class Svn {
             repository = SVNRepositoryFactory.create(SVNURL.parseURIEncoded(url));
             if (rev >= repository.getLatestRevision()) {
                 System.out.println("Skipped checkout for repo: " + repo + ". This one is already at head revision");
-                return null;
+                return new RepoCheckout(null, repository.getLatestRevision());
             }
 
             SVNNodeKind nodeKind = repository.checkPath("", -1);
@@ -346,7 +346,7 @@ public class Svn {
           for (String line : lines) {
             sb.append(cnt++ + " " + line + "\n");
           }
-          return sb.toString();
+          return sb.toString().trim();
 
     }
 

@@ -1,5 +1,9 @@
 module manage
 
+  invoke queryRepoTask() every 30 seconds
+  invoke invokeCheckReindex() every 60 seconds
+  invoke refreshAllRepos() every 5 days
+
   define page manage(){
     title { "Manage - Reposearch" }
     var p := ""
@@ -40,10 +44,11 @@ module manage
 
     <br />"*Removal may take some time. Please wait until the repository or project disappears."
     <br /><br />
-    submit action{
-      refreshAllRepos();
-      return manage();
-    } {"Refresh all repos where HEAD > indexed rev"}
+    table{
+      row{ column{"Refresh all repos where HEAD > indexed rev: "} column{submit action{refreshAllRepos();         return manage();} {"REFRESH ALL"} } }
+      row{ column{"Force a fresh checkout for all repos: "}       column{submit action{forceCheckoutAllRepos();   return manage();} {"FORCE CHECKOUT ALL"} } }
+      row{ column{"Cancel all scheduled refreshes/checkouts: "}   column{submit action{cancelScheduledRefreshes();return manage();} {"CANCEL ALL"} } }
+    }
 
     if(fr.length > 0){
       <br />
@@ -100,16 +105,14 @@ module manage
         else{
           submit action{queryRepo(r);} {"Force checkout HEAD"}
           if(r isa SvnRepo){
-            submit action{queryRepoSVN(r);} {"Checkout if head > r" output(r.rev)}
+            submit action{queryRepoSVN(r);} {"Checkout if HEAD > r" output(r.rev)}
           }
         }
         submit action{pr.repos.remove(r);deleteRepoEntries(r); replace("reposPH" + pr.name, showRepos(pr));} {"Remove*"}
         submit action{return skippedFiles(r);}{"skipped files"}
       }
       if(r.error){
-        div{
-          "ERROR OCCURRED DURING REFRESH"
-        }
+        div{"ERROR OCCURRED DURING REFRESH"}
       }
     }
 
@@ -183,6 +186,7 @@ module manage
 
   function queryRepo(r:Repo){
     r.refresh := true;
+    r.refreshSVN := false;
   }
 
   function queryRepoSVN(r:Repo){
@@ -190,20 +194,30 @@ module manage
     r.refreshSVN := true;
   }
 
-  invoke queryRepoTask() every 30 seconds
-
-  invoke refreshAllRepos() every 5 days
-
   function refreshAllRepos(){
-      for(pr:Project){
-        for(r:Repo in pr.repos){
-           if(r isa SvnRepo){
-             queryRepoSVN(r);
-           } else {
-                queryRepo(r);
-           }
-        }
+    for(pr:Project){
+      for(r:Repo in pr.repos){
+         if(r isa SvnRepo){
+           queryRepoSVN(r);
+         } else {
+           queryRepo(r);
+         }
+       }
+    }
+  }
+  function forceCheckoutAllRepos(){
+    for(pr:Project){
+      for(r:Repo in pr.repos){
+        queryRepo(r);
       }
+    }
+  }
+  function cancelScheduledRefreshes(){
+    for(pr:Project){
+      for(r:Repo in pr.repos){
+        cancelQueryRepo(r);
+      }
+    }
   }
 
   function queryRepoTask(){
@@ -221,32 +235,33 @@ module manage
         if(r isa SvnRepo){ col := Svn.checkoutSvn((r as SvnRepo).url); }
         if(r isa GithubRepo){ col := Svn.checkoutGithub((r as GithubRepo).user,(r as GithubRepo).repo); }
       }
-      if(col != null){
-        deleteRepoEntries(r);
-        for(c: Entry in col.getEntries()){
-          if(c.content == "BINFILE"){
+      if(col == null){
+          r.error := true;
+      } else {
+        //only replace entries when new ones are retrieved, i.e. col.list is not null
+        if (col.getEntries() != null) {
+          deleteRepoEntries(r);
+          for(c: Entry in col.getEntries()){
+            if(c.content == "1 BINFILE"){
               skippedFiles.add("<a href=\"" + c.url + "\">"+c.name+"</a>");
-          } else {
+            } else {
               c.projectname := r.project.name;
               c.repo := r;
               c.save();
+            }
+          }
+          r.rev := col.getRevision();
+          if(!settings.reindex){
+            settings.reindex := true;
           }
         }
-        r.rev := col.getRevision();
         r.error := false;
       }
-      else{
-        r.error := true;
-      }
       r.refresh:=false;
-      if(!settings.reindex){
-        settings.reindex := true;
-      }
+      r.refreshSVN := false;
       r.skippedFiles := skippedFiles.concat("<br />");
     }
   }
-
-  invoke invokeCheckReindex() every 60 seconds
 
   function invokeCheckReindex(){
     if(settings.reindex){
