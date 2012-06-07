@@ -1,5 +1,6 @@
 body {
     margin-left: 15px;
+    font-family: Arial;
 }
 #resultAndfacetArea {
     left: 0;
@@ -227,8 +228,10 @@ input.button {
     text-decoration: none;
 }
 a:link, a:visited {
+    color: Navy;
     font-family: Helvetica;
-    color: Black;
+    font-style: normal;
+    text-decoration: none;
 }
 pre {
 
@@ -284,4 +287,8 @@ pre {
     font-weight: normal;
     margin: 0px 0px 4px 3px;
     padding: 0;
+}
+textarea.inputTextarea {
+    height: 12em;
+    width: 70em;
 }

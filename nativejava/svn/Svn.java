@@ -255,7 +255,7 @@ public class Svn {
     private static void addEntryRecursive(String dir,SVNRepository repo,List<Entry> list) throws SVNException{
         SVNProperties props = null;
         Collection<?> nullcol = null;
-        System.out.println("getDir: "+dir);
+        System.out.println("Reposearch getdir: " + repo.getLocation().getPath() + "/" + dir);
         Collection<?> col = repo.getDir(dir, latestRevision, props, nullcol);
         @SuppressWarnings("rawtypes")
         Iterator i = col.iterator();

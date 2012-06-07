@@ -30,7 +30,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
         var timer = 0; //scoped inside this function block, triggering onkeyup again before timeout resets the timer for that particular action
         return function(callback){
             clearTimeout(timer);
-            timer = setTimeout(callback, 750);
+            timer = setTimeout(callback, 500);
         }
     }();
   </script>

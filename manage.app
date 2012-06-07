@@ -1,18 +1,26 @@
 module manage
 
-  invoke queryRepoTask() every 30 seconds
+  invoke queryRepoTask()      every 30 seconds
   invoke invokeCheckReindex() every 60 seconds
-  invoke refreshAllRepos() every 5 days
+  invoke refreshAllRepos()    every 5 days
 
   define page manage(){
     title { "Manage - Reposearch" }
-    var p := ""
     var fr := (from Repo where project is null);
+    var fpMsgText := fpMsg.msg;
+    var p := "";
 
     navigate(root()){"return to home"}
+
+    table{
+      row{ column{"Refresh all repos where HEAD > indexed rev: "} column{submit action{refreshAllRepos();         return manage();} {"REFRESH ALL"} } }
+      row{ column{"Force a fresh checkout for all repos: "}       column{submit action{forceCheckoutAllRepos();   return manage();} {"FORCE CHECKOUT ALL"} } }
+      row{ column{"Cancel all scheduled refreshes/checkouts: "}   column{submit action{cancelScheduledRefreshes();return manage();} {"CANCEL ALL"} } }
+    } <br />
+
     form{
       input(p)
-      submit action{Project{name:=p}.save();} {"Add project"}
+      submit action{Project{name:=p}.save();} {"Add new project"}
     }
     <br/>
     placeholder requestsPH{
@@ -44,11 +52,18 @@ module manage
 
     <br />"*Removal may take some time. Please wait until the repository or project disappears."
     <br /><br />
-    table{
-      row{ column{"Refresh all repos where HEAD > indexed rev: "} column{submit action{refreshAllRepos();         return manage();} {"REFRESH ALL"} } }
-      row{ column{"Force a fresh checkout for all repos: "}       column{submit action{forceCheckoutAllRepos();   return manage();} {"FORCE CHECKOUT ALL"} } }
-      row{ column{"Cancel all scheduled refreshes/checkouts: "}   column{submit action{cancelScheduledRefreshes();return manage();} {"CANCEL ALL"} } }
+
+    form{
+        "Frontpage message" <br />
+        input(fpMsgText)[onkeyup := updateFpMsgPreview(fpMsgText)]
+        submit action{fpMsg.msg := fpMsgText; fpMsg.save();}{"save"}
     }
+    action ignore-validation updateFpMsgPreview(d : WikiText) {
+        replace(fpMsgPreview, FpMsgPreview(d));
+    }
+
+    placeholder fpMsgPreview {FpMsgPreview(fpMsgText)}
+
 
     if(fr.length > 0){
       <br />
@@ -58,6 +73,14 @@ module manage
         }
         return manage();
       } {"Remove foreign Repo's (" output(fr.length) ")"} " (Repo entities where project == null)"
+    }
+  }
+
+  define ajax FpMsgPreview(d : WikiText) {
+    label("Preview:") {
+      block{
+        <center> output(d) </center>
+      }
     }
   }
 
@@ -103,10 +126,10 @@ module manage
           submit action{cancelQueryRepo(r);} {"Cancel refresh"}
         }
         else{
-          submit action{queryRepo(r);} {"Force checkout HEAD"}
           if(r isa SvnRepo){
             submit action{queryRepoSVN(r);} {"Checkout if HEAD > r" output(r.rev)}
           }
+          submit action{queryRepo(r);} {"Force checkout HEAD"}
         }
         submit action{pr.repos.remove(r);deleteRepoEntries(r); replace("reposPH" + pr.name, showRepos(pr));} {"Remove*"}
         submit action{return skippedFiles(r);}{"skipped files"}
@@ -265,10 +288,15 @@ module manage
 
   function invokeCheckReindex(){
     if(settings.reindex){
+      //directly set to false, in case repositories are updated during suggestion reindexing
+      settings.reindex := false;
       IndexManager.indexSuggestions();
       IndexManager.renewFacetIndexReaders();
     }
-    settings.reindex := false;
+  }
+
+  entity Message{
+    msg :: WikiText
   }
 
   entity Settings{

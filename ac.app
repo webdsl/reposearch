@@ -75,6 +75,7 @@ page renewAdmin(){
     rule ajaxtemplate showpathfacets(*){true}
     rule ajaxtemplate showReposLink(*){true}
     rule ajaxtemplate repos(*){true}
+    rule ajaxtemplate FpMsgPreview(*){true}
     rule page pendingRequests(*){true}
     rule page skippedFiles(*){true}
     rule page autocompleteService(*){true}

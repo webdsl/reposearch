@@ -5,8 +5,11 @@ application reposearch
   imports searchconfiguration
   imports ac
 
+  var fpMsg := if( (from Message).length > 0) (from Message)[0]  else Message{msg := ""};
+
   define page root(){
-      title { "Reposearch" }
+    title { "Reposearch" }
+    <center>output(fpMsg.msg)</center>
     <span class="home-text">"Search within project or " navigate(search("", "")){"all"} " projects:"</span>
       <br/> <br/>
     table{
