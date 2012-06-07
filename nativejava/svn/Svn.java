@@ -280,6 +280,9 @@ public class Svn {
                 ||o.getName().endsWith(".jpg")
                 ||o.getName().endsWith(".bmp")
                 ||o.getName().endsWith(".jar")) {
+                    c.setContentNoEventsOrValidation(addLines("BINFILE"));
+
+                } else {
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
                     repo.getFile(dir+o.getName(), latestRevision, null, out);
                     //Use utils.File as container for converting to String with proper encoding
@@ -307,10 +310,7 @@ public class Svn {
                             System.out.println("file close exception during svn checkout reposearch 2:");
                             ex.printStackTrace();
                         }
-
                     }
-                } else {
-                    c.setContentNoEventsOrValidation("BINFILE");
                 }
 
                 c.setUrlNoEventsOrValidation(o.getURL().toString());
