@@ -116,11 +116,12 @@ body {
     padding: 4px;
 }
 input.button {
-    background-color: AliceBlue;
-    border-radius: 8px 8px 8px 8px;
-    color: Black;    
-    font-weight: normal;
+    background-color: WhiteSmoke;
+    border-radius: 5px 5px 5px 5px;
+    color: Navy;
     font-family: sans-serif;
+    font-weight: normal;
+    padding: 0;
 }
 .login {
     bottom: 0;
@@ -255,14 +256,14 @@ pre {
     background: AliceBlue;
 }
 .main-container input.button {
-    background-color: Ivory;
+    background-color: WhiteSmoke;
     border-radius: 0 0 0 0;
     color: black;
     float: none;
     font-family: sans-serif;
     font-size: 14px;
     font-weight: normal;
-    margin: 2px;
+    margin: 1px;
     padding: 0;
 }
 .new-repo {
@@ -291,4 +292,14 @@ pre {
 textarea.inputTextarea {
     height: 12em;
     width: 70em;
+}
+html body#manage table {
+    border-style: solid;
+    border-width: thin;
+    text-align: left;
+    background-color: AliceBlue;
+}
+html body#manage table tbody td {
+    border-top-style: dotted;
+    border-top-width: thin;
 }

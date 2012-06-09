@@ -6,6 +6,24 @@ application reposearch
   imports ac
 
   var fpMsg := if( (from Message).length > 0) (from Message)[0]  else Message{msg := ""};
+  var schedule := if( (from Schedule).length > 0) (from Schedule)[0] else Schedule{dayCounter := 0 nextInvocation := now().addDays(4)};
+
+  entity Schedule{
+    dayCounter      :: Int
+    intervalInDays  :: Int (default=5)
+    nextInvocation  :: DateTime
+    lastInvocation  :: DateTime
+    function newDay(){
+      if (dayCounter >= intervalInDays) { dayCounter := 0; }
+      else {dayCounter := dayCounter + 1;}
+      nextInvocation := now().addDays( intervalInDays - dayCounter );
+      if (dayCounter == 0){ refreshAllRepos(); }
+    }
+    function shiftByDays(days : Int){
+        dayCounter := dayCounter - days;
+        nextInvocation := nextInvocation.addDays( days );
+    }
+  }
 
   define page root(){
     title { "Reposearch" }
@@ -172,7 +190,7 @@ application reposearch
       + content using keep_all_chars      as content
       + content using keep_all_chars_cs   as contentCase ^ 10.0
       content   using code_identifiers_cs as codeIdentifiers (autocomplete)
-      + name    using filename_analyzer   as fileName (autocomplete)
+      + name    using filename_analyzer   as fileName ^ 20.0 (autocomplete)
       name      using extension_analyzer  as fileExt
       url       using path_analyzer       as repoPath
       namespace by projectname

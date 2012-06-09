@@ -62,6 +62,7 @@ page renewAdmin(){
 
     rule page root(){true}
     rule page showFile(*){true}
+    rule page viewFile(*){true}
     rule page search(*){true}
     rule page manage(){loggedIn()}
     rule ajaxtemplate paginatedTemplate(*){true}

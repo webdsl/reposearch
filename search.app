@@ -51,7 +51,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
         searcher := toSearcher(query,namespace); //update with entered query
         replace(resultAndfacetArea, paginatedTemplate(searcher, 1, namespace));
         //HTML5 feature, replace url without causing page reload
-        runscript("window.history.replaceState('','','" + navigate(doSearch(searcher, namespace, 1) ) + "');");
+        runscript("window.history.replaceState(null,'reposearch','" + navigate(doSearch(searcher, namespace, 1) ) + "');");
     } else {
         clear(resultAndfacetArea);
     }
@@ -108,7 +108,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   }
 
   div[class="search-result-link"]{
-      navWithAnchor(navigate(showFile(searcher, cf)), ruleOffset){div[class="search-result-location"]{ output(location) } <b>output(linkText)</b>}
+      navWithAnchor(navigate(viewFile(searcher.getQuery(), cf.url, cf.projectname)), ruleOffset){div[class="search-result-location"]{ output(location) } <b>output(linkText)</b>}
   }
    <div class="search-result-highlight">
         <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(highlightedContent[0].concat("<br />"))</div>
@@ -287,13 +287,20 @@ native class org.webdsl.search.SearchHelper as SearchHelper {
      static lastIndexLink(Int, Int, Int): Int
   }
 
+//backwards compatibility
 define page showFile(searcher : EntrySearcher, cf : Entry){
-  title { output(cf.name + " - Reposearch") }
+    init{return viewFile(searcher.getQuery(),cf.url, cf.projectname);}
+}
+
+define page viewFile(query : String, url:URL, projectName:String){
+  var cf := (from Entry as e where e.url=~url and e.projectname = ~projectName)[0]
   var linkText    := "";
   var location    : String;
   var lineNumbers : String;
   var codeLines   : String;
   var highlighted : List<List<String>>;
+  var searcher    := toSearcher(query, "");
+  title { output(cf.name + " - Reposearch") }
 
   init{
       linkText := searcher.highlight("fileName", cf.name, "<u>","</u>", 1, 256, "");

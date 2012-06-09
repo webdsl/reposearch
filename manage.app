@@ -2,20 +2,27 @@ module manage
 
   invoke queryRepoTask()      every 30 seconds
   invoke invokeCheckReindex() every 60 seconds
-  invoke refreshAllRepos()    every 5 days
+  invoke schedule.newDay()    every 1 days
 
   define page manage(){
     title { "Manage - Reposearch" }
     var fr := (from Repo where project is null);
     var fpMsgText := fpMsg.msg;
     var p := "";
+    var now := now();
 
     navigate(root()){"return to home"}
 
     table{
-      row{ column{"Refresh all repos where HEAD > indexed rev: "} column{submit action{refreshAllRepos();         return manage();} {"REFRESH ALL"} } }
-      row{ column{"Force a fresh checkout for all repos: "}       column{submit action{forceCheckoutAllRepos();   return manage();} {"FORCE CHECKOUT ALL"} } }
-      row{ column{"Cancel all scheduled refreshes/checkouts: "}   column{submit action{cancelScheduledRefreshes();return manage();} {"CANCEL ALL"} } }
+      row{ column{<i>"Refresh scheduling:" </i>} column{} }
+      row{ column{"Server time"}                                  column{ output(now) } }
+      row{ column{"Last refresh (all repos)"}                     column{ if(schedule.lastInvocation != null) { output(schedule.lastInvocation) } else {"unkown"} } }
+      row{ column{"Next scheduled refresh (all repos)"}           column{ output(schedule.nextInvocation) " " submit action{schedule.shiftByDays(-1); return manage();} {"-"} submit action{schedule.shiftByDays(1); return manage();} {"+"} } }
+      row{ column{"Auto refresh interval (days)"}                 column{ form{ input(schedule.intervalInDays)[style := "width:3em;"]  submit action{schedule.save(); return manage();}{"set"}  } } }
+      row{ column{<i>"Instant refresh management:" </i>} column{}}
+      row{ column{"Refresh all repos where HEAD > indexed rev: "} column{submit action{refreshAllRepos();         return manage();} {"refresh all"} } }
+      row{ column{"Force a fresh checkout for all repos: "}       column{submit action{forceCheckoutAllRepos();   return manage();} {"force checkout all"} } }
+      row{ column{"Cancel all scheduled refreshes/checkouts: "}   column{submit action{cancelScheduledRefreshes();return manage();} {"cancel all"} } }
     } <br />
 
     form{
@@ -218,6 +225,7 @@ module manage
   }
 
   function refreshAllRepos(){
+    schedule.lastInvocation := now();
     for(pr:Project){
       for(r:Repo in pr.repos){
          if(r isa SvnRepo){
@@ -229,6 +237,7 @@ module manage
     }
   }
   function forceCheckoutAllRepos(){
+    schedule.lastInvocation := now();
     for(pr:Project){
       for(r:Repo in pr.repos){
         queryRepo(r);
@@ -286,8 +295,9 @@ module manage
     }
   }
 
+  //If settings.reindex is set to true and no refresh is going on, refresh suggestions/facet readers
   function invokeCheckReindex(){
-    if(settings.reindex){
+    if(settings.reindex && (from Repo where refresh=true).length < 1){
       //directly set to false, in case repositories are updated during suggestion reindexing
       settings.reindex := false;
       IndexManager.indexSuggestions();
