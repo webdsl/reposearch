@@ -17,11 +17,13 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
   var query := searcher.getQuery();
   var caseSensitive := SearchPrefs.caseSensitive;
 
-
   includeJS("jquery-1.5.min.js")
   includeJS("jquery-ui-1.8.9.custom.min.js")
   includeJS("completion.js")
   includeCSS("jquery-ui.css")
+
+  includeCSS("prettify.css")
+  includeJS("prettify.js")
 
   <script>
     setupcompletion("~source");
@@ -51,7 +53,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
         searcher := toSearcher(query,namespace); //update with entered query
         replace(resultAndfacetArea, paginatedTemplate(searcher, 1, namespace));
         //HTML5 feature, replace url without causing page reload
-        runscript("window.history.replaceState(null,'reposearch','" + navigate(doSearch(searcher, namespace, 1) ) + "');");
+        runscript("window.history.pushState('history','reposearch','" + navigate(doSearch(searcher, namespace, 1) ) + "');");
     } else {
         clear(resultAndfacetArea);
     }
@@ -119,8 +121,6 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
 
   define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String){
       //highlight code using google-code-prettify
-      includeCSS("prettify.css")
-      includeJS("prettify.js")
         //prettify code
         <script>$(function(){prettyPrint();})</script>
           if(searcher.getQuery().length() > 0) {

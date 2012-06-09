@@ -14,10 +14,11 @@ application reposearch
     nextInvocation  :: DateTime
     lastInvocation  :: DateTime
     function newDay(){
-      if (dayCounter >= intervalInDays) { dayCounter := 0; }
+      var execute := false;
+      if (dayCounter >= intervalInDays) { dayCounter := 0; execute := true; }
       else {dayCounter := dayCounter + 1;}
       nextInvocation := now().addDays( intervalInDays - dayCounter );
-      if (dayCounter == 0){ refreshAllRepos(); }
+      if (execute){ refreshAllRepos(); }
     }
     function shiftByDays(days : Int){
         dayCounter := dayCounter - days;
