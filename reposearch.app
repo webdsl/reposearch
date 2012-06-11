@@ -15,8 +15,8 @@ application reposearch
     lastInvocation  :: DateTime
     function newDay(){
       var execute := false;
+      dayCounter := dayCounter + 1;
       if (dayCounter >= intervalInDays) { dayCounter := 0; execute := true; }
-      else {dayCounter := dayCounter + 1;}
       nextInvocation := now().addDays( intervalInDays - dayCounter );
       if (execute){ refreshAllRepos(); }
     }
@@ -34,7 +34,7 @@ application reposearch
     table{
       for(p:Project order by p.displayName ){
         row{
-          column{ navigate(search(p.name, "")){output(p.displayName)} } column{ placeholder "repos-"+p.displayName {showReposLink(p) }}
+          column{ navigate(search(p.name, "")){output(p.displayName)} } column{ reposLink(p) }
         }
       }
     }
@@ -51,8 +51,12 @@ application reposearch
     </div>
   }
 
+  define reposLink(p: Project){
+    placeholder "repos-"+p.displayName {showReposLink(p) }
+  }
+
   define ajax showReposLink(p : Project){
-      "  [" submitlink action{replace("repos-"+p.displayName, repos(p));}{"info"} "]"
+    "  [" submitlink action{replace("repos-"+p.displayName, repos(p));}{"info"} "]"
   }
 
   define output(r : Repo){
@@ -66,6 +70,7 @@ application reposearch
           output((r as GithubRepo).repo)
       }
       " at revision: " output(r.rev)
+      " (last refresh: " output(r.lastRefresh) ")"
   }
 
   define ajax repos(p : Project){
@@ -159,12 +164,13 @@ application reposearch
     validate(name.length() > 2, "length must be greater than 2")
   }
   entity Repo{
-    project -> Project (inverse=Project.repos)
-    refresh :: Bool
-    refreshSVN :: Bool
-    error::Bool
-    skippedFiles :: Text
-    rev :: Long
+    project     -> Project (inverse=Project.repos)
+    refresh     :: Bool
+    refreshSVN  :: Bool
+    error       :: Bool
+    skippedFiles:: Text
+    rev         :: Long
+    lastRefresh :: DateTime (default=now().addYears(-20))
   }
   entity SvnRepo : Repo{
     url :: URL
@@ -209,8 +215,8 @@ application reposearch
     //static getCommits(String):List<Commit>
     static getFiles(String):RepoCheckout
     static getFilesIfNew(String,Long):RepoCheckout
-    static checkoutSvn(String):RepoCheckout
-    static checkoutGithub(String,String):RepoCheckout
+    static getFiles(String,String):RepoCheckout
+    static getFilesIfNew(String,String,Long):RepoCheckout
   }
 
   native class svn.RepoCheckout as RepoCheckout{

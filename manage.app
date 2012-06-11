@@ -129,14 +129,12 @@ module manage
       output(r)
       div{
         if(r.refresh){
-          "REFRESH SCHEDULED"
-          submit action{cancelQueryRepo(r);} {"Cancel refresh"}
+          if(r.refreshSVN){ "REFRESH SCHEDULED" } else { "CHECK OUT SCHEDULED" }
+          submit action{cancelQueryRepo(r);} {"Cancel"}
         }
         else{
-          if(r isa SvnRepo){
-            submit action{queryRepoSVN(r);} {"Checkout if HEAD > r" output(r.rev)}
-          }
-          submit action{queryRepo(r);} {"Force checkout HEAD"}
+          submit action{queryRepo(r);} {"Checkout if HEAD > r" output(r.rev)}
+          submit action{queryCheckoutRepo(r);} {"Force checkout HEAD"}
         }
         submit action{pr.repos.remove(r);deleteRepoEntries(r); replace("reposPH" + pr.name, showRepos(pr));} {"Remove*"}
         submit action{return skippedFiles(r);}{"skipped files"}
@@ -216,23 +214,18 @@ module manage
 
   function queryRepo(r:Repo){
     r.refresh := true;
-    r.refreshSVN := false;
-  }
-
-  function queryRepoSVN(r:Repo){
-    r.refresh := true;
     r.refreshSVN := true;
+  }
+  function queryCheckoutRepo(r:Repo){
+    r.refresh := true;
+    r.refreshSVN := false;
   }
 
   function refreshAllRepos(){
     schedule.lastInvocation := now();
     for(pr:Project){
       for(r:Repo in pr.repos){
-         if(r isa SvnRepo){
-           queryRepoSVN(r);
-         } else {
-           queryRepo(r);
-         }
+         queryRepo(r);
        }
     }
   }
@@ -240,7 +233,7 @@ module manage
     schedule.lastInvocation := now();
     for(pr:Project){
       for(r:Repo in pr.repos){
-        queryRepo(r);
+        queryCheckoutRepo(r);
       }
     }
   }
@@ -260,12 +253,13 @@ module manage
       var col : RepoCheckout;
       var oldRev : Long := if(r.rev == null) -1 else r.rev;
       var rev : Long;
-      if(r.refreshSVN){
-        col := Svn.getFilesIfNew( (r as SvnRepo).url, oldRev );
+      if(r.refreshSVN){ //checkout if newer revision is available
+        if(r isa SvnRepo){ col := Svn.getFilesIfNew( (r as SvnRepo).url, oldRev ); }
+        if(r isa GithubRepo){ col := Svn.getFilesIfNew( (r as GithubRepo).user,(r as GithubRepo).repo, oldRev ); }
       }
-      else{
-        if(r isa SvnRepo){ col := Svn.checkoutSvn((r as SvnRepo).url); }
-        if(r isa GithubRepo){ col := Svn.checkoutGithub((r as GithubRepo).user,(r as GithubRepo).repo); }
+      else{ //forced checkout
+        if(r isa SvnRepo){ col := Svn.getFiles((r as SvnRepo).url); }
+        if(r isa GithubRepo){ col := Svn.getFiles((r as GithubRepo).user,(r as GithubRepo).repo); }
       }
       if(col == null){
           r.error := true;
@@ -283,9 +277,13 @@ module manage
             }
           }
           r.rev := col.getRevision();
+          r.lastRefresh := now();
           if(!settings.reindex){
             settings.reindex := true;
           }
+        } else {
+          r.rev := col.getRevision();
+          r.lastRefresh := now();
         }
         r.error := false;
       }

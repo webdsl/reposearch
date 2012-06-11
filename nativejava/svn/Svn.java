@@ -47,188 +47,36 @@ public class Svn {
         */
     }
 
-    public static RepoCheckout checkoutSvn(String repo1) {
-        return checkout(repo1,null);
+    public static RepoCheckout getFilesIfNew(String user,String repo, long rev) {
+        return getFilesIfNew("https://github.com/"+user+"/"+repo, rev);
     }
-    public static RepoCheckout checkoutGithub(String user,String repo) {
-        return checkout("http://svn.github.com/"+user+"/"+repo+".git",
-                        "https://github.com/"+user+"/"+repo+"/blob/master/");
-    }
-
-
-    public static RepoCheckout checkout(String repo1, String repo2) {
-        if(repo2==null){
-            repo2=repo1;
-        }
-        setupLibrary();
-        File dst;
-        long revision;
-        List<Entry> list;
-        try {
-            dst = Files.createTempDir();
-            System.out.println("Checking out repo: " + repo1);
-            System.out.println("temp dir: " + dst);
-            SVNURL svnurl = SVNURL.parseURIEncoded(repo1);
-
-            SVNClientManager cm = SVNClientManager.newInstance();
-            SVNUpdateClient uc = cm.getUpdateClient();
-
-            revision = uc.doCheckout(svnurl, dst, SVNRevision.UNDEFINED, SVNRevision.HEAD, true);
-
-            list = new ArrayList<Entry>();
-
-            if(!repo2.endsWith("/")){
-                repo2 = repo2+"/";
-            }
-            addEntryRecursive(repo2,"",dst,list);
-
-        } catch (SVNException svne) {
-            svne.printStackTrace();
-            return null;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-        //ignore failed delete
-        try {
-            //Files.deleteRecursively(dst);  //fails
-            FileUtils.deleteDirectory(dst);
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
-
-        return new RepoCheckout(list, revision);
-    }
-
-    private static void addEntryRecursive(String repo, String dir, File dst, List<Entry> list) throws IOException{
-        File[] files = dst.listFiles();
-        if (files != null) { // Either dir does not exist or is not a directory
-            String content, contentFixed;
-            for (File f : files) {
-               // System.out.println("file name: "+f.getName());
-                //System.out.println(f.getAbsolutePath());
-                if(f.isDirectory()){
-                    if(!f.getName().equals(".svn")){
-                        System.out.println("dir: "+f.getName());
-                        addEntryRecursive(repo,dir+f.getName()+"/",f,list);
-                    }
-                }
-                else{
-                    Entry c = new Entry();
-                    list.add(c);
-                    c.setNameNoEventsOrValidation(f.getName());
-                    //System.out.println("file name: "+f.getName());
-                    if(!(f.getName().endsWith(".zip")
-                      ||f.getName().endsWith(".tbl")
-                      ||f.getName().endsWith(".png")
-                      ||f.getName().endsWith(".jpg")
-                      ||f.getName().endsWith(".bmp")
-                      ||f.getName().endsWith(".jar"))){
-                        //We use a File property instead of String property
-                        //to workaround encoding exceptions.
-                        utils.File webdslFile = new utils.File();
-                        FileInputStream fis = null;
-                        try{
-                            fis= new FileInputStream(f);
-                            webdslFile.setContentStream(fis);
-                            //c.setFileNoEventsOrValidation(webdslFile);
-
-                            content = webdslFile.getContentAsString();
-                            contentFixed = fixEncoding( content );
-
-                            if ( contentFixed.length() < 1 && !contentFixed.equals( content ) )
-                                c.setContentNoEventsOrValidation( addLines("BINFILE") );
-                            else
-                                c.setContentNoEventsOrValidation( addLines( contentFixed ) );
-
-                        } finally{
-                            try{
-                                if(fis != null)
-                                    fis.close();
-                            } catch (java.io.IOException ex){
-                                System.out.println("file close exception during svn checkout reposearch 1:");
-                                ex.printStackTrace();
-                            }
-                        }
-                    } else {
-                        c.setContentNoEventsOrValidation("BINFILE");
-                    }
-                    //System.out.println("file contents: "+Files.toString(f,Charset.defaultCharset()));
-                    c.setUrlNoEventsOrValidation(repo+dir+f.getName());
-                    //System.out.println("file url: "+repo+dir+f.getName());
-                }
-
-            }
-        }
-    }
-
-    public static List<Commit> getCommits(String repo) {
-        String url = repo;
-
-        setupLibrary();
-        SVNRepository repository = null;
-        try {
-            repository = SVNRepositoryFactory.create(SVNURL.parseURIEncoded(url));
-
-            SVNNodeKind nodeKind = repository.checkPath("", -1);
-
-            if (nodeKind == SVNNodeKind.NONE) {
-                System.err.println("There is no entry at '" + url + "'.");
-                throw new SVNException(SVNErrorMessage.UNKNOWN_ERROR_MESSAGE);
-            } else if (nodeKind == SVNNodeKind.FILE) {
-                System.err.println("The entry at '" + url + "' is a file while a directory was expected.");
-                throw new SVNException(SVNErrorMessage.UNKNOWN_ERROR_MESSAGE);
-            }
-
-            long latestRevision = -1;
-            latestRevision = repository.getLatestRevision();
-
-            //long oldrev = 0;
-            long oldrev = latestRevision - 10;
-            //max(latestRevision - 10,0);
-
-            @SuppressWarnings("rawtypes")
-            Collection col = repository.log(null, null, latestRevision, oldrev, false, false);
-            @SuppressWarnings("rawtypes")
-            Iterator i = col.iterator();
-            System.out.println(i.hasNext());
-            List<Commit> list = new ArrayList<Commit>();
-            while(i.hasNext()){
-                SVNLogEntry o = (SVNLogEntry) i.next();
-                System.out.println(o);
-                Commit c = new Commit();
-                list.add(c);
-                c.setRevNoEventsOrValidation(o.getRevision());
-                c.setAuthorNoEventsOrValidation(o.getAuthor());
-                c.setMessageNoEventsOrValidation(o.getMessage());
-                c.setDateNoEventsOrValidation(o.getDate());
-            }
-
-            return list;
-        } catch (SVNException svne) {
-            svne.printStackTrace();
-            return null;
-        }
+    public static RepoCheckout getFiles(String user,String repo) {
+        return getFiles("https://github.com/"+user+"/"+repo);
     }
 
     private static final long latestRevision = -1;
 
     public static RepoCheckout getFiles(String repo) {
-        return getFilesIfNew(repo, -1);
+        return getFilesIfNew(repo, -10);
     }
 
-    //returns: RepoCheckout object if newer revision is available and files are checked out, null when given revision (rev) is newest
-    public static RepoCheckout getFilesIfNew(String repo, long rev) {
-        String url = repo;
+    //returns: RepoCheckout object with:
+    //- non-null file list if newer revision is available and files are checked out
+    //- null file list when given revision (rev) is newest
+    public static RepoCheckout getFilesIfNew(String repoUrl, long rev) {
+        String url = repoUrl;
 
         setupLibrary();
         SVNRepository repository = null;
         try {
             repository = SVNRepositoryFactory.create(SVNURL.parseURIEncoded(url));
-            if (rev >= repository.getLatestRevision()) {
-                System.out.println("Skipped checkout for repo: " + repo + ". This one is already at head revision");
-                return new RepoCheckout(null, repository.getLatestRevision());
+
+            //long headRevRepoRoot = repository.getLatestRevision();
+            long headRevRepoUrl = repository.getDir("", latestRevision, true, null).getRevision();
+
+            if (rev >= headRevRepoUrl) {
+                System.out.println("Skipped checkout for repo: " + repoUrl + ". This one is already at head revision");
+                return new RepoCheckout(null, headRevRepoUrl);
             }
 
             SVNNodeKind nodeKind = repository.checkPath("", -1);
@@ -244,7 +92,7 @@ public class Svn {
             List<Entry> list = new ArrayList<Entry>();
             addEntryRecursive("",repository,list);
 
-            return new RepoCheckout(list, repository.getLatestRevision());
+            return new RepoCheckout(list, headRevRepoUrl);
         } catch (SVNException svne) {
             svne.printStackTrace();
             return null;
