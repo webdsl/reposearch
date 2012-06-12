@@ -268,16 +268,19 @@ module manage
         if (col.getEntries() != null) {
           deleteRepoEntries(r);
           for(c: Entry in col.getEntries()){
-            if(c.content == "1 BINFILE"){
-              skippedFiles.add("<a href=\"" + c.url + "\">"+c.name+"</a>");
-            } else {
               c.projectname := r.project.name;
               c.repo := r;
               c.save();
-            }
+          }
+          for(c: Entry in col.getBinEntries()){
+              c.projectname := r.project.name;
+              c.repo := r;
+              c.save();
+              skippedFiles.add("<a href=\"" + c.url + "\">"+c.name+"</a>");
           }
           r.rev := col.getRevision();
           r.lastRefresh := now();
+          r.skippedFiles := skippedFiles.concat("<br />");
           if(!settings.reindex){
             settings.reindex := true;
           }
@@ -289,7 +292,6 @@ module manage
       }
       r.refresh:=false;
       r.refreshSVN := false;
-      r.skippedFiles := skippedFiles.concat("<br />");
     }
   }
 

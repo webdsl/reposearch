@@ -3,8 +3,6 @@ package svn;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -12,11 +10,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 import org.tmatesoft.svn.core.SVNException;
-import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tmatesoft.svn.core.SVNProperties;
 import org.tmatesoft.svn.core.SVNURL;
@@ -25,14 +21,8 @@ import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
-import org.tmatesoft.svn.core.wc.SVNClientManager;
-import org.tmatesoft.svn.core.wc.SVNRevision;
-import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 
-import webdsl.generated.domain.Commit;
 import webdsl.generated.domain.Entry;
-
-import com.google.common.io.Files;
 
 public class Svn {
     public static void main(String[] args){
@@ -76,7 +66,7 @@ public class Svn {
 
             if (rev >= headRevRepoUrl) {
                 System.out.println("Skipped checkout for repo: " + repoUrl + ". This one is already at head revision");
-                return new RepoCheckout(null, headRevRepoUrl);
+                return new RepoCheckout(null, null, headRevRepoUrl);
             }
 
             SVNNodeKind nodeKind = repository.checkPath("", -1);
@@ -89,10 +79,11 @@ public class Svn {
                 throw new SVNException(SVNErrorMessage.UNKNOWN_ERROR_MESSAGE);
             }
 
-            List<Entry> list = new ArrayList<Entry>();
-            addEntryRecursive("",repository,list);
+            List<Entry> entries = new ArrayList<Entry>();
+            List<Entry> binEntries = new ArrayList<Entry>();
+            addEntryRecursive("", repository, entries, binEntries);
 
-            return new RepoCheckout(list, headRevRepoUrl);
+            return new RepoCheckout(entries, binEntries, headRevRepoUrl);
         } catch (SVNException svne) {
             svne.printStackTrace();
             return null;
@@ -100,37 +91,39 @@ public class Svn {
     }
 
 
-    private static void addEntryRecursive(String dir,SVNRepository repo,List<Entry> list) throws SVNException{
+    private static void addEntryRecursive(String dir,SVNRepository repo,List<Entry> entries, List<Entry> binEntries) throws SVNException{
         SVNProperties props = null;
         Collection<?> nullcol = null;
         System.out.println("Reposearch getdir: " + repo.getLocation().getPath() + "/" + dir);
         Collection<?> col = repo.getDir(dir, latestRevision, props, nullcol);
         @SuppressWarnings("rawtypes")
         Iterator i = col.iterator();
-        String content, contentFixed;
+        String content = null, contentFixed = null;
+        boolean isBinFile;
         //System.out.println(i.hasNext());
         while(i.hasNext()){
+            isBinFile = true;
             SVNDirEntry o = (SVNDirEntry) i.next();
             //System.out.println(o.getName());
             //System.out.println(o.getKind());
             if(o.getKind()==SVNNodeKind.DIR){
                 //System.out.println("dir: "+o.getName());
-                addEntryRecursive(dir+o.getName()+"/",repo,list);
+                addEntryRecursive(dir+o.getName()+"/",repo,entries, binEntries);
+                continue;
             }
             else{
                 //System.out.println("file: "+o.getName());
                 Entry c = new Entry();
-                list.add(c);
+
                 c.setNameNoEventsOrValidation(o.getName());
-                if(  o.getName().endsWith(".zip")
+                c.setUrlNoEventsOrValidation(o.getURL().toString());
+                if(! (o.getName().endsWith(".zip")
                 ||o.getName().endsWith(".tbl")
                 ||o.getName().endsWith(".png")
                 ||o.getName().endsWith(".jpg")
                 ||o.getName().endsWith(".bmp")
-                ||o.getName().endsWith(".jar")) {
-                    c.setContentNoEventsOrValidation(addLines("BINFILE"));
+                ||o.getName().endsWith(".jar") ) ) {
 
-                } else {
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
                     repo.getFile(dir+o.getName(), latestRevision, null, out);
                     //Use utils.File as container for converting to String with proper encoding
@@ -142,10 +135,7 @@ public class Svn {
 
                         content = f.getContentAsString();
                         contentFixed = fixEncoding( content );
-                        if ( contentFixed.length() < 1 && !contentFixed.equals( content ) )
-                            c.setContentNoEventsOrValidation( addLines("BINFILE") );
-                        else
-                            c.setContentNoEventsOrValidation( addLines( contentFixed ) );
+                        isBinFile = ( contentFixed.length() < 1 && !contentFixed.equals( content ) ) ;
                     } catch( IOException ex){
                         ex.printStackTrace();
                     } finally {
@@ -155,13 +145,19 @@ public class Svn {
                             if(out != null)
                                 out.close();
                         } catch (java.io.IOException ex){
-                            System.out.println("file close exception during svn checkout reposearch 2:");
+                            System.out.println("file close exception during svn checkout reposearch:");
                             ex.printStackTrace();
                         }
                     }
                 }
+                if (isBinFile){
+                    c.setContentNoEventsOrValidation( addLines("BINFILE") );
+                    binEntries.add(c);
+                } else {
+                    c.setContentNoEventsOrValidation( addLines( contentFixed ) );
+                    entries.add(c);
+                }
 
-                c.setUrlNoEventsOrValidation(o.getURL().toString());
             }
         }
     }

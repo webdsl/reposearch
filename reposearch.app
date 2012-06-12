@@ -222,4 +222,5 @@ application reposearch
   native class svn.RepoCheckout as RepoCheckout{
       getRevision() : Long
       getEntries()  : List<Entry>
+      getBinEntries() : List<Entry>
   }
