@@ -30,6 +30,8 @@ import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import webdsl.generated.domain.Entry;
 
 public class Svn {
+    private static StringBuilder logBuilder = new StringBuilder();
+
     public static void main(String[] args){
         test();
     }
@@ -304,5 +306,15 @@ public class Svn {
 
     private static void log(String msg){
         System.out.println("Reposearch: " + msg);
+        logBuilder.append(new java.util.Date());
+        logBuilder.append(": ");
+        logBuilder.append(msg);
+        logBuilder.append("\n");
+
+    }
+    public static String getLog(){
+        String toReturn = logBuilder.toString();
+        logBuilder = new StringBuilder();
+        return toReturn;
     }
 }

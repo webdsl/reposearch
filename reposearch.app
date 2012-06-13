@@ -18,6 +18,7 @@ application reposearch
     intervalInHours :: Int (default=12)
     nextInvocation  :: DateTime
     lastInvocation  :: DateTime
+    log             :: Text
     function newHour(){
       var execute := false;
       hourCounter := hourCounter + 1;
@@ -32,9 +33,6 @@ application reposearch
   }
 
   define page root(){
-      init{
-          Svn.test();
-      }
     title { "Reposearch" }
     <center>output(fpMsg.msg)</center>
     <span class="home-text">"Search within project or " navigate(search("", "")){"all"} " projects:"</span>
@@ -225,6 +223,7 @@ application reposearch
     static updateFromRevOrCheckout(String,Long):RepoTaskResult
     static checkout(String,String):RepoTaskResult
     static updateFromRevOrCheckout(String,String,Long):RepoTaskResult
+    static getLog() : String
   }
 
   native class svn.RepoTaskResult as RepoTaskResult{

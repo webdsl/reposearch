@@ -63,13 +63,15 @@ module manage
     form{
         "Frontpage message" <br />
         input(fpMsgText)[onkeyup := updateFpMsgPreview(fpMsgText)]
-        submit action{fpMsg.msg := fpMsgText; fpMsg.save();}{"save"}
+        <br />submit action{fpMsg.msg := fpMsgText; fpMsg.save();}{"save"}
     }
     action ignore-validation updateFpMsgPreview(d : WikiText) {
         replace(fpMsgPreview, FpMsgPreview(d));
     }
 
     placeholder fpMsgPreview {FpMsgPreview(fpMsgText)}
+
+    showLog()
 
 
     if(fr.length > 0){
@@ -289,7 +291,22 @@ module manage
       r.refresh:=false;
       r.refreshSVN := false;
     }
+    updateLog();
   }
+
+  function updateLog(){
+      if (schedule.log == null){ schedule.log := "";}
+      schedule.log := schedule.log + Svn.getLog();
+      if(schedule.log.length() > 5000){ schedule.log := schedule.log.substring(schedule.log.length()-5000);}
+  }
+
+  define ignore-access-control showLog(){
+      "Log:"
+      table{
+     row{ column{ <pre> rawoutput(schedule.log) </pre> } }
+    }
+  }
+
 
   //If settings.reindex is set to true and no refresh is going on, refresh suggestions/facet readers
   function invokeCheckReindex(){
