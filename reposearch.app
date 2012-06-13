@@ -6,27 +6,35 @@ application reposearch
   imports ac
 
   var fpMsg := if( (from Message).length > 0) (from Message)[0]  else Message{msg := ""};
-  var schedule := if( (from Schedule).length > 0) (from Schedule)[0] else Schedule{dayCounter := 0 nextInvocation := now().addDays(4)};
+  var schedule := if( (from Schedule).length > 0) (from Schedule)[0] else Schedule{hourCounter := 0 nextInvocation := now().addHours(12)};
+
+  function resetSchedule(){
+    schedule.hourCounter := 0;
+    schedule.intervalInHours := 12;
+  }
 
   entity Schedule{
-    dayCounter      :: Int
-    intervalInDays  :: Int (default=5)
+    hourCounter     :: Int (default=0)
+    intervalInHours :: Int (default=12)
     nextInvocation  :: DateTime
     lastInvocation  :: DateTime
-    function newDay(){
+    function newHour(){
       var execute := false;
-      dayCounter := dayCounter + 1;
-      if (dayCounter >= intervalInDays) { dayCounter := 0; execute := true; }
-      nextInvocation := now().addDays( intervalInDays - dayCounter );
+      hourCounter := hourCounter + 1;
+      if (hourCounter >= intervalInHours) { hourCounter := 0; execute := true; }
+      nextInvocation := now().addHours( intervalInHours - hourCounter );
       if (execute){ refreshAllRepos(); }
     }
-    function shiftByDays(days : Int){
-        dayCounter := dayCounter - days;
-        nextInvocation := nextInvocation.addDays( days );
+    function shiftByHours(hours : Int){
+        hourCounter := hourCounter - hours;
+        nextInvocation := nextInvocation.addHours( hours );
     }
   }
 
   define page root(){
+      init{
+          Svn.test();
+      }
     title { "Reposearch" }
     <center>output(fpMsg.msg)</center>
     <span class="home-text">"Search within project or " navigate(search("", "")){"all"} " projects:"</span>
@@ -168,7 +176,6 @@ application reposearch
     refresh     :: Bool
     refreshSVN  :: Bool
     error       :: Bool
-    skippedFiles:: Text
     rev         :: Long
     lastRefresh :: DateTime (default=now().addYears(-20))
   }
@@ -213,14 +220,15 @@ application reposearch
 
   native class svn.Svn as Svn{
     //static getCommits(String):List<Commit>
-    static getFiles(String):RepoCheckout
-    static getFilesIfNew(String,Long):RepoCheckout
-    static getFiles(String,String):RepoCheckout
-    static getFilesIfNew(String,String,Long):RepoCheckout
+    static test()
+    static checkout(String):RepoTaskResult
+    static updateFromRevOrCheckout(String,Long):RepoTaskResult
+    static checkout(String,String):RepoTaskResult
+    static updateFromRevOrCheckout(String,String,Long):RepoTaskResult
   }
 
-  native class svn.RepoCheckout as RepoCheckout{
+  native class svn.RepoTaskResult as RepoTaskResult{
       getRevision() : Long
-      getEntries()  : List<Entry>
-      getBinEntries() : List<Entry>
+      getEntriesForAddition()  : List<Entry>
+      getEntriesForRemoval()   : List<String>
   }

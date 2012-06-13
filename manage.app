@@ -2,7 +2,7 @@ module manage
 
   invoke queryRepoTask()      every 30 seconds
   invoke invokeCheckReindex() every 60 seconds
-  invoke schedule.newDay()    every 1 days
+  invoke schedule.newHour()   every 1 hours
 
   define page manage(){
     title { "Manage - Reposearch" }
@@ -14,15 +14,15 @@ module manage
     navigate(root()){"return to home"}
 
     table{
-      row{ column{<i>"Refresh scheduling:" </i>} column{} }
+      row{ column{<i>"Refresh scheduling:" </i>}                  column{ submit action{resetSchedule();} {"reset"} } }
       row{ column{"Server time"}                                  column{ output(now) } }
       row{ column{"Last refresh (all repos)"}                     column{ if(schedule.lastInvocation != null) { output(schedule.lastInvocation) } else {"unkown"} } }
-      row{ column{"Next scheduled refresh (all repos)"}           column{ output(schedule.nextInvocation) " " submit action{schedule.shiftByDays(-1); return manage();} {"-"} submit action{schedule.shiftByDays(1); return manage();} {"+"} } }
-      row{ column{"Auto refresh interval (days)"}                 column{ form{ input(schedule.intervalInDays)[style := "width:3em;"]  submit action{schedule.save(); return manage();}{"set"}  } } }
-      row{ column{<i>"Instant refresh management:" </i>} column{}}
-      row{ column{"Refresh all repos where HEAD > indexed rev: "} column{submit action{refreshAllRepos();         return manage();} {"refresh all"} } }
+      row{ column{"Next scheduled refresh (all repos)"}           column{ output(schedule.nextInvocation) " " submit action{schedule.shiftByHours(-24); return manage();} {"-1d"} submit action{schedule.shiftByHours(-6); return manage();} {"-6h"} submit action{schedule.shiftByHours(6); return manage();} {"+6h"} submit action{schedule.shiftByHours(24); return manage();} {"+1d"} } }
+      row{ column{"Auto refresh interval (hours)"}                column{ form{ input(schedule.intervalInHours)[style := "width:3em;"]  submit action{schedule.save(); return manage();}{"set"}  } } }
+      row{ column{<i>"Instant refresh management:" </i>}          column{}}
+      row{ column{"Update all repos to HEAD: "}                   column{submit action{refreshAllRepos();         return manage();} {"refresh all"} } }
       row{ column{"Force a fresh checkout for all repos: "}       column{submit action{forceCheckoutAllRepos();   return manage();} {"force checkout all"} } }
-      row{ column{"Cancel all scheduled refreshes/checkouts: "}   column{submit action{cancelScheduledRefreshes();return manage();} {"cancel all"} } }
+      row{ column{"Cancel all scheduled refresh/checkouts: "}     column{submit action{cancelScheduledRefreshes();return manage();} {"cancel all"} } }
     } <br />
 
     form{
@@ -129,11 +129,11 @@ module manage
       output(r)
       div{
         if(r.refresh){
-          if(r.refreshSVN){ "REFRESH SCHEDULED" } else { "CHECK OUT SCHEDULED" }
+          if(r.refreshSVN){ "UPDATE TO HEAD SCHEDULED" } else { "CHECK OUT SCHEDULED" }
           submit action{cancelQueryRepo(r);} {"Cancel"}
         }
         else{
-          submit action{queryRepo(r);} {"Checkout if HEAD > r" output(r.rev)}
+          submit action{queryRepo(r);} {"Update if HEAD > r" output(r.rev)}
           submit action{queryCheckoutRepo(r);} {"Force checkout HEAD"}
         }
         submit action{pr.repos.remove(r);deleteRepoEntries(r); replace("reposPH" + pr.name, showRepos(pr));} {"Remove*"}
@@ -196,10 +196,8 @@ module manage
   }
 
   define page skippedFiles(r : Repo){
-      title { "Skipped files - Reposearch" }
-      "The following files are not indexed for repository [" output(r) "]:"
-      par{
-        rawoutput(r.skippedFiles)
+      init{
+        return search( r.project.name , "BINFILE" );
       }
   }
 
@@ -250,37 +248,35 @@ module manage
     var skippedFiles := List<String>();
     if(repos.length > 0){
       var r := repos[0];
-      var col : RepoCheckout;
+      var col : RepoTaskResult;
       var oldRev : Long := if(r.rev == null) -1 else r.rev;
       var rev : Long;
-      if(r.refreshSVN){ //checkout if newer revision is available
-        if(r isa SvnRepo){ col := Svn.getFilesIfNew( (r as SvnRepo).url, oldRev ); }
-        if(r isa GithubRepo){ col := Svn.getFilesIfNew( (r as GithubRepo).user,(r as GithubRepo).repo, oldRev ); }
+      if(r.refreshSVN){
+        if(r isa SvnRepo){ col := Svn.updateFromRevOrCheckout( (r as SvnRepo).url, oldRev ); }
+        if(r isa GithubRepo){ col := Svn.updateFromRevOrCheckout( (r as GithubRepo).user,(r as GithubRepo).repo, oldRev ); }
       }
       else{ //forced checkout
-        if(r isa SvnRepo){ col := Svn.getFiles((r as SvnRepo).url); }
-        if(r isa GithubRepo){ col := Svn.getFiles((r as GithubRepo).user,(r as GithubRepo).repo); }
+        if(r isa SvnRepo){ col := Svn.checkout((r as SvnRepo).url); }
+        if(r isa GithubRepo){ col := Svn.checkout((r as GithubRepo).user,(r as GithubRepo).repo); }
       }
       if(col == null){
           r.error := true;
       } else {
-        //only replace entries when new ones are retrieved, i.e. col.list is not null
-        if (col.getEntries() != null) {
-          deleteRepoEntries(r);
-          for(c: Entry in col.getEntries()){
+        //only replace entries when new ones are retrieved, i.e. col.getEntriesForAddition() is not null
+        if (col.getEntriesForAddition() != null) {
+          if(r.refreshSVN){
+              deleteRepoEntries(r, col);
+          } else {
+            deleteRepoEntries(r);
+          }
+          for(c: Entry in col.getEntriesForAddition()){
               c.projectname := r.project.name;
               c.repo := r;
               c.save();
           }
-          for(c: Entry in col.getBinEntries()){
-              c.projectname := r.project.name;
-              c.repo := r;
-              c.save();
-              skippedFiles.add("<a href=\"" + c.url + "\">"+c.name+"</a>");
-          }
+
           r.rev := col.getRevision();
           r.lastRefresh := now();
-          r.skippedFiles := skippedFiles.concat("<br />");
           if(!settings.reindex){
             settings.reindex := true;
           }
@@ -316,4 +312,15 @@ module manage
 
   function deleteRepoEntries(r:Repo){
     for(e:Entry where e.repo == r){e.delete();}
+  }
+
+  function deleteRepoEntries(r:Repo, rco : RepoTaskResult){
+      var entries : List<Entry>;
+      var projectName := r.project.name;
+      for(url:String in rco.getEntriesForRemoval()){
+          entries := (from Entry as e where e.url=~url and e.repo = ~r);
+          //when no hits are retrieved, we might be dealing with a directory, so try to delete all files within that directory using search
+          if (entries.length < 1)  { entries := (search Entry in namespace projectName matching repoPath:url).results(); }
+          for(e : Entry in entries){ log("Reposearch: Deleted Entry: " + e.url); e.delete();}
+      }
   }
