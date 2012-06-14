@@ -6,89 +6,113 @@ module manage
 
   define page manage(){
     title { "Manage - Reposearch" }
-    var fr := (from Repo where project is null);
-    var fpMsgText := fpMsg.msg;
-    var p := "";
-    var now := now();
-
     navigate(root()){"return to home"}
 
-    table{
-      row{ column{<i>"Refresh scheduling:" </i>}                  column{ submit action{resetSchedule();} {"reset"} } }
-      row{ column{"Server time"}                                  column{ output(now) } }
-      row{ column{"Last refresh (all repos)"}                     column{ if(schedule.lastInvocation != null) { output(schedule.lastInvocation) } else {"unkown"} } }
-      row{ column{"Next scheduled refresh (all repos)"}           column{ output(schedule.nextInvocation) " " submit action{schedule.shiftByHours(-24); return manage();} {"-1d"} submit action{schedule.shiftByHours(-6); return manage();} {"-6h"} submit action{schedule.shiftByHours(6); return manage();} {"+6h"} submit action{schedule.shiftByHours(24); return manage();} {"+1d"} } }
-      row{ column{"Auto refresh interval (hours)"}                column{ form{ input(schedule.intervalInHours)[style := "width:3em;"]  submit action{schedule.save(); return manage();}{"set"}  } } }
-      row{ column{<i>"Instant refresh management:" </i>}          column{}}
-      row{ column{"Update all repos to HEAD: "}                   column{submit action{refreshAllRepos();         return manage();} {"refresh all"} } }
-      row{ column{"Force a fresh checkout for all repos: "}       column{submit action{forceCheckoutAllRepos();   return manage();} {"force checkout all"} } }
-      row{ column{"Cancel all scheduled refresh/checkouts: "}     column{submit action{cancelScheduledRefreshes();return manage();} {"cancel all"} } }
-    } <br />
+    manageRefresh()
 
-    form{
-      input(p)
-      submit action{Project{name:=p}.save();} {"Add new project"}
-    }
-    <br/>
     placeholder requestsPH{
       showRequests()
     }
-    <br/>
-    for(pr:Project order by pr.displayName){
 
-      div[class="top-container"]{"Project: " <b>output(pr.name)</b> " [" submitlink("remove*", removeProject(pr))"]"}
-      div[class="main-container"]{
-        placeholder "reposPH" + pr.name{
-          showRepos(pr)
-        }
-        placeholder "addRepoPH" + pr.name{
-          addRepoBtn(pr)
+    manageProjects()
+    <br />
+    manageFrontpageMessage()
+    <br />
+    logMessage()
+
+  }
+
+  define manageProjects(){
+    var p := "";
+    var fr := (from Repo where project is null);
+    div[class="top-container"]{<b>"Manage Projects"</b>}
+    div[class="main-container"]{
+      form{
+        input(p)
+        submit action{Project{name:=p}.save();} {"Add new project"}
+      }
+      <br />
+      for(pr:Project order by pr.displayName){
+        div[class="top-container"]{"Project: " <b>output(pr.name)</b> " [" submitlink("remove*", removeProject(pr)) "] *be patient, may take over a minute)""]"}
+        div[class="main-container"]{
+          placeholder "reposPH" + pr.name{
+            showRepos(pr)
+          }
+          placeholder "addRepoPH" + pr.name{
+            addRepoBtn(pr)
+          }
         }
       }
-    }
 
-    action removeProject(pr : Project){
-        for(r:Repo in pr.repos){
-            deleteRepoEntries(r);
+      if(fr.length > 0){
+        <br />
+        submit action{
+          for(r:Repo in fr){
             r.delete();
-        }
+          }
+          return manage();
+        } {"Remove foreign Repo's (" output(fr.length) ")"} " (Repo entities where project == null)"
+      }
+
+    }
+    action removeProject(pr : Project){
+      for(r:Repo in pr.repos){
+        deleteRepoEntries(r);
+          r.delete();
+      }
       pr.delete();
       settings.reindex := true;
       return manage();
     }
+  }
 
-    <br />"*Removal may take some time. Please wait until the repository or project disappears."
-    <br /><br />
-
-    form{
-        "Frontpage message" <br />
+  define manageFrontpageMessage(){
+    var fpMsgText := fpMsg.msg;
+    div[class="top-container"]{<b>"Edit Frontpage Message"</b>}
+    div[class="main-container"]{
+      form{
         input(fpMsgText)[onkeyup := updateFpMsgPreview(fpMsgText)]
         <br />submit action{fpMsg.msg := fpMsgText; fpMsg.save();}{"save"}
+      }
+      placeholder fpMsgPreview {FpMsgPreview(fpMsgText)}
     }
     action ignore-validation updateFpMsgPreview(d : WikiText) {
         replace(fpMsgPreview, FpMsgPreview(d));
     }
-
-    placeholder fpMsgPreview {FpMsgPreview(fpMsgText)}
-
-    showLog()
-
-
-    if(fr.length > 0){
-      <br />
-      submit action{
-        for(r:Repo in fr){
-          r.delete();
-        }
-        return manage();
-      } {"Remove foreign Repo's (" output(fr.length) ")"} " (Repo entities where project == null)"
-    }
   }
 
   define ajax FpMsgPreview(d : WikiText) {
-    label("Preview:") {
-      block{
-        <center> output(d) </center>
+    block{
+      <center> output(d) </center>
+    }
+  }
+
+  define logMessage(){
+    div[class="top-container"]{<b>"SVN Log"</b>}
+    div[class="main-container"]{
+      placeholder log {showLog()}<br />
+      submit action{replace(log, showLog());}{"refresh"}
+    }
+  }
+
+  define manageRefresh(){
+    placeholder refreshManagement{ refreshScheduleControl() } <br />
+  }
+
+  define ajax refreshScheduleControl(){
+    var now := now();
+    div[class="top-container"]{<b>"Manage Refresh Scheduling"</b>}
+    div[class="main-container"]{
+      table{
+      row{ column{<i>"Refresh scheduling:" </i>}                  column{ submit action{resetSchedule();} {"reset"} } }
+      row{ column{"Server time"}                                  column{ output(now) } }
+      row{ column{"Last refresh (all repos)"}                     column{ if(schedule.lastInvocation != null) { output(schedule.lastInvocation) } else {"unkown"} } }
+      row{ column{"Next scheduled refresh (all repos)"}           column{ output(schedule.nextInvocation) " " submit action{schedule.shiftByHours(-24); replace(refreshManagement, refreshScheduleControl());} {"-1d"} submit action{schedule.shiftByHours(-3); replace(refreshManagement, refreshScheduleControl());} {"-3h"} submit action{schedule.shiftByHours(3); replace(refreshManagement, refreshScheduleControl());} {"+3h"} submit action{schedule.shiftByHours(24); replace(refreshManagement, refreshScheduleControl());} {"+1d"} } }
+      row{ column{"Auto refresh interval (hours)"}                column{ form{ input(schedule.intervalInHours)[style := "width:3em;"]  submit action{schedule.save(); replace(refreshManagement, refreshScheduleControl());}{"set"}  } } }
+      row{ column{<i>"Instant refresh management:" </i>}          column{ }}
+      row{ column{"Update all repos to HEAD: "}                   column{submit action{refreshAllRepos();         replace(refreshManagement, refreshScheduleControl());} {"refresh all"} } }
+      row{ column{"Force a fresh checkout for all repos: "}       column{submit action{forceCheckoutAllRepos();   replace(refreshManagement, refreshScheduleControl());} {"force checkout all"} } }
+      row{ column{"Cancel all scheduled refresh/checkouts: "}     column{submit action{cancelScheduledRefreshes();replace(refreshManagement, refreshScheduleControl());} {"cancel all"} } }
       }
     }
   }
@@ -246,13 +270,15 @@ module manage
   }
 
   function queryRepoTask(){
-    var repos := from Repo where refresh=true;
+    var repos := from Repo where refresh=true and (inrefresh=null or inrefresh=false);
     var skippedFiles := List<String>();
     if(repos.length > 0){
       var r := repos[0];
       var col : RepoTaskResult;
       var oldRev : Long := if(r.rev == null) -1 else r.rev;
       var rev : Long;
+      var performNextRefresh := false;
+      r.inRefresh:=true;
       if(r.refreshSVN){
         if(r isa SvnRepo){ col := Svn.updateFromRevOrCheckout( (r as SvnRepo).url, oldRev ); }
         if(r isa GithubRepo){ col := Svn.updateFromRevOrCheckout( (r as GithubRepo).user,(r as GithubRepo).repo, oldRev ); }
@@ -276,34 +302,33 @@ module manage
               c.repo := r;
               c.save();
           }
-
-          r.rev := col.getRevision();
-          r.lastRefresh := now();
-          if(!settings.reindex){
-            settings.reindex := true;
-          }
+          settings.addProject(r.project);
         } else {
-          r.rev := col.getRevision();
-          r.lastRefresh := now();
+          performNextRefresh := true;
         }
+        r.rev := col.getRevision();
+        r.lastRefresh := now();
         r.error := false;
       }
+
       r.refresh:=false;
       r.refreshSVN := false;
+      r.inRefresh:=false;
+      if(performNextRefresh){ queryRepoTask(); }
+
     }
-    updateLog();
   }
 
   function updateLog(){
       if (schedule.log == null){ schedule.log := "";}
       schedule.log := schedule.log + Svn.getLog();
-      if(schedule.log.length() > 5000){ schedule.log := schedule.log.substring(schedule.log.length()-5000);}
+      if(schedule.log.length() > 10000){ schedule.log := schedule.log.substring(schedule.log.length()-10000);}
   }
 
-  define ignore-access-control showLog(){
-      "Log:"
-      table{
-     row{ column{ <pre> rawoutput(schedule.log) </pre> } }
+  define ajax showLog(){
+    init{updateLog();}
+    table{
+      row{ column{ <pre> rawoutput(schedule.log) </pre> } }
     }
   }
 
@@ -311,9 +336,10 @@ module manage
   //If settings.reindex is set to true and no refresh is going on, refresh suggestions/facet readers
   function invokeCheckReindex(){
     if(settings.reindex && (from Repo where refresh=true).length < 1){
+      var namespaces := [p.name | p:Project in settings.projects];
       //directly set to false, in case repositories are updated during suggestion reindexing
       settings.reindex := false;
-      IndexManager.indexSuggestions();
+      IndexManager.indexSuggestions(namespaces);
       IndexManager.renewFacetIndexReaders();
     }
   }
@@ -324,8 +350,12 @@ module manage
 
   entity Settings{
     reindex :: Bool
+    projects-> List<Project>
+    function addProject(p : Project) {
+      if(!reindex){ reindex := true; }
+      if(projects.indexOf(p) < 0 ){ projects.add(p); }
+    }
   }
-  var settings := Settings{}
 
   function deleteRepoEntries(r:Repo){
     for(e:Entry where e.repo == r){e.delete();}

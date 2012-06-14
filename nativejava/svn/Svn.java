@@ -12,6 +12,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNErrorMessage;
@@ -31,6 +34,7 @@ import webdsl.generated.domain.Entry;
 
 public class Svn {
     private static StringBuilder logBuilder = new StringBuilder();
+    private static final Lock lock = new ReentrantLock();
 
     public static void main(String[] args){
         test();
@@ -305,16 +309,33 @@ public class Svn {
     }
 
     private static void log(String msg){
-        System.out.println("Reposearch: " + msg);
-        logBuilder.append(new java.util.Date());
-        logBuilder.append(": ");
-        logBuilder.append(msg);
-        logBuilder.append("\n");
+        try {
+            lock.tryLock(3, TimeUnit.SECONDS);
+            System.out.println("Reposearch: " + msg);
+            logBuilder.append(new java.util.Date());
+            logBuilder.append(": ");
+            logBuilder.append(msg);
+            logBuilder.append("\n");
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
 
     }
     public static String getLog(){
-        String toReturn = logBuilder.toString();
-        logBuilder = new StringBuilder();
+        String toReturn = null;
+        try {
+            lock.tryLock(3, TimeUnit.SECONDS);
+            toReturn = logBuilder.toString();
+            logBuilder = new StringBuilder();
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
         return toReturn;
     }
 }

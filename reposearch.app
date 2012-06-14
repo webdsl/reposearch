@@ -7,6 +7,7 @@ application reposearch
 
   var fpMsg := if( (from Message).length > 0) (from Message)[0]  else Message{msg := ""};
   var schedule := if( (from Schedule).length > 0) (from Schedule)[0] else Schedule{hourCounter := 0 nextInvocation := now().addHours(12)};
+  var settings := if( (from Settings).length > 0) (from Settings)[0] else Settings{reindex := false projects := List<Project>()}
 
   function resetSchedule(){
     schedule.hourCounter := 0;
@@ -170,9 +171,10 @@ application reposearch
     validate(name.length() > 2, "length must be greater than 2")
   }
   entity Repo{
-    project     -> Project (inverse=Project.repos)
+    project     -> Project  (inverse=Project.repos)
     refresh     :: Bool
     refreshSVN  :: Bool
+    inRefresh   :: Bool     (default=false)
     error       :: Bool
     rev         :: Long
     lastRefresh :: DateTime (default=now().addYears(-20))

@@ -125,8 +125,10 @@ input.button {
 }
 .login {
     bottom: 0;
-    float: left;
+    clear: both;
+    display: block;
     font-size: 10px;
+    right: 0;
     position: absolute;
 }
 .home-text{
