@@ -33,8 +33,9 @@ module manage
       }
       <br />
       for(pr:Project order by pr.displayName){
-        div[class="top-container"]{"Project: " <b>output(pr.name)</b> " [" submitlink("remove*", removeProject(pr)) "] *be patient, may take over a minute)""]"}
+        div[class="top-container"]{"Project: " <b>output(pr.name)</b> " [" submitlink("remove project*", removeProject(pr)) "] *be patient, this may take over a minute"}
         div[class="main-container"]{
+          searchCount(pr)
           placeholder "reposPH" + pr.name{
             showRepos(pr)
           }
@@ -57,13 +58,17 @@ module manage
     }
     action removeProject(pr : Project){
       for(r:Repo in pr.repos){
-        deleteRepoEntries(r);
+        deleteAllRepoEntries(r);
           r.delete();
       }
       pr.delete();
       settings.reindex := true;
       return manage();
     }
+  }
+
+  define searchCount(pr : Project){
+      "# of searches since " output(pr.countSince) " for project " output(pr.displayName) ": " <b>output(pr.searchCount)</b> " " submitlink("reset", action{pr.resetSearchCount();})
   }
 
   define manageFrontpageMessage(){
@@ -156,13 +161,13 @@ module manage
       div{
         if(r.refresh){
           if(r.refreshSVN){ "UPDATE TO HEAD SCHEDULED" } else { "CHECK OUT SCHEDULED" }
-          submit action{cancelQueryRepo(r);} {"Cancel"}
+          submit action{cancelQueryRepo(r); replace("reposPH" + pr.name,showRepos(pr)); } {"Cancel"}
         }
         else{
-          submit action{queryRepo(r);} {"Update if HEAD > r" output(r.rev)}
-          submit action{queryCheckoutRepo(r);} {"Force checkout HEAD"}
+          submit action{queryRepo(r); replace("reposPH" + pr.name,showRepos(pr));} {"Update if HEAD > r" output(r.rev)}
+          submit action{queryCheckoutRepo(r); replace("reposPH" + pr.name,showRepos(pr));} {"Force checkout HEAD"}
         }
-        submit action{pr.repos.remove(r);deleteRepoEntries(r); replace("reposPH" + pr.name, showRepos(pr));} {"Remove*"}
+        submit action{pr.repos.remove(r);deleteAllRepoEntries(r); replace("reposPH" + pr.name, showRepos(pr));} {"Remove*"}
         submit action{return skippedFiles(r);}{"skipped files"}
       }
       if(r.error){
@@ -295,7 +300,7 @@ module manage
           if(r.refreshSVN){
               deleteRepoEntries(r, col);
           } else {
-            deleteRepoEntries(r);
+            deleteAllRepoEntries(r);
           }
           for(c: Entry in col.getEntriesForAddition()){
               c.projectname := r.project.name;
@@ -357,14 +362,14 @@ module manage
     }
   }
 
-  function deleteRepoEntries(r:Repo){
+  function deleteAllRepoEntries(r:Repo){
     for(e:Entry where e.repo == r){e.delete();}
   }
 
-  function deleteRepoEntries(r:Repo, rco : RepoTaskResult){
+  function deleteRepoEntries(r:Repo, rtr : RepoTaskResult){
       var entries : List<Entry>;
       var projectName := r.project.name;
-      for(url:String in rco.getEntriesForRemoval()){
+      for(url:String in rtr.getEntriesForRemoval()){
           entries := (from Entry as e where e.url=~url and e.repo = ~r);
           //when no hits are retrieved, we might be dealing with a directory, so try to delete all files within that directory using search
           if (entries.length < 1)  { entries := (search Entry in namespace projectName matching repoPath:url).results(); }

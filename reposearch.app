@@ -113,11 +113,11 @@ application reposearch
     "Add your project/repository!"
     form{
       table {
-        row { column{"Project name: "}     column{input(p)} }
-        row { column{"SVN: "}              column{input(n)}    }
+        row { column{"Project name: "}     column{inputajax(r.project) } }
+        row { column{"SVN: "}              column{input(r.svn) }    }
         row { column{<span class="home-text">"or"</span>} column{}    }
-        row { column{"Github user: "}      column{input(gu)} }
-        row { column{"Github repository: "}column{input(gr)} }
+        row { column{"Github user: "}      column{input(r.gu)} }
+        row { column{"Github repository: "}column{input(r.gr)} }
       }
       submit action{replace("requestPH", req(""));} {"cancel"}
       submit action{
@@ -129,7 +129,7 @@ application reposearch
           // validate(/[A-Za-z0-9]+[A-Za-z0-9\-_\.\s][A-Za-z0-9]+/.match(p), "Project name should be at least 3 characters (allowed chars: a-z,A-Z,0-9,-,_, ,.)");
           // validate( (n.length() > 0 || (gu.length() > 0 && gr.length() > 0) ), "Please specify an SVN repository url or Github user and repository");
 
-          r.project:=p; r.svn:=n; r.gu:=gu; r.gr:=gr; r.save(); replace("requestPH", req("Your request is sent to the administrators. Please allow some time to process your request"));} {"add request"}
+          r.save(); replace("requestPH", req("Your request is sent to the administrators. Please allow some time to process your request"));} {"add request"}
     }
     submitlink openPendingRequests(){nOfPendingRequests()}
 
@@ -137,9 +137,11 @@ application reposearch
   }
 
   define page pendingRequests(){
-      title { "Pending requests - Reposearch" }
-      navigate(root()){"return to home"}
-      for(r:Request order by r.project){
+    var pendingRequests := from Request order by project;
+    title { "Pending requests - Reposearch" }
+    if (pendingRequests.length < 1){"There are no pending requests at this moment." <br />}
+    navigate(root()){"return to home"}
+    for(r : Request in pendingRequests){
       div[class="top-container-green"]{ output(r.project) " (project name)"}
       div[class="main-container"]{
           list{
@@ -162,13 +164,25 @@ application reposearch
       svn :: URL
       gu  :: String
       gr  :: String
+      validate(/[A-Za-z0-9]+[A-Za-z0-9\-_\.\s][A-Za-z0-9]+/.match(project), "Project name should be at least 3 characters (allowed chars: a-z,A-Z,0-9,-,_, ,.)")
+      validate( (svn.length() > 6 || (gu.length()>1 && gr.length()>1) ), "please fill in a SVN or Github repository" )
   }
 
   entity Project {
-    name :: String (id)
-    repos -> List<Repo>
-    displayName :: String := name.substring(0,1).toUpperCase() + name.substring(1, name.length())
+    name        :: String (id)
+    repos       -> List<Repo>
+    displayName :: String := if(name.length() > 0) name.substring(0,1).toUpperCase() + name.substring(1, name.length()) else name
+    searchCount :: Int
+    countSince  :: DateTime
     validate(name.length() > 2, "length must be greater than 2")
+
+    function resetSearchCount(){
+        searchCount := 0;
+        countSince := now();
+    }
+    function incSearchCount(){
+        searchCount := searchCount + 1;
+    }
   }
   entity Repo{
     project     -> Project  (inverse=Project.repos)

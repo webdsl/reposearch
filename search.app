@@ -1,8 +1,8 @@
 module search
 
 define page search(namespace:String, q:String){
+  init{  if(q.length() > 0){ incSearchCount(namespace); }  }
   title { output(q + " - Reposearch") }
-
   showSearch(toSearcher(q, namespace), namespace, 1)
 }
 
@@ -49,14 +49,15 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
   }
 
   action updateResults(){
-      if(query.length() > 0){
+      if(query.length() > 2){
         searcher := toSearcher(query,namespace); //update with entered query
         replace(resultAndfacetArea, paginatedTemplate(searcher, 1, namespace));
         //HTML5 feature, replace url without causing page reload
         runscript("window.history.pushState('history','reposearch','" + navigate(doSearch(searcher, namespace, 1) ) + "');");
-    } else {
+        incSearchCount(namespace);
+      } else {
         clear(resultAndfacetArea);
-    }
+      }
   }
 
   placeholder resultAndfacetArea{
@@ -65,6 +66,10 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
       }
   }
 }
+
+  function incSearchCount(namespace : String){
+    getUniqueProject(namespace).incSearchCount();
+  }
 
 service autocompleteService(namespace:String, term : String){
   var jsonArray := JSONArray();
@@ -125,8 +130,8 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
         <script>$(function(){prettyPrint();})</script>
           if(searcher.getQuery().length() > 0) {
               viewFacets(searcher, ns)
-            div[class="main-container"]{
-            paginatedResults(searcher, pageNum, ns)
+              div[class="main-container"]{
+              paginatedResults(searcher, pageNum, ns)
             }
         }
   }
@@ -397,5 +402,12 @@ function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLen
 page searchStats(){
     title { output("Reposearch Search Statistics") }
     showSearchStats()
-    submit action{SearchStatistics.clear();}{"Reset statistics"}
+    submit action{SearchStatistics.clear();}{"Reset global statistics"}
+
+    header{"Search counts per project"}
+    for(pr : Project order by pr.searchCount desc){
+        searchCount(pr)
+    }separated-by{<br />}
+    submit action{for(pr : Project){ pr.resetSearchCount(); }}{"Reset project search statistics"}
+
 }
