@@ -68,7 +68,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
 }
 
   function incSearchCount(namespace : String){
-    getUniqueProject(namespace).incSearchCount();
+    if(namespace != ""){findProject(namespace).incSearchCount();}
   }
 
 service autocompleteService(namespace:String, term : String){
@@ -406,8 +406,8 @@ page searchStats(){
 
     header{"Search counts per project"}
     for(pr : Project order by pr.searchCount desc){
-        searchCount(pr)
-    }separated-by{<br />}
+        searchCount(pr)<br />
+    }<br />
     submit action{for(pr : Project){ pr.resetSearchCount(); }}{"Reset project search statistics"}
 
 }

@@ -6,20 +6,21 @@ application reposearch
   imports ac
 
   var fpMsg := if( (from Message).length > 0) (from Message)[0]  else Message{msg := ""};
-  var schedule := if( (from Schedule).length > 0) (from Schedule)[0] else Schedule{hourCounter := 0 nextInvocation := now().addHours(12)};
+  var manager := if( (from RepoSearchManager).length > 0) (from RepoSearchManager)[0] else RepoSearchManager{hourCounter := 0 nextInvocation := now().addHours(12) log:="" adminEmails:=""};
   var settings := if( (from Settings).length > 0) (from Settings)[0] else Settings{reindex := false projects := List<Project>()}
 
   function resetSchedule(){
-    schedule.hourCounter := 0;
-    schedule.intervalInHours := 12;
+    manager.hourCounter := 0;
+    manager.intervalInHours := 12;
   }
 
-  entity Schedule{
+  entity RepoSearchManager{
     hourCounter     :: Int (default=0)
     intervalInHours :: Int (default=12)
     nextInvocation  :: DateTime
     lastInvocation  :: DateTime
     log             :: Text
+    adminEmails     :: Text
     function newHour(){
       var execute := false;
       hourCounter := hourCounter + 1;
@@ -108,11 +109,13 @@ application reposearch
     var gu := "";
     var gr := "";
     var n : URL := "";
+    var submitter : Email := "";
     var r : Request := Request{};
 
     "Add your project/repository!"
     form{
       table {
+        row { column{"Your email: "}       column{input(submitter)} }
         row { column{"Project name: "}     column{input(p)} }
         row { column{"SVN: "}              column{input(n)}    }
         row { column{<span class="home-text">"or"</span>} column{}    }
@@ -121,14 +124,63 @@ application reposearch
       }
        validate(/[A-Za-z0-9]+[A-Za-z0-9\-_\.\s][A-Za-z0-9]+/.match(p), "Project name should be at least 3 characters (allowed chars: a-z,A-Z,0-9,-,_, ,.)")
        validate( (n.length() > 6 || (gu.length()>1 && gr.length()>1) ), "please fill in a SVN or Github repository" )
+       validate(validateEmail(submitter), "please enter a valid email address")
        submit action{replace("requestPH", req(""));} {"cancel"}
        submit action{
-       r.project:=p; r.svn:=n; r.gu:=gu; r.gr:=gr; r.save(); replace("requestPH", req("Your request is sent to the administrators. Please allow some time to process your request"));} {"add request"}
+       r.project:=p; r.svn:=n; r.gu:=gu; r.gr:=gr; r.submitter:=submitter; r.save(); replace("requestPH", req("Your request is sent to the administrators. You will receive an email when your request is processed")); emailRequest(r);} {"add request"}
 
     }
     submitlink openPendingRequests(){nOfPendingRequests()}
 
     action openPendingRequests(){return pendingRequests();}
+  }
+
+  function validateEmail(mail : String) : Bool {
+    return /([a-zA-Z0-9_\-\.])+@(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})|(([a-zA-Z0-9\-]+\.)+)([a-zA-Z]{2,4}))/.match(mail);
+  }
+
+  function emailRequest(r : Request){
+    var emails : List<Text> := manager.adminEmails.split(",");
+    for(e : Text in emails where validateEmail(e)){
+      email adminRequestMail(e, "noreply@webdsl.org", r);
+    }
+  }
+
+  function sendRequestAcceptedMail(r: Request){
+      email submitterRequestMail(r, true, "");
+  }
+
+  function sendRequestRejectedMail(r: Request, reason : Text){
+      email submitterRequestMail(r, false, reason);
+  }
+
+  define email submitterRequestMail(r:Request, added : Bool, reason : Text) {
+    to(r.submitter)
+    from("noreply@webdsl.org")
+    if (added){ subject("Reposearch request accepted") } else { subject("Reposearch request rejected") }
+    par { "Dear recipient," }
+    par { "Your request to add the following repository to Reposearch has been "
+      if(added){"accepted and should be available for search shortly."}
+      else{ "rejected." <br/><br/> "Reason: " output(reason) }
+    }
+    <br />
+    par { "Project: " output(r.project) }
+    par { "SVN: " output(r.svn) }
+    par { "Github: " output(r.gu) " - " output(r.gr) }
+    <br />
+    par { navigate(root()){"Go to reposearch"} }
+  }
+
+  define email adminRequestMail(to:String,from:String, r : Request) {
+    to(to)
+    from(from)
+    subject("New reposearch repository request")
+    par { "A new request is added on reposearch" }
+    par { "Requester: " output(r.submitter) }
+    par { "Project: " output(r.project) }
+    par { "SVN: " output(r.svn) }
+    par { "Github: " output(r.gu) " - " output(r.gr) }
+    par { navigate(manage()){"Go to manage page"} }
   }
 
   define page pendingRequests(){
@@ -159,6 +211,7 @@ application reposearch
       svn :: URL
       gu  :: String
       gr  :: String
+      submitter :: Email
   }
 
   entity Project {

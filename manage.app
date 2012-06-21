@@ -2,13 +2,15 @@ module manage
 
   invoke queryRepoTask()      every 30 seconds
   invoke invokeCheckReindex() every 60 seconds
-  invoke schedule.newHour()   every 1 hours
+  invoke manager.newHour()   every 1 hours
 
   define page manage(){
     title { "Manage - Reposearch" }
     navigate(root()){"return to home"}
 
     manageRefresh()
+
+    manageRequestReceipts()
 
     placeholder requestsPH{
       showRequests()
@@ -20,6 +22,22 @@ module manage
     <br />
     logMessage()
 
+  }
+
+  define manageRequestReceipts(){
+      var addresses : String := manager.adminEmails;
+      form{
+          input(addresses){" will receive a notification upon a request."}
+          validate(validateEmailList(addresses) ,"Email addresses need to be seperated by a comma, without whitespace e.g. 'foo@bar.com,bar@foo.com'")
+          submit action{manager.adminEmails := addresses;}{"apply"}
+      }
+  }
+
+  function validateEmailList(listStr : String) : Bool {
+      for(address : String in listStr.split(",")){
+          if(!validateEmail(address)){ return false; }
+      }
+      return true;
   }
 
   define manageProjects(){
@@ -111,9 +129,9 @@ module manage
       table{
       row{ column{<i>"Refresh scheduling:" </i>}                  column{ submit action{resetSchedule();} {"reset"} } }
       row{ column{"Server time"}                                  column{ output(now) } }
-      row{ column{"Last refresh (all repos)"}                     column{ if(schedule.lastInvocation != null) { output(schedule.lastInvocation) } else {"unkown"} } }
-      row{ column{"Next scheduled refresh (all repos)"}           column{ output(schedule.nextInvocation) " " submit action{schedule.shiftByHours(-24); replace(refreshManagement, refreshScheduleControl());} {"-1d"} submit action{schedule.shiftByHours(-3); replace(refreshManagement, refreshScheduleControl());} {"-3h"} submit action{schedule.shiftByHours(3); replace(refreshManagement, refreshScheduleControl());} {"+3h"} submit action{schedule.shiftByHours(24); replace(refreshManagement, refreshScheduleControl());} {"+1d"} } }
-      row{ column{"Auto refresh interval (hours)"}                column{ form{ input(schedule.intervalInHours)[style := "width:3em;"]  submit action{schedule.save(); replace(refreshManagement, refreshScheduleControl());}{"set"}  } } }
+      row{ column{"Last refresh (all repos)"}                     column{ if(manager.lastInvocation != null) { output(manager.lastInvocation) } else {"unkown"} } }
+      row{ column{"Next scheduled refresh (all repos)"}           column{ output(manager.nextInvocation) " " submit action{manager.shiftByHours(-24); replace(refreshManagement, refreshScheduleControl());} {"-1d"} submit action{manager.shiftByHours(-3); replace(refreshManagement, refreshScheduleControl());} {"-3h"} submit action{manager.shiftByHours(3); replace(refreshManagement, refreshScheduleControl());} {"+3h"} submit action{manager.shiftByHours(24); replace(refreshManagement, refreshScheduleControl());} {"+1d"} } }
+      row{ column{"Auto refresh interval (hours)"}                column{ form{ input(manager.intervalInHours)[style := "width:3em;"]  submit action{manager.save(); replace(refreshManagement, refreshScheduleControl());}{"set"}  } } }
       row{ column{<i>"Instant refresh management:" </i>}          column{ }}
       row{ column{"Update all repos to HEAD: "}                   column{submit action{refreshAllRepos();         replace(refreshManagement, refreshScheduleControl());} {"refresh all"} } }
       row{ column{"Force a fresh checkout for all repos: "}       column{submit action{forceCheckoutAllRepos();   replace(refreshManagement, refreshScheduleControl());} {"force checkout all"} } }
@@ -190,9 +208,11 @@ module manage
     var gr:= r.gr;
     var existing : List<Project>;
     var targetProject : Project;
+    var reason : Text := "";
 
     div[class="top-container-green"]{"REQUEST"}
     div[class="main-container"]{
+      "requester: " output(r.submitter)
       form{
         "Project name: "
         input(project)
@@ -202,9 +222,13 @@ module manage
         input(gu)
         <br />"Github repo: "
         input(gr)
+        <br />"Reason in case of rejection: "
+        <br />
+        input(reason)
         <br />
         submit action{r.delete();
             replace("requestsPH", showRequests());
+            sendRequestRejectedMail(r, reason);
         }{"reject (deletes request)"}
          submit action{ existing := from Project where name = ~project;
             if( existing.length != 0 ){
@@ -219,6 +243,7 @@ module manage
             if(gu.length() != 0  && gr.length() != 0){
                 targetProject.repos.add( GithubRepo{ user:=gu repo:=gr refresh:=true } );
             }
+            sendRequestAcceptedMail(r);
             r.delete();
             return manage();
          }{"add to new/existing project"}
@@ -251,7 +276,7 @@ module manage
   }
 
   function refreshAllRepos(){
-    schedule.lastInvocation := now();
+    manager.lastInvocation := now();
     for(pr:Project){
       for(r:Repo in pr.repos){
          queryRepo(r);
@@ -259,7 +284,7 @@ module manage
     }
   }
   function forceCheckoutAllRepos(){
-    schedule.lastInvocation := now();
+    manager.lastInvocation := now();
     for(pr:Project){
       for(r:Repo in pr.repos){
         queryCheckoutRepo(r);
@@ -325,15 +350,15 @@ module manage
   }
 
   function updateLog(){
-      if (schedule.log == null){ schedule.log := "";}
-      schedule.log := schedule.log + Svn.getLog();
-      if(schedule.log.length() > 10000){ schedule.log := schedule.log.substring(schedule.log.length()-10000);}
+      if (manager.log == null){ manager.log := "";}
+      manager.log := manager.log + Svn.getLog();
+      if(manager.log.length() > 10000){ manager.log := manager.log.substring(manager.log.length()-10000);}
   }
 
   define ajax showLog(){
     init{updateLog();}
     table{
-      row{ column{ <pre> rawoutput(schedule.log) </pre> } }
+      row{ column{ <pre> rawoutput(manager.log) </pre> } }
     }
   }
 
