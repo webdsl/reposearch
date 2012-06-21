@@ -113,23 +113,18 @@ application reposearch
     "Add your project/repository!"
     form{
       table {
-        row { column{"Project name: "}     column{inputajax(r.project) } }
-        row { column{"SVN: "}              column{input(r.svn) }    }
+        row { column{"Project name: "}     column{input(p)} }
+        row { column{"SVN: "}              column{input(n)}    }
         row { column{<span class="home-text">"or"</span>} column{}    }
-        row { column{"Github user: "}      column{input(r.gu)} }
-        row { column{"Github repository: "}column{input(r.gr)} }
+        row { column{"Github user: "}      column{input(gu)} }
+        row { column{"Github repository: "}column{input(gr)} }
       }
-      submit action{replace("requestPH", req(""));} {"cancel"}
-      submit action{
-          //TODO FIXME: validate doesnt work atm:
-            // exception occured while handling request URL: http://localhost:8080/reposearch/addProject
-            // exception message: could not initialize proxy - no Session
-            // org.hibernate.LazyInitializationException: could not initialize proxy - no Session
-            // ...
-          // validate(/[A-Za-z0-9]+[A-Za-z0-9\-_\.\s][A-Za-z0-9]+/.match(p), "Project name should be at least 3 characters (allowed chars: a-z,A-Z,0-9,-,_, ,.)");
-          // validate( (n.length() > 0 || (gu.length() > 0 && gr.length() > 0) ), "Please specify an SVN repository url or Github user and repository");
+       validate(/[A-Za-z0-9]+[A-Za-z0-9\-_\.\s][A-Za-z0-9]+/.match(p), "Project name should be at least 3 characters (allowed chars: a-z,A-Z,0-9,-,_, ,.)")
+       validate( (n.length() > 6 || (gu.length()>1 && gr.length()>1) ), "please fill in a SVN or Github repository" )
+       submit action{replace("requestPH", req(""));} {"cancel"}
+       submit action{
+       r.project:=p; r.svn:=n; r.gu:=gu; r.gr:=gr; r.save(); replace("requestPH", req("Your request is sent to the administrators. Please allow some time to process your request"));} {"add request"}
 
-          r.save(); replace("requestPH", req("Your request is sent to the administrators. Please allow some time to process your request"));} {"add request"}
     }
     submitlink openPendingRequests(){nOfPendingRequests()}
 
@@ -164,8 +159,6 @@ application reposearch
       svn :: URL
       gu  :: String
       gr  :: String
-      validate(/[A-Za-z0-9]+[A-Za-z0-9\-_\.\s][A-Za-z0-9]+/.match(project), "Project name should be at least 3 characters (allowed chars: a-z,A-Z,0-9,-,_, ,.)")
-      validate( (svn.length() > 6 || (gu.length()>1 && gr.length()>1) ), "please fill in a SVN or Github repository" )
   }
 
   entity Project {
