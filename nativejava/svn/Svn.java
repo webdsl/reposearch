@@ -70,40 +70,38 @@ public class Svn {
         try {
             repository = SVNRepositoryFactory.create(SVNURL.parseURIEncoded(url));
 
-            //long headRevRepoRoot = repository.getLatestRevision();
-            long repoUrlHeadRev = repository.getDir("", latestRevision, true, null).getRevision();
-
-            if (fromRev >= repoUrlHeadRev) {
-                log("Skipped update for repo: " + repoUrl + ". This one is already at head revision");
-                return new RepoTaskResult(null, null, repoUrlHeadRev);
-            }
-
             SVNNodeKind nodeKind = repository.checkPath("", latestRevision);
-
             if (nodeKind == SVNNodeKind.NONE) {
                 log("There is no entry at '" + url + "'.");
                 throw new SVNException(SVNErrorMessage.UNKNOWN_ERROR_MESSAGE);
-            } else if (nodeKind == SVNNodeKind.FILE) {
-                log("The entry at '" + url + "' is a file while a directory was expected.");
-                throw new SVNException(SVNErrorMessage.UNKNOWN_ERROR_MESSAGE);
             }
-
-
-
-
-            List<Entry> entriesForAddition = new ArrayList<Entry>();
-            List<String> entriesForRemoval = new ArrayList<String>();
-
-            if (fromRev < 1) {
-                log("Checkout: " + repoUrl);
-                addEntryRecursive("", repository, entriesForAddition);
-            } else {
-                log("Updating: " + repoUrl + " from" + fromRev + " to HEAD");
-                updateToRevision(repository, fromRev+1, entriesForAddition, entriesForRemoval);
+            else if (nodeKind == SVNNodeKind.FILE) {
+                log("The entry at '" + url + "' is a file.");
+                // TODO: skip if no changes // String urldir = url.substring(0,url.lastIndexOf('/'));
+                List<Entry> entriesForAddition = new ArrayList<Entry>();
+                getFile("", repository, entriesForAddition);
+                return new RepoTaskResult(entriesForAddition, new ArrayList<String>(), -1);
             }
-
-            return new RepoTaskResult(entriesForAddition, entriesForRemoval, repoUrlHeadRev);
+            else{
+                //long headRevRepoRoot = repository.getLatestRevision();
+                long repoUrlHeadRev = repository.getDir("", latestRevision, true, null).getRevision();
+                if (fromRev >= repoUrlHeadRev) {
+                    log("Skipped update for repo: " + repoUrl + ". This one is already at head revision");
+                    return new RepoTaskResult(null, null, repoUrlHeadRev);
+                }
+                List<Entry> entriesForAddition = new ArrayList<Entry>();
+                List<String> entriesForRemoval = new ArrayList<String>();
+                if (fromRev < 1) {
+                    log("Checkout: " + repoUrl);
+                    addEntryRecursive("", repository, entriesForAddition);
+                } else {
+                    log("Updating: " + repoUrl + " from" + fromRev + " to HEAD");
+                    updateToRevision(repository, fromRev+1, entriesForAddition, entriesForRemoval);
+                }
+                return new RepoTaskResult(entriesForAddition, entriesForRemoval, repoUrlHeadRev);
+            }
         } catch (SVNException svne) {
+            log(svne.getMessage());
             svne.printStackTrace();
             return null;
         }
@@ -187,7 +185,7 @@ public class Svn {
                 try {
                     getFile(dir+o.getName(), repository, entries);
                 } catch (SVNException e) {
-                    // TODO Auto-generated catch block
+                    log(e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -230,7 +228,8 @@ public class Svn {
                 content = f.getContentAsString();
                 contentFixed = fixEncoding( content );
                 isBinFile = ( contentFixed.length() < 1 && !contentFixed.equals( content ) ) ;
-            } catch( IOException ex){
+            } catch(IOException ex){
+                log(ex.getMessage());
                 ex.printStackTrace();
             } finally {
                 try{
