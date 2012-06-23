@@ -115,7 +115,14 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
   }
 
   div[class="search-result-link"]{
-      navWithAnchor(navigate(viewFile(searcher.getQuery(), cf.url, cf.projectname)), ruleOffset){div[class="search-result-location"]{ output(location) } <b>output(linkText)</b>}
+      navWithAnchor(navigate(viewFile(searcher.getQuery(), cf.url, cf.projectname)), ruleOffset){
+        div[class="search-result-location"]{ 
+          output(location) 
+        } 
+        <b>
+          output(if(linkText.length()>0) linkText else "-")
+        </b>
+      }  
   }
    <div class="search-result-highlight">
         <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(highlightedContent[0].concat("<br />"))</div>
