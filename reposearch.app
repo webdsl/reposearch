@@ -76,6 +76,8 @@ application reposearch
           output((r as GithubRepo).user)
           " "
           output((r as GithubRepo).repo)
+          " "
+          output((r as GithubRepo).svnPath)
       }
       " at revision: " output(r.rev)
       " (last refresh: " output(r.lastRefresh) ")"
@@ -108,6 +110,8 @@ application reposearch
     var p := "";
     var gu := "";
     var gr := "";
+    var path := "trunk";
+    var tag := false;
     var n : URL := "";
     var submitter : Email := "";
     var r : Request := Request{};
@@ -117,17 +121,22 @@ application reposearch
       table {
         row { column{"Your email: "}       column{input(submitter)} }
         row { column{"Project name: "}     column{input(p)} }
-        row { column{"SVN: "}              column{input(n)}    }
-        row { column{<span class="home-text">"or"</span>} column{}    }
-        row { column{"Github user: "}      column{input(gu)} }
-        row { column{"Github repository: "}column{input(gr)} }
+        row { column{"SVN or Github URL: "}column{input(n)} }
+        row { column{"This URL is/resides within a github tag"}  column{input(tag){"this is a tag in Github."} } }
+        row { column{"Example links:"}     column{<i>"http://some.svn.url/repo/trunk"
+                        <br />"https://github.com/hibernate/hibernate-search (master branch)"
+                        <br />"https://github.com/hibernate/hibernate-search/tree/4.0 (4.0 branch)"
+                        <br />"https://github.com/hibernate/hibernate-search/tree/4.0.0.Final (4.0.0.Final tag)"
+                        <br />"https://github.com/mobl/mobl-lib/blob/v0.5.0/mobl/ui/generic/touchscroll.js (a file within v0.5.0 tag)"
+                      </i>}
+            }
       }
        validate(/[A-Za-z0-9]+[A-Za-z0-9\-_\.\s][A-Za-z0-9]+/.match(p), "Project name should be at least 3 characters (allowed chars: a-z,A-Z,0-9,-,_, ,.)")
-       validate( (n.length() > 6 || (gu.length()>1 && gr.length()>1) ), "please fill in a SVN or Github repository" )
+       validate( (n.length() > 6), "please fill in a SVN or Github repository" )
        validate(validateEmail(submitter), "please enter a valid email address")
-       submit action{replace("requestPH", req(""));} {"cancel"}
+       submit action{replace("requestPH", req(""));}[ignore-validation] {"cancel"}
        submit action{
-       r.project:=p; r.svn:=n; r.gu:=gu; r.gr:=gr; r.submitter:=submitter; r.save(); replace("requestPH", req("Your request is sent to the administrators. You will receive an email when your request is processed")); emailRequest(r);} {"add request"}
+       r.project:=p; r.svn:=n; r.submitter:=submitter; r.save(); replace("requestPH", req("Your request is sent to the administrators. You will receive an email when your request is processed")); emailRequest(r);} {"add request"}
 
     }
     submitlink openPendingRequests(){nOfPendingRequests()}
@@ -166,7 +175,7 @@ application reposearch
     <br />
     par { "Project: " output(r.project) }
     par { "SVN: " output(r.svn) }
-    par { "Github: " output(r.gu) " - " output(r.gr) }
+    par { "Github tag?: " output(r.isGithubTag) }
     <br />
     par { navigate(root()){"Go to reposearch"} }
   }
@@ -179,7 +188,7 @@ application reposearch
     par { "Requester: " output(r.submitter) }
     par { "Project: " output(r.project) }
     par { "SVN: " output(r.svn) }
-    par { "Github: " output(r.gu) " - " output(r.gr) }
+    par { "Github tag?: " output(r.isGithubTag) }
     par { navigate(manage()){"Go to manage page"} }
   }
 
@@ -193,8 +202,7 @@ application reposearch
       div[class="main-container"]{
           list{
             listitem{"SVN: '" output(r.svn) "'"}
-            listitem{"Github user: '" output(r.gu) "'"}
-            listitem{"Github repo: '" output(r.gr) "'"}
+            listitem{"is a Github tag: '" output(r.isGithubTag) "'"}
         }
       }
     }
@@ -207,11 +215,10 @@ application reposearch
   }
 
   entity Request {
-      project :: String
-      svn :: URL
-      gu  :: String
-      gr  :: String
-      submitter :: Email
+      project     :: String
+      svn         :: URL
+      isGithubTag :: Bool
+      submitter   :: Email
   }
 
   entity Project {
@@ -245,6 +252,7 @@ application reposearch
   entity GithubRepo : Repo{
     user::String
     repo::String
+    svnPath::String
   }
   entity Commit{
     rev :: Long
@@ -283,8 +291,8 @@ application reposearch
     static test()
     static checkout(String):RepoTaskResult
     static updateFromRevOrCheckout(String,Long):RepoTaskResult
-    static checkout(String,String):RepoTaskResult
-    static updateFromRevOrCheckout(String,String,Long):RepoTaskResult
+    static checkout(String,String,String):RepoTaskResult
+    static updateFromRevOrCheckout(String,String,String,Long):RepoTaskResult
     static getLog() : String
   }
 

@@ -153,19 +153,15 @@ module manage
   define ajax addRepo(pr : Project){
     var gu:String
     var gr:String
+    var isTag:=false;
     var n :URL
     div[class="new-repo"]{
       form{
-        "SVN: "
+        "SVN or github URL: "
         input(n)
-        submit action{ pr.repos.add(SvnRepo{url:=n}); replace("addRepoPH" + pr.name, addRepoBtn(pr)); replace("reposPH" + pr.name, showRepos(pr));} {"Add repository"}
-      }
-      form{
-        "Github user: "
-        input(gu)
-        " repository: "
-        input(gr)
-        submit action{ pr.repos.add(GithubRepo{user:=gu repo:=gr}); replace("addRepoPH" + pr.name, addRepoBtn(pr)); replace("reposPH" + pr.name, showRepos(pr)); } {"Add repository"}
+        <br />"resides within github tag?: "
+        input(isTag)
+        submit action{ pr.repos.add(createNewRepo(n, isTag)); replace("addRepoPH" + pr.name, addRepoBtn(pr)); replace("reposPH" + pr.name, showRepos(pr));} {"Add repository"}
       }
     }
     div{
@@ -204,8 +200,7 @@ module manage
   define showRequest(r : Request){
     var project := r.project;
     var repo : URL := r.svn;
-    var gu:= r.gu;
-    var gr:= r.gr;
+    var isGithubTag := r.isGithubTag;
     var existing : List<Project>;
     var targetProject : Project;
     var reason : Text := "";
@@ -218,10 +213,8 @@ module manage
         input(project)
         <br />"SVN: "
         input(repo)
-        <br />"Github user: "
-        input(gu)
-        <br />"Github repo: "
-        input(gr)
+        <br />"is Github tag?"
+        input(isGithubTag)
         <br />"Reason in case of rejection: "
         <br />
         input(reason)
@@ -237,12 +230,8 @@ module manage
                 targetProject := Project{ name:=project };
             }
             targetProject.save();
-            if(repo.length() != 0){
-                targetProject.repos.add( SvnRepo{ url:=repo refresh:=true } );
-            }
-            if(gu.length() != 0  && gr.length() != 0){
-                targetProject.repos.add( GithubRepo{ user:=gu repo:=gr refresh:=true } );
-            }
+            targetProject.repos.add( createNewRepo(repo, isGithubTag) );
+
             sendRequestAcceptedMail(r);
             r.delete();
             return manage();
@@ -260,6 +249,29 @@ module manage
   init{
     Project{name:="WebDSL" repos:=[(SvnRepo{url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac"} as Repo)]}.save();
   }
+
+  function createNewRepo(url:String,isGithubTag:Bool) : Repo{
+    if(url.toLowerCase().contains("github.com")){
+        var params := /.*github\.com/([^/]+)/([^/]+)(/?.*)/.replaceAll("$1,$2,$3", url).split(",");
+        var u := params[0];
+        var r := params[1];
+        var p := "/trunk";
+        var prefixPath := "";
+        if(/(^$)|((tree|blob)/master.*)/.match(params[2])) {
+          prefixPath := "trunk";
+        } else {
+          prefixPath := if (isGithubTag) "tags" else "branch";
+        }
+        if(params[2].length() > 1) {
+          p := /^/(tree|blob)(/master)?/.replaceFirst(prefixPath, params[2]);
+        }
+        return GithubRepo{ user:=u repo:=r svnPath:=p refresh:=true};
+    }
+    else{
+        return SvnRepo{ url:=url refresh:=true };
+    }
+  }
+
 
   function cancelQueryRepo(r:Repo){
     r.refresh := false;
@@ -311,11 +323,11 @@ module manage
       r.inRefresh:=true;
       if(r.refreshSVN){
         if(r isa SvnRepo){ col := Svn.updateFromRevOrCheckout( (r as SvnRepo).url, oldRev ); }
-        if(r isa GithubRepo){ col := Svn.updateFromRevOrCheckout( (r as GithubRepo).user,(r as GithubRepo).repo, oldRev ); }
+        if(r isa GithubRepo){ col := Svn.updateFromRevOrCheckout( (r as GithubRepo).user,(r as GithubRepo).repo, (r as GithubRepo).svnPath, oldRev ); }
       }
       else{ //forced checkout
         if(r isa SvnRepo){ col := Svn.checkout((r as SvnRepo).url); }
-        if(r isa GithubRepo){ col := Svn.checkout((r as GithubRepo).user,(r as GithubRepo).repo); }
+        if(r isa GithubRepo){ col := Svn.checkout((r as GithubRepo).user,(r as GithubRepo).repo, (r as GithubRepo).svnPath); }
       }
       if(col == null){
           r.error := true;

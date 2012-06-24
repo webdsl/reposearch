@@ -45,11 +45,11 @@ public class Svn {
         updateFromRevOrCheckout(repo, 65);
     }
 
-    public static RepoTaskResult updateFromRevOrCheckout(String user,String repo, long rev) {
-        return updateFromRevOrCheckout("https://github.com/"+user+"/"+repo, rev);
+    public static RepoTaskResult updateFromRevOrCheckout(String user,String repo, String path, long rev) {
+        return updateFromRevOrCheckout("https://github.com/"+user+"/"+repo+"/"+path, rev);
     }
-    public static RepoTaskResult checkout(String user,String repo) {
-        return checkout("https://github.com/"+user+"/"+repo);
+    public static RepoTaskResult checkout(String user,String repo,String path) {
+        return checkout("https://github.com/"+user+"/"+repo+"/"+path);
     }
 
     private static final long latestRevision = -1;
@@ -86,7 +86,7 @@ public class Svn {
                 //long headRevRepoRoot = repository.getLatestRevision();
                 long repoUrlHeadRev = repository.getDir("", latestRevision, true, null).getRevision();
                 if (fromRev >= repoUrlHeadRev) {
-                    log("Skipped update for repo: " + repoUrl + ". This one is already at head revision");
+                    log("Skipped update for repo: " + repoUrl + ". This one is already at HEAD");
                     return new RepoTaskResult(null, null, repoUrlHeadRev);
                 }
                 List<Entry> entriesForAddition = new ArrayList<Entry>();
@@ -95,7 +95,7 @@ public class Svn {
                     log("Checkout: " + repoUrl);
                     addEntryRecursive("", repository, entriesForAddition);
                 } else {
-                    log("Updating: " + repoUrl + " from" + fromRev + " to HEAD");
+                    log("Updating: " + repoUrl + " from " + fromRev + " to HEAD (r" + repoUrlHeadRev + ")");
                     updateToRevision(repository, fromRev+1, entriesForAddition, entriesForRemoval);
                 }
                 return new RepoTaskResult(entriesForAddition, entriesForRemoval, repoUrlHeadRev);
@@ -146,7 +146,7 @@ public class Svn {
                 }
             }
         }
-        StringBuilder sb = new StringBuilder("Update summary for " + repositoryRootUrl + " from r" + start + " to HEAD (modified files will be deleted and added):");
+        StringBuilder sb = new StringBuilder("Reposearch deltas for " + repositoryRootUrl + " from changeset r" + start + " to HEAD (modified files will be deleted and added):");
         sb.append("\n--------------------------------");
         for (String path : toRemove) {
             entriesForRemoval.add( repositoryRootUrl+repository.getRepositoryPath(path) );
@@ -202,7 +202,13 @@ public class Svn {
         Entry c = new Entry();
 
         c.setNameNoEventsOrValidation(fileName);
-        c.setUrlNoEventsOrValidation(url);
+        if(url.startsWith("https://github.com/")) {
+          //fix file link for github
+          String githubUrl = url.replaceAll(".com/([^/]+/[^/]+)/trunk/", ".com/$1/blob/master/").replaceAll(".com/([^/]+/[^/]+)/(tags|branch)/([^/]+)/", ".com/$1/blob/$3/");
+          c.setUrlNoEventsOrValidation(githubUrl);
+        } else {
+          c.setUrlNoEventsOrValidation(url);
+        }
         if(! (fileName.endsWith(".zip")
         ||fileName.endsWith(".tbl")
         ||fileName.endsWith(".png")
