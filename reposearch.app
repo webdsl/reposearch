@@ -121,9 +121,10 @@ application reposearch
       table {
         row { column{"Your email: "}       column{input(submitter)} }
         row { column{"Project name: "}     column{input(p)} }
-        row { column{"SVN or Github URL: "}column{input(n)} }
-        row { column{"This URL is/resides within a github tag"}  column{input(tag){"this is a tag in Github."} } }
+        row { column{"SVN or Github URL(s): "}column{input(n)} }
+        row { column{"This URL is/resides within a github tag"}  column{input(tag){"this is a location within a tag on Github."} } }
         row { column{"Example links:"}     column{<i>"http://some.svn.url/repo/trunk"
+                        <br />"http://some.svn.url/repo/trunk,http://some.svn.url/repo/branch/special (multiple locations separated by comma)"
                         <br />"https://github.com/hibernate/hibernate-search (master branch)"
                         <br />"https://github.com/hibernate/hibernate-search/tree/4.0 (4.0 branch)"
                         <br />"https://github.com/hibernate/hibernate-search/tree/4.0.0.Final (4.0.0.Final tag)"
@@ -136,7 +137,7 @@ application reposearch
        validate(validateEmail(submitter), "please enter a valid email address")
        submit action{replace("requestPH", req(""));}[ignore-validation] {"cancel"}
        submit action{
-       r.project:=p; r.svn:=n; r.submitter:=submitter; r.save(); replace("requestPH", req("Your request is sent to the administrators. You will receive an email when your request is processed")); emailRequest(r);} {"add request"}
+       r.project:=p; r.svn:=n; r.submitter:=submitter; r.isGithubTag:=tag r.save(); replace("requestPH", req("Your request is sent to the administrators. You will receive an email when your request is processed")); emailRequest(r);} {"add request"}
 
     }
     submitlink openPendingRequests(){nOfPendingRequests()}
