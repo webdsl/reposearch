@@ -82,55 +82,6 @@ public class Svn {
             }
             else if (nodeKind == SVNNodeKind.FILE) {
                 log("The entry at '" + url + "' is a file.");
-                log("Latest file rev: " + repository.getLatestRevision());
-//                final List<Long> file_rev= new ArrayList<Long>();
-//                repository.getFileRevisions("", 0, repository.getLatestRevision(), false, new ISVNFileRevisionHandler() {
-//
-//                    @Override
-//                    public void textDeltaEnd(String arg0) throws SVNException {
-//                        log("1");
-//
-//                    }
-//
-//                    @Override
-//                    public OutputStream textDeltaChunk(String arg0, SVNDiffWindow arg1)
-//                            throws SVNException {
-//                        // TODO Auto-generated method stub
-//                        log("2");
-//                        return null;
-//                    }
-//
-//                    @Override
-//                    public void applyTextDelta(String arg0, String arg1) throws SVNException {
-//                        // TODO Auto-generated method stub
-//                        log("3");
-//
-//                    }
-//
-//                    @Override
-//                    public void openRevision(SVNFileRevision arg0) throws SVNException {
-//                        file_rev.add(arg0.getRevision());
-//                        log("4");
-//
-//                    }
-//
-//                    @Override
-//                    public void closeRevision(String arg0) throws SVNException {
-//                        log("5");
-//                        // TODO Auto-generated method stub
-//
-//                    }
-//                });
-//                long laatste = 0;
-//                for (Long long1 : file_rev) {
-//                    log("Real latest file rev: " + long1);
-//                    laatste = long1;
-//
-//                }
-
-
-
-                // TODO: skip if no changes // String urldir = url.substring(0,url.lastIndexOf('/'));
                 List<Entry> entriesForAddition = new ArrayList<Entry>();
                 List<String> entriesForRemoval = new ArrayList<String>();
                 long rev = repository.getLatestRevision();
