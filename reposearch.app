@@ -136,7 +136,7 @@ application reposearch
        validate(validateEmail(submitter), "please enter a valid email address")
        submit action{replace("requestPH", req(""));}[ignore-validation] {"cancel"}
        submit action{
-       r.project:=p; r.svn:=n; r.submitter:=submitter; r.isGithubTag:=tag r.save(); replace("requestPH", req("Your request is sent to the administrators. You will receive an email when your request is processed")); emailRequest(r);} {"add request"}
+       r.project:=p; r.svn:=n; r.submitter:=submitter; r.isGithubTag:=tag; r.save(); replace("requestPH", req("Your request is sent to the administrators. You will receive an email when your request is processed")); emailRequest(r);} {"add request"}
 
     }
     submitlink openPendingRequests(){nOfPendingRequests()}
