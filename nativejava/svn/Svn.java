@@ -63,7 +63,7 @@ public class Svn {
     // -if fromRev < 1 : It performs a checkout and returns a RepoTaskResult object with all files in HEAD revision
     // -if fromRev is the latest: null file lists (no need to update)
     public static RepoTaskResult updateFromRevOrCheckout(String repoUrl, long fromRev) {
-        log("Trying to update (r>0) or checkout (r<=1) location: '" + repoUrl + "' from r=" + fromRev);
+        log("Trying to update (r>0) or checkout (r<1) location: '" + repoUrl + "' from r=" + fromRev);
         String url = repoUrl;
 
         setupLibrary();

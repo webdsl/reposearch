@@ -226,7 +226,7 @@ application reposearch
     repos       -> List<Repo>
     displayName :: String := if(name.length() > 0) name.substring(0,1).toUpperCase() + name.substring(1, name.length()) else name
     searchCount :: Int
-    countSince  :: DateTime
+    countSince  :: DateTime (default=now())
     validate(name.length() > 2, "length must be greater than 2")
 
     function resetSearchCount(){
