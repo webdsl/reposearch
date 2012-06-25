@@ -95,8 +95,12 @@ public class Svn {
                 return new RepoTaskResult(entriesForAddition, entriesForRemoval, rev);
             }
             else{
-                //long headRevRepoRoot = repository.getLatestRevision();
-                long repoUrlHeadRev = repository.getDir("", latestRevision, true, null).getRevision();
+                long repoUrlHeadRev;
+                try{
+                  repoUrlHeadRev = repository.getDir("", latestRevision, true, null).getRevision();
+                } catch (SVNException ex){
+                    repoUrlHeadRev= repository.getLatestRevision();
+                }
                 if (fromRev >= repoUrlHeadRev) {
                     log("Skipped update for repo: " + repoUrl + ". This one is already at HEAD");
                     return new RepoTaskResult(null, null, repoUrlHeadRev);
@@ -106,6 +110,7 @@ public class Svn {
                 if (fromRev < 1) {
                     log("Checkout: " + repoUrl);
                     addEntryRecursive("", repository, entriesForAddition);
+                    log("Finished checking out: " + repoUrl);
                 } else {
                     log("Updating: " + repoUrl + " from " + fromRev + " to HEAD (r" + repoUrlHeadRev + ")");
                     updateToRevision(repository, fromRev, entriesForAddition, entriesForRemoval);
@@ -187,7 +192,7 @@ public class Svn {
         SVNProperties props = null;
         Collection<?> nullcol = null;
         log("getdir: " + repository.getLocation().getPath() + "/" + dir);
-        Collection<?> col = repository.getDir(dir, latestRevision, props, nullcol);
+        Collection<?> col = repository.getDir(dir, latestRevision, props, SVNDirEntry.DIRENT_KIND, nullcol);
         @SuppressWarnings("rawtypes")
         Iterator i = col.iterator();
         //System.out.println(i.hasNext());

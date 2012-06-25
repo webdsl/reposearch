@@ -253,18 +253,20 @@ module manage
 
   function createNewRepo(url:String,isGithubTag:Bool) : Repo{
     if(url.toLowerCase().contains("github.com")){
-        var params := /.*github\.com/([^/]+)/([^/]+)(/?.*)/.replaceAll("$1,$2,$3", url).split(",");
+        //https://github.com/mobl/mobl/tree/master/editor/java/mobl/strategies
+        var params := /.*github\.com/([^/]+)/([^/]+)/?(.*)/.replaceAll("$1,$2,$3", url).split(",");
         var u := params[0];
         var r := params[1];
-        var p := "/trunk";
+        var p := "trunk";
         var prefixPath := "";
-        if(/(^/?$)|(/(tree|blob)/master.*)/.match(params[2])) {
+        log("params[2]:" + params[2]);
+        if(/(^$)|((tree|blob)/master.*)/.match(params[2])) {
           prefixPath := "trunk";
         } else {
           prefixPath := if (isGithubTag) "tags" else "branch";
         }
         if(params[2].length() > 1) {
-          p := /^/(tree|blob)(/master)?/.replaceFirst(prefixPath, params[2]);
+          p := /^(tree|blob)(/master)?/.replaceFirst(prefixPath, params[2]);
         }
         return GithubRepo{ user:=u.trim() repo:=r.trim() svnPath:=p.trim() refresh:=true};
     }

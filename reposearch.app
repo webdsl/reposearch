@@ -131,7 +131,7 @@ application reposearch
                       </i>}
             }
       }
-       validate(/[A-Za-z0-9]+[A-Za-z0-9\-_\.\s][A-Za-z0-9]+/.match(p), "Project name should be at least 3 characters (allowed chars: a-z,A-Z,0-9,-,_, ,.)")
+       validate(/[A-Za-z0-9][A-Za-z0-9\-_\.\s]{2,}/.match(p), "Project name should be at least 3 characters (allowed chars: a-z,A-Z,0-9,-,_, ,.)")
        validate( (n.length() > 6), "please fill in a SVN or Github repository" )
        validate(validateEmail(submitter), "please enter a valid email address")
        submit action{replace("requestPH", req(""));}[ignore-validation] {"cancel"}
