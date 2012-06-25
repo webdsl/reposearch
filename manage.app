@@ -258,7 +258,7 @@ module manage
         var r := params[1];
         var p := "/trunk";
         var prefixPath := "";
-        if(/(^$)|((tree|blob)/master.*)/.match(params[2])) {
+        if(/(^/?$)|(/(tree|blob)/master.*)/.match(params[2])) {
           prefixPath := "trunk";
         } else {
           prefixPath := if (isGithubTag) "tags" else "branch";
@@ -266,10 +266,10 @@ module manage
         if(params[2].length() > 1) {
           p := /^/(tree|blob)(/master)?/.replaceFirst(prefixPath, params[2]);
         }
-        return GithubRepo{ user:=u repo:=r svnPath:=p refresh:=true};
+        return GithubRepo{ user:=u.trim() repo:=r.trim() svnPath:=p.trim() refresh:=true};
     }
     else{
-        return SvnRepo{ url:=url refresh:=true };
+        return SvnRepo{ url:=url.trim() refresh:=true };
     }
   }
 
@@ -365,7 +365,7 @@ module manage
   function updateLog(){
       if (manager.log == null){ manager.log := "";}
       manager.log := manager.log + Svn.getLog();
-      if(manager.log.length() > 10000){ manager.log := manager.log.substring(manager.log.length()-10000);}
+      if(manager.log.length() > 20000){ manager.log := manager.log.substring(manager.log.length()-20000);}
   }
 
   define ajax showLog(){

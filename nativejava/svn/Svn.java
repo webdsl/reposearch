@@ -4,9 +4,7 @@ package svn;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -29,11 +27,8 @@ import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
-import org.tmatesoft.svn.core.io.ISVNFileRevisionHandler;
-import org.tmatesoft.svn.core.io.SVNFileRevision;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
-import org.tmatesoft.svn.core.io.diff.SVNDiffWindow;
 
 import webdsl.generated.domain.Entry;
 
@@ -68,6 +63,7 @@ public class Svn {
     // -if fromRev < 1 : It performs a checkout and returns a RepoTaskResult object with all files in HEAD revision
     // -if fromRev is the latest: null file lists (no need to update)
     public static RepoTaskResult updateFromRevOrCheckout(String repoUrl, long fromRev) {
+        log("Trying to update (r>0) or checkout (r<=1) location: '" + repoUrl + "' from r=" + fromRev);
         String url = repoUrl;
 
         setupLibrary();
