@@ -79,6 +79,7 @@ module manage
         deleteAllRepoEntries(r);
           r.delete();
       }
+      settings.projects.remove(pr);
       pr.delete();
       settings.reindex := true;
       return manage();
@@ -381,6 +382,7 @@ module manage
       var namespaces := [p.name | p:Project in settings.projects];
       //directly set to false, in case repositories are updated during suggestion reindexing
       settings.reindex := false;
+      settings.projects := List<Project>();
       IndexManager.indexSuggestions(namespaces);
       IndexManager.renewFacetIndexReaders();
     }

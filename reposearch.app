@@ -250,9 +250,9 @@ application reposearch
     url :: URL
   }
   entity GithubRepo : Repo{
-    user::String
-    repo::String
-    svnPath::String
+    user::String    (default="")
+    repo::String    (default="")
+    svnPath::String (default="")
   }
   entity Commit{
     rev :: Long
