@@ -51,7 +51,7 @@ module manage
       }
       <br />
       for(pr:Project order by pr.displayName){
-        div[class="top-container"]{"Project: " <b>output(pr.name)</b> " [" submitlink("remove project*", removeProject(pr)) "] *be patient, this may take over a minute"}
+        div[class="top-container"]{"Project: " <b>output(pr.name)</b> " [" submitlink("remove project*", removeProject(pr)) "] *this may take over a minute"}
         div[class="main-container"]{
           searchCount(pr)
           placeholder "reposPH" + pr.name{

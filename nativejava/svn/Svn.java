@@ -4,7 +4,9 @@ package svn;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,8 +29,11 @@ import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
+import org.tmatesoft.svn.core.io.ISVNFileRevisionHandler;
+import org.tmatesoft.svn.core.io.SVNFileRevision;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
+import org.tmatesoft.svn.core.io.diff.SVNDiffWindow;
 
 import webdsl.generated.domain.Entry;
 
@@ -77,10 +82,70 @@ public class Svn {
             }
             else if (nodeKind == SVNNodeKind.FILE) {
                 log("The entry at '" + url + "' is a file.");
+                log("Latest file rev: " + repository.getLatestRevision());
+//                final List<Long> file_rev= new ArrayList<Long>();
+//                repository.getFileRevisions("", 0, repository.getLatestRevision(), false, new ISVNFileRevisionHandler() {
+//
+//                    @Override
+//                    public void textDeltaEnd(String arg0) throws SVNException {
+//                        log("1");
+//
+//                    }
+//
+//                    @Override
+//                    public OutputStream textDeltaChunk(String arg0, SVNDiffWindow arg1)
+//                            throws SVNException {
+//                        // TODO Auto-generated method stub
+//                        log("2");
+//                        return null;
+//                    }
+//
+//                    @Override
+//                    public void applyTextDelta(String arg0, String arg1) throws SVNException {
+//                        // TODO Auto-generated method stub
+//                        log("3");
+//
+//                    }
+//
+//                    @Override
+//                    public void openRevision(SVNFileRevision arg0) throws SVNException {
+//                        file_rev.add(arg0.getRevision());
+//                        log("4");
+//
+//                    }
+//
+//                    @Override
+//                    public void closeRevision(String arg0) throws SVNException {
+//                        log("5");
+//                        // TODO Auto-generated method stub
+//
+//                    }
+//                });
+//                long laatste = 0;
+//                for (Long long1 : file_rev) {
+//                    log("Real latest file rev: " + long1);
+//                    laatste = long1;
+//
+//                }
+
+
+
                 // TODO: skip if no changes // String urldir = url.substring(0,url.lastIndexOf('/'));
                 List<Entry> entriesForAddition = new ArrayList<Entry>();
-                getFile("", repository, entriesForAddition);
-                return new RepoTaskResult(entriesForAddition, new ArrayList<String>(), -1);
+                List<String> entriesForRemoval = new ArrayList<String>();
+                long rev = repository.getLatestRevision();
+                if(fromRev < 1){
+                    log("Checkout: " + repoUrl);
+                    getFile("", repository, entriesForAddition);
+                } else {
+                    if (fromRev < rev)
+                        rev = updateToRevision(repository, fromRev, entriesForAddition, entriesForRemoval);
+                    else {
+                        log("Skipped update for repo: " + repoUrl + ". This one is already at HEAD");
+                        return new RepoTaskResult(null, null, rev);
+                    }
+                }
+                return new RepoTaskResult(entriesForAddition, entriesForRemoval, rev);
             }
             else{
                 //long headRevRepoRoot = repository.getLatestRevision();
@@ -96,7 +161,7 @@ public class Svn {
                     addEntryRecursive("", repository, entriesForAddition);
                 } else {
                     log("Updating: " + repoUrl + " from " + fromRev + " to HEAD (r" + repoUrlHeadRev + ")");
-                    updateToRevision(repository, fromRev+1, entriesForAddition, entriesForRemoval);
+                    updateToRevision(repository, fromRev, entriesForAddition, entriesForRemoval);
                 }
                 return new RepoTaskResult(entriesForAddition, entriesForRemoval, repoUrlHeadRev);
             }
@@ -107,17 +172,19 @@ public class Svn {
         }
     }
 
-    private static void updateToRevision(SVNRepository repository, long start, List<Entry> entriesForAddition, List<String> entriesForRemoval) throws SVNException{
+    private static long updateToRevision(SVNRepository repository, long start, List<Entry> entriesForAddition, List<String> entriesForRemoval) throws SVNException{
         Collection<?> logEntries = null;
 
         String repositoryRootUrl = repository.getRepositoryRoot(false).toString();
 
-        logEntries = repository.log( new String[] { "" } , null , start , latestRevision , true , true );
+        logEntries = repository.log( new String[] { "" } , null , start+1 , latestRevision , true , true );
         Iterator<?> logs = logEntries.iterator();
         Map<?,?> changedPaths;
         Set<String> toAdd = new HashSet<String>(), toRemove = new HashSet<String>();
+        SVNLogEntry log = null;
         while(logs.hasNext()){
-            changedPaths = ((SVNLogEntry) logs.next()).getChangedPaths();
+            log = ((SVNLogEntry) logs.next());
+            changedPaths = log.getChangedPaths();
 
             for ( Iterator<?> pathEntries = changedPaths.keySet().iterator( ); pathEntries.hasNext( ); ) {
                 SVNLogEntryPath entryPath = ( SVNLogEntryPath ) changedPaths.get( pathEntries.next( ) );
@@ -146,20 +213,26 @@ public class Svn {
                 }
             }
         }
-        StringBuilder sb = new StringBuilder("Reposearch deltas for " + repositoryRootUrl + " from changeset r" + start + " to HEAD (modified files will be deleted and added):");
-        sb.append("\n--------------------------------");
-        for (String path : toRemove) {
-            entriesForRemoval.add( repositoryRootUrl+repository.getRepositoryPath(path) );
-            sb.append("\n- ");
-            sb.append(path);
+        long latestRev = (log == null) ? start : log.getRevision();
+        if (log != null) {
+            StringBuilder sb = new StringBuilder("Reposearch deltas for " + repositoryRootUrl + " from base r" + start + " to target r" + latestRev +  " (modified files will be deleted and added):");
+            sb.append("\n--------------------------------");
+            for (String path : toRemove) {
+                entriesForRemoval.add( repositoryRootUrl+repository.getRepositoryPath(path) );
+                sb.append("\n- ");
+                sb.append(path);
+            }
+            for (String path : toAdd) {
+                getFile(path, repository, entriesForAddition);
+                sb.append("\n+ ");
+                sb.append(path);
+            }
+            sb.append("\n--------------------------------");
+            log(sb.toString());
+        } else {
+            log("No updates for location: " + repository.getLocation() + ". This one is already at HEAD");
         }
-        for (String path : toAdd) {
-            getFile(path, repository, entriesForAddition);
-            sb.append("\n+ ");
-            sb.append(path);
-        }
-        sb.append("\n--------------------------------");
-        log(sb.toString());
+        return latestRev;
     }
 
 
@@ -195,8 +268,8 @@ public class Svn {
 
     private static void getFile(String path, SVNRepository repository, List<Entry> entries) throws SVNException{
 
-        String fileName = path.substring( path.lastIndexOf('/') +1);
         String url = repository.getRepositoryRoot(false).toString() + repository.getRepositoryPath(path);
+        String fileName = url.substring( url.lastIndexOf('/') +1);
         String content = null, contentFixed = null;
         boolean isBinFile = true;
         Entry c = new Entry();
