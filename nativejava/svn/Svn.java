@@ -170,7 +170,7 @@ public class Svn {
             StringBuilder sb = new StringBuilder("Reposearch deltas for " + repositoryRootUrl + " from base r" + start + " to target r" + latestRev +  " (modified files will be deleted and added):");
             sb.append("\n--------------------------------");
             for (String path : toRemove) {
-                entriesForRemoval.add( repositoryRootUrl+repository.getRepositoryPath(path) );
+                entriesForRemoval.add( fixUrl(repositoryRootUrl+repository.getRepositoryPath(path)) );
                 sb.append("\n- ");
                 sb.append(path);
             }
@@ -217,6 +217,15 @@ public class Svn {
         }
     }
 
+    private static String fixUrl(String url){
+        if(url.startsWith("https://github.com/")) {
+            //fix file link for github
+            return url.replaceAll(".com/([^/]+/[^/]+)/trunk/", ".com/$1/blob/master/").replaceAll(".com/([^/]+/[^/]+)/(tags|branch)/([^/]+)/", ".com/$1/blob/$3/");
+        }
+        //else
+        return url;
+    }
+
 
     private static void getFile(String path, SVNRepository repository, List<Entry> entries) throws SVNException{
 
@@ -227,13 +236,8 @@ public class Svn {
         Entry c = new Entry();
 
         c.setNameNoEventsOrValidation(fileName);
-        if(url.startsWith("https://github.com/")) {
-          //fix file link for github
-          String githubUrl = url.replaceAll(".com/([^/]+/[^/]+)/trunk/", ".com/$1/blob/master/").replaceAll(".com/([^/]+/[^/]+)/(tags|branch)/([^/]+)/", ".com/$1/blob/$3/");
-          c.setUrlNoEventsOrValidation(githubUrl);
-        } else {
-          c.setUrlNoEventsOrValidation(url);
-        }
+        c.setUrlNoEventsOrValidation( fixUrl(url) );
+
         if(! (fileName.endsWith(".zip")
         ||fileName.endsWith(".tbl")
         ||fileName.endsWith(".png")
