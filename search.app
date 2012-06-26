@@ -353,9 +353,9 @@ function toSearcher(q:String, ns:String) : EntrySearcher{
 function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int, fullContentFallback: Bool) : List<List<String>>{
   var raw : String;
   if(SearchPrefs.caseSensitive){
-    raw := searcher.highlight("contentCase", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
+    raw := searcher.highlightLargeText("contentCase", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
   } else{
-    raw := searcher.highlight("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
+    raw := searcher.highlightLargeText("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
   }
   if(fullContentFallback && raw.length() < 1) {
     raw := entry.content;
