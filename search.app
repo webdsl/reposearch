@@ -133,7 +133,7 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
 }
 
   define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String){
-        prettifyCode
+        prettifyCode(ns)
         if(searcher.getQuery().length() > 0) {
               viewFacets(searcher, ns)
               div[class="main-container"]{
