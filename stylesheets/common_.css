@@ -305,3 +305,6 @@ html body#manage table tbody td {
     border-top-style: dotted;
     border-top-width: thin;
 }
+.hover {
+  background-color: silver;
+}  

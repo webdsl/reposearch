@@ -24,6 +24,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
 
   includeCSS("prettify.css")
   includeJS("prettify.js")
+  includeJS("make-clickable.js")
 
   <script>
     setupcompletion("~source");
@@ -132,10 +133,8 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
 }
 
   define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String){
-      //highlight code using google-code-prettify
-        //prettify code
-        <script>$(function(){prettyPrint();})</script>
-          if(searcher.getQuery().length() > 0) {
+        prettifyCode
+        if(searcher.getQuery().length() > 0) {
               viewFacets(searcher, ns)
               div[class="main-container"]{
               paginatedResults(searcher, pageNum, ns)
@@ -326,10 +325,7 @@ define page viewFile(query : String, url:URL, projectName:String){
     //add line number anchors
     lineNumbers := />(\d+)</.replaceAll( "><a name=\"$1\">$1</a><", lineNumbers );
   }
-  //highlight code using google-code-prettify
-  includeCSS("prettify.css")
-  includeJS("prettify.js")
-  <script>$(function(){prettyPrint();})</script>
+  prettifyCode(projectName)
 
   navigate(search(cf.projectname, ""))[target:="_blank"]{"new search"}
   div[class="search-result-link"]{
@@ -340,6 +336,18 @@ define page viewFile(query : String, url:URL, projectName:String){
         <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(codeLines)</pre></div>
   </ div>
   navigate(search(cf.projectname, ""))[target:="_blank"]{"new search"}
+}
+
+define prettifyCode(){ prettifyCodeHelper("") }
+define prettifyCode(projectName : String){ prettifyCodeHelper("\""+projectName+"\"") }
+define prettifyCodeHelper(projectName : String){
+  //highlight code using google-code-prettify  
+  includeCSS("prettify.css")
+  includeJS("prettify.js")
+  includeJS("make-clickable.js")
+  <script>
+    prettifyAndMakeClickable(~projectName);
+  </script>
 }
 
 function toSearcher(q:String, ns:String) : EntrySearcher{
