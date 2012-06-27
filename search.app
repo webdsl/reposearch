@@ -338,8 +338,11 @@ define page viewFile(query : String, url:URL, projectName:String){
   navigate(search(cf.projectname, ""))[target:="_blank"]{"new search"}
 }
 
+native class utils.URLFilter as URLFilter {
+  static filter(String):String
+}
 define prettifyCode(){ prettifyCodeHelper("") }
-define prettifyCode(projectName : String){ prettifyCodeHelper("\""+projectName+"\"") }
+define prettifyCode(projectName : String){ prettifyCodeHelper("\""+URLFilter.filter(projectName)+"\"") }
 define prettifyCodeHelper(projectName : String){
   //highlight code using google-code-prettify  
   includeCSS("prettify.css")
