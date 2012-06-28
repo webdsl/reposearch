@@ -38,7 +38,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
     }();
   </script>
 
-  navigate(root()){"return to home"}
+  homeLink()
 
   form {
     <div class="ui-widget">
@@ -344,7 +344,7 @@ native class utils.URLFilter as URLFilter {
 define prettifyCode(){ prettifyCodeHelper("") }
 define prettifyCode(projectName : String){ prettifyCodeHelper("\""+URLFilter.filter(projectName)+"\"") }
 define prettifyCodeHelper(projectName : String){
-  //highlight code using google-code-prettify  
+  //highlight code using google-code-prettify
   includeCSS("prettify.css")
   includeJS("prettify.js")
   includeJS("make-clickable.js")
@@ -415,17 +415,4 @@ function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLen
   lists.add(listLines);
   lists.add(listCode);
   return lists;
-}
-
-page searchStats(){
-    title { output("Reposearch Search Statistics") }
-    showSearchStats()
-    submit action{SearchStatistics.clear();}{"Reset global statistics"}
-
-    header{"Search counts per project"}
-    for(pr : Project order by pr.searchCount desc){
-        searchCount(pr)<br />
-    }<br />
-    submit action{for(pr : Project){ pr.resetSearchCount(); }}{"Reset project search statistics"}
-
 }

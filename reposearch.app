@@ -19,9 +19,11 @@ application reposearch
     intervalInHours :: Int (default=12)
     nextInvocation  :: DateTime
     lastInvocation  :: DateTime
+    newWeekMoment   :: Date(default=now())
     log             :: Text
     adminEmails     :: Text
     function newHour(){
+      tryNewWeek();
       var execute := false;
       hourCounter := hourCounter + 1;
       if (hourCounter >= intervalInHours) { hourCounter := 0; execute := true; }
@@ -31,6 +33,14 @@ application reposearch
     function shiftByHours(hours : Int){
         hourCounter := hourCounter - hours;
         nextInvocation := nextInvocation.addHours( hours );
+    }
+    function tryNewWeek(){
+        if(newWeekMoment.addDays(7).before(now())){
+            newWeekMoment := newWeekMoment.addDays(7);
+            for(p : Project){
+              p.newWeek();
+            }
+        }
     }
   }
 
@@ -51,6 +61,10 @@ application reposearch
     <br/>navigate(manage()){"Manage"}
     <br/>navigate(searchStats()){"Search statistics"}<br/><br/>
     navigate(dologin()){<span class="login">"Admin log in/out"</span>}
+  }
+
+  define homeLink(){
+    navigate(root()){"return to home"}
   }
 
   define divsmall(){
@@ -196,7 +210,7 @@ application reposearch
     var pendingRequests := from Request order by project;
     title { "Pending requests - Reposearch" }
     if (pendingRequests.length < 1){"There are no pending requests at this moment." <br />}
-    navigate(root()){"return to home"}
+    homeLink()
     for(r : Request in pendingRequests){
       div[class="top-container-green"]{ output(r.project) " (project name)"}
       div[class="main-container"]{
@@ -222,19 +236,27 @@ application reposearch
   }
 
   entity Project {
-    name        :: String (id)
-    repos       -> List<Repo>
-    displayName :: String := if(name.length() > 0) name.substring(0,1).toUpperCase() + name.substring(1, name.length()) else name
-    searchCount :: Int
-    countSince  :: DateTime (default=now())
+    name                 :: String (id)
+    repos                -> List<Repo>
+    displayName          :: String   := if(name.length() > 0) name.substring(0,1).toUpperCase() + name.substring(1, name.length()) else name
+    searchCount          :: Int      (default=0)
+    weeklySearchCount    :: Int      := if(weekStartSearchCount != null) searchCount - weekStartSearchCount else 0
+    weekStartSearchCount :: Int      (default=0)
+    countSince           :: DateTime (default=now())
+
+
     validate(name.length() > 2, "length must be greater than 2")
 
     function resetSearchCount(){
         searchCount := 0;
+        weekStartSearchCount := 0;
         countSince := now();
     }
     function incSearchCount(){
         searchCount := searchCount + 1;
+    }
+    function newWeek(){
+        weekStartSearchCount := searchCount;
     }
   }
   entity Repo{

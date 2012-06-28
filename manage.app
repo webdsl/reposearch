@@ -4,9 +4,24 @@ module manage
   invoke invokeCheckReindex() every 60 seconds
   invoke manager.newHour()   every 1 hours
 
+section entities
+  entity Message{
+    msg :: WikiText
+  }
+
+  entity Settings{
+    reindex :: Bool
+    projects-> List<Project>
+    function addProject(p : Project) {
+      if(!reindex){ reindex := true; }
+      if(projects.indexOf(p) < 0 ){ projects.add(p); }
+    }
+  }
+
+section pages/templates
   define page manage(){
     title { "Manage - Reposearch" }
-    navigate(root()){"return to home"}
+    homeLink()
 
     manageRefresh()
 
@@ -24,6 +39,30 @@ module manage
 
   }
 
+  page searchStats(){
+    title { output("Reposearch Search Statistics") }
+
+    var startDate := if(manager.newWeekMoment!=null) manager.newWeekMoment else now();
+
+    homeLink()
+    showSearchStats()
+    submit action{SearchStatistics.clear();}{"Reset global statistics"}
+
+    header{"Search counts per project"}
+    table{
+      row{ column{ <i>"Project name"</i> } column{ <i>"total"</i> } column{ <i>"this week"</i> } column{ <center><i>"since"</i></center> } column{ <i>"reset"</i> }}
+      for(pr : Project order by pr.weeklySearchCount desc){
+        searchCountInTable(pr)
+      }
+    }
+    form{
+      "Week count start date: " input(startDate)
+      submit action{manager.newWeekMoment := startDate;}{"set"}
+    } <br />
+    submit action{for(pr : Project){ pr.resetSearchCount(); }}{"Reset search statistics for all projects"}
+
+  }
+
   define manageRequestReceipts(){
       var addresses : String := manager.adminEmails;
       form{
@@ -31,13 +70,6 @@ module manage
           validate(validateEmailList(addresses) ,"Email addresses need to be seperated by a comma, without whitespace e.g. 'foo@bar.com,bar@foo.com'")
           submit action{manager.adminEmails := addresses;}{"apply"}
       }
-  }
-
-  function validateEmailList(listStr : String) : Bool {
-      for(address : String in listStr.split(",")){
-          if(!validateEmail(address)){ return false; }
-      }
-      return true;
   }
 
   define manageProjects(){
@@ -87,7 +119,17 @@ module manage
   }
 
   define searchCount(pr : Project){
-      "# of searches since " output(pr.countSince) " for project " output(pr.displayName) ": " <b>output(pr.searchCount)</b> " " submitlink("reset", action{pr.resetSearchCount();})
+      "# of searches total / this week for project " output(pr.displayName) ": " <b>output(pr.searchCount)</b>  " (since " output(pr.countSince) ") / " <b>output(pr.weeklySearchCount)</b> " (since " output(manager.newWeekMoment) ") " submitlink("reset", action{pr.resetSearchCount();})
+  }
+
+  define searchCountInTable(pr : Project){
+      row{
+        column{output(pr.displayName)}
+        column{<center><b>output(pr.searchCount)</b></center>}
+        column{<center><b>output(pr.weeklySearchCount)</b></center>}
+        column{output(pr.countSince)}
+        column{submitlink("reset", action{pr.resetSearchCount();})}
+      }
   }
 
   define manageFrontpageMessage(){
@@ -247,8 +289,24 @@ module manage
       }
   }
 
+  define ajax showLog(){
+    init{updateLog();}
+    table{
+      row{ column{ <pre> rawoutput(manager.log) </pre> } }
+    }
+  }
+
+section functions
+
   init{
     Project{name:="WebDSL" repos:=[(SvnRepo{url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac"} as Repo)]}.save();
+  }
+
+  function validateEmailList(listStr : String) : Bool {
+      for(address : String in listStr.split(",")){
+          if(!validateEmail(address)){ return false; }
+      }
+      return true;
   }
 
   function createNewRepo(url:String,isGithubTag:Bool) : Repo{
@@ -370,14 +428,6 @@ module manage
       if(manager.log.length() > 20000){ manager.log := manager.log.substring(manager.log.length()-20000);}
   }
 
-  define ajax showLog(){
-    init{updateLog();}
-    table{
-      row{ column{ <pre> rawoutput(manager.log) </pre> } }
-    }
-  }
-
-
   //If settings.reindex is set to true and no refresh is going on, refresh suggestions/facet readers
   function invokeCheckReindex(){
     if(settings.reindex && (from Repo where refresh=true).length < 1){
@@ -387,19 +437,6 @@ module manage
       settings.projects := List<Project>();
       IndexManager.indexSuggestions(namespaces);
       IndexManager.renewFacetIndexReaders();
-    }
-  }
-
-  entity Message{
-    msg :: WikiText
-  }
-
-  entity Settings{
-    reindex :: Bool
-    projects-> List<Project>
-    function addProject(p : Project) {
-      if(!reindex){ reindex := true; }
-      if(projects.indexOf(p) < 0 ){ projects.add(p); }
     }
   }
 
