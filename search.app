@@ -167,23 +167,38 @@ define highlightedResult(cf : Entry, searcher : EntrySearcher){
         div[class="facet-area"]{"Filter on file location:"}
         for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace) <br /> }
         placeholder repoPathPh{
-          showpathfacets(searcher, path_hasSel, namespace, false)
+          showPathFacets(searcher, path_hasSel, namespace, false)
         }
      }
   }
 
-  define ajax showpathfacets(searcher : EntrySearcher, hasSelection : Bool, namespace : String, show : Bool){
-
-      if( show ){
-         submitlink action{replace(repoPathPh, showpathfacets( searcher, hasSelection, namespace, false));}{"shrink"}
-        div{
-          for(f : Facet in all repoPath facets from searcher) {
+  define ajax showPathFacets(searcher : EntrySearcher, hasSelection : Bool, namespace : String, show : Bool){
+    if( show ){
+      submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false));}{"shrink"}
+      div{
+        for(f : Facet in interestingPathFacets(searcher)) {
           showFacet(searcher, f, hasSelection, namespace) <br />
         }
       }
     } else {
-      submitlink action{replace(repoPathPh, showpathfacets( searcher, hasSelection, namespace, true));}{"expand"}
+      submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, true));}{"expand"}
     }
+  }
+
+  function interestingPathFacets(searcher : EntrySearcher) : List<Facet> {
+    var previous : Facet;
+    var allFacets:= all repoPath facets from searcher;
+    var toReturn := List<Facet>();
+    for(f : Facet in allFacets) {
+      if(previous != null && (!f.getValue().startsWith(previous.getValue()) || f.getCount() != previous.getCount() )) {
+        toReturn.add(f);
+      }
+      previous := f;
+    }
+    if(allFacets.length > 0){
+      toReturn.add(allFacets.get(allFacets.length-1));
+    }
+    return toReturn;
   }
 
   define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String) {

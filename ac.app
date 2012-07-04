@@ -72,7 +72,7 @@ page renewAdmin(){
     rule ajaxtemplate showRepos(*){true}
     rule ajaxtemplate showRequests(*){true}
     rule ajaxtemplate req(*){true}
-    rule ajaxtemplate showpathfacets(*){true}
+    rule ajaxtemplate showPathFacets(*){true}
     rule ajaxtemplate showReposLink(*){true}
     rule ajaxtemplate repos(*){true}
     rule ajaxtemplate FpMsgPreview(*){true}
