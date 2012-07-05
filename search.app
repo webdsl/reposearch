@@ -12,7 +12,7 @@ define page doSearch(searcher : EntrySearcher, namespace:String, pageNum: Int){
 }
 
 define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: Int){
-  var source := "/autocompleteService"+"/"+namespace;
+  var source := "/autocompleteService"+"/"+URLFilter.filter(namespace);
   var searcher := entrySearcher;
   var query := searcher.getQuery();
   var caseSensitive := SearchPrefs.caseSensitive;

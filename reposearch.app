@@ -292,9 +292,9 @@ application reposearch
   }
     search mapping Entry {
       + content using keep_all_chars      as content
-      + content using keep_all_chars_cs   as contentCase ^ 10.0
+      + content using keep_all_chars_cs   as contentCase ^ 50.0
       content   using code_identifiers_cs as codeIdentifiers (autocomplete)
-      + name    using filename_analyzer   as fileName ^ 20.0 (autocomplete)
+      + name    using filename_analyzer   as fileName ^ 100.0 (autocomplete)
       name      using extension_analyzer  as fileExt
       url       using path_analyzer       as repoPath
       namespace by projectname
