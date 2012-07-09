@@ -43,7 +43,7 @@ section pages/templates
     title { output("Reposearch Search Statistics") }
 
     var startDate := if(manager.newWeekMoment!=null) manager.newWeekMoment else now();
-    var projectsInOrder := from Project as prj order by prj.weeklySearchCount desc, prj.searchCount;
+    var projectsInOrder := from Project order by weeklySearchCount desc, searchCount desc;
 
     homeLink()
     showSearchStats()
@@ -57,7 +57,7 @@ section pages/templates
       }
     }
     form{
-      "Week count start date: " input(startDate)
+      "Change the day at which the week counters reset (date of last reset): " input(startDate)
       submit action{manager.newWeekMoment := startDate;}{"set"}
     } <br />
     submit action{for(pr : Project){ pr.resetSearchCount(); }}{"Reset search statistics for all projects"}

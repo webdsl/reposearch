@@ -1,7 +1,6 @@
 module search
 
 define page search(namespace:String, q:String){
-  init{  if(q.length() > 0){ incSearchCount(namespace); }  }
   title { output(q + " - Reposearch") }
   showSearch(toSearcher(q, namespace), namespace, 1)
 }
@@ -12,10 +11,15 @@ define page doSearch(searcher : EntrySearcher, namespace:String, pageNum: Int){
 }
 
 define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: Int){
+  var prj := findProject(namespace);
   var source := "/autocompleteService"+"/"+URLFilter.filter(namespace);
   var searcher := entrySearcher;
   var query := searcher.getQuery();
   var caseSensitive := SearchPrefs.caseSensitive;
+  init{
+    if ( prj == null  && namespace != "" ){ return root(); }
+    if ( query.length() > 0 ){ incSearchCount(prj); }
+  }
 
   includeJS("jquery-1.5.min.js")
   includeJS("jquery-ui-1.8.9.custom.min.js")
@@ -55,7 +59,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
         replace(resultAndfacetArea, paginatedTemplate(searcher, 1, namespace));
         //HTML5 feature, replace url without causing page reload
         runscript("window.history.pushState('history','reposearch','" + navigate(doSearch(searcher, namespace, 1) ) + "');");
-        incSearchCount(namespace);
+        incSearchCount(prj);
       } else {
         clear(resultAndfacetArea);
       }
@@ -68,8 +72,8 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
   }
 }
 
-  function incSearchCount(namespace : String){
-    if(namespace != ""){findProject(namespace).incSearchCount();}
+  function incSearchCount(prj : Project){
+    if(prj != null){prj.incSearchCount();}
   }
 
 service autocompleteService(namespace:String, term : String){
