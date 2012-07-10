@@ -43,7 +43,7 @@ section pages/templates
     title { output("Reposearch Search Statistics") }
 
     var startDate := if(manager.newWeekMoment!=null) manager.newWeekMoment else now();
-    var projectsInOrder := from Project order by weeklySearchCount desc, searchCount desc;
+    var projectsInOrder := from Project order by searchCount desc;
 
     homeLink()
     showSearchStats()
@@ -52,7 +52,7 @@ section pages/templates
     header{"Search counts per project"}
     table{
       row{ column{ <i>"Project name"</i> } column{ <i>"total"</i> } column{ <i>"this week"</i> } column{ <center><i>"since"</i></center> } column{ <i>"reset"</i> }}
-      for(pr : Project in projectsInOrder){
+      for(pr : Project in projectsInOrder order by pr.weeklySearchCount desc){
         searchCountInTable(pr)
       }
     }

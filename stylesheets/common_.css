@@ -1,21 +1,17 @@
+
 body {
-    margin-left: 15px;
+    background-color: #EBF4FA;
     font-family: Arial;
+    margin-left: 15px;
 }
-#resultAndfacetArea {
-    left: 0;
-    padding-left: 250px;
-    padding-top: 10px;
-    position: absolute;
-    right: 0;
-}
+
 .facet-area {
-    font-style: italic;
     clear: both;
+    font-style: italic;
     padding-top: 8px;
 }
 .top-container {
-    background-color: LightSteelBlue;
+    background-color: #BBD9EE;
     border-radius: 15px 15px 0 0;
     margin-right: 10px;
     margin-top: 3px;
@@ -30,7 +26,7 @@ body {
 }
 .main-container {
     background-color: white;
-    border: 1px solid LightSteelBlue;
+    border: 1px solid #BBD9EE;
     border-radius: 0 0 15px 15px;
     clear: both;
     margin-right: 10px;
@@ -53,7 +49,7 @@ body {
     padding: 0 0 0 3px;
 }
 .included-facet {
-    background-color: White;
+    background-color: #EBF4FA;
     border-radius: 5px 5px 5px 5px;
     color: black;
     float: left;
@@ -62,6 +58,7 @@ body {
     padding: 0 0 0 3px;
 }
 .included-facet a:link, .included-facet a:visited {
+    background-color: #EBF4FA;
     color: black;
     text-decoration: none;
 }
@@ -70,7 +67,7 @@ body {
     text-decoration: none;
 }
 .exclude-facet-sym {
-    background-color: LightSlateGray;
+    background-color: #206BA4;
     border-radius: 0 5px 5px 0;
     color: white;
     float: right;
@@ -92,134 +89,109 @@ body {
     color: red;
 }
 .search-result-highlight {
-    border: 1px solid LightSlateGrey;
+    background-color: White;
+    border: 1px solid #BBD9EE;
     border-radius: 0 0 5px 5px;
-    font-family: monospace, Helvetica, sans-serif;
+    font-family: monospace,Helvetica,sans-serif;
     font-size: 13px;
-    margin: 0 4px 4px 0;
-    padding: 5px 0px 5px 0px;
-    overflow: auto;
-    position: relative;
+    margin: 0 4px 15px 0;
     outline: medium none;
+    overflow: auto;
+    padding: 0;
+    position: relative;
     z-index: 1;
+    min-height: 18px;
 }
 .search-result-link a:link, .search-result-link a:visited {
-    color: white;
+    color: #206BA4;
     text-decoration: none;
+    font-family: monospace;
 }
 .search-result-link {
-    background-color: LightSlateGrey;
-    border: 1px solid LightSlateGrey;
+    background-color: #BBD9EE;
+    border: 1px solid #BBD9EE;
     border-radius: 5px 5px 0 0;
     font-size: 13px;
     margin: 4px 4px 0 0;
     padding: 4px;
 }
 input.button {
-    background-color: WhiteSmoke;
+    background-color: #BBD9EE;
     border-radius: 5px 5px 5px 5px;
-    color: Navy;
+    color: Black;
     font-family: sans-serif;
     font-weight: normal;
     padding: 0;
+    margin: 0 0 0 2px;
 }
 .login {
     bottom: 0;
     clear: both;
     display: block;
     font-size: 10px;
-    right: 0;
     position: absolute;
+    right: 0;
 }
-.home-text{
-    font-family: Helvetica;
+.home-text {
     color: Black;
+    font-family: Helvetica;
 }
 .search-result-location {
-    color: white;
+    color: #206BA4;
     float: right;
     font-size: 13px;
     margin: 0 4px 0 0;
 }
 .linenumbera {
-    color: gray;
-    float: left;
-    width: 29px;
-    background-color: AliceBlue;
-    text-align: center;
-    margin: 0 9px 0 0;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
     -moz-user-select: none;
-    -o-user-select: none;
-    user-select: none;
-}
-.nolinenumbera{
-    /* gecko based browsers */
-    background: -moz-linear-gradient(top, #F0F8FF , #D8DFE6);
-
-    /* webkit based browsers */
-    background: -webkit-gradient(linear, left top, left bottom, from(#F0F8FF), to(#D8DFE6));
-    color: black;
+    background-color: WhiteSmoke;
+    color: #206BA4;
     float: left;
-    width: 29px;
-    background-color: #CEDAE6;
-    left: 0px;
+    margin: 0 9px 0 0;
+    text-align: center;
+    width: 34px;
+}
+.nolinenumbera {
+    background: -moz-linear-gradient(center top , #EBF4FA, WhiteSmoke) repeat scroll 0 0 #EBF4FA;
+    color: Black;
+    float: left;
+    left: 0;
     line-height: 1.25em;
     margin: 0 9px 0 0;
     position: absolute;
     text-align: center;
     width: 100%;
 }
-
 .linenumberb {
-    color: gray;
-    float: left;
-    width: 29px;
-    background-color: AliceBlue;
-    text-align: center;
-    margin: 0 9px 0 0;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
     -moz-user-select: none;
-    -o-user-select: none;
-    user-select: none;
-    line-height: 1.25em;
-}
-.nolinenumberb{
-    /* gecko based browsers */
-    background: -moz-linear-gradient(top, #F0F8FF , #D8DFE6);
-
-    /* webkit based browsers */
-    background: -webkit-gradient(linear, left top, left bottom, from(#F0F8FF), to(#D8DFE6));
-    color: black;
+    background-color: #EBF4FA;
+    color: #206BA4;
     float: left;
-    width: 29px;
-    background-color: #CEDAE6;
-    left: 0px;
+    line-height: 1.25em;
+    margin: 0 9px 0 0;
+    text-align: center;
+    width: 34px;
+}
+.nolinenumberb {
+    background: -moz-linear-gradient(center top , WhiteSmoke, #EBF4FA) repeat scroll 0 0 WhiteSmoke;
+    color: Black;
+    float: left;
+    left: 0;
     line-height: 1.25em;
     margin: 0 9px 0 0;
     position: absolute;
     text-align: center;
     width: 100%;
 }
-
-
-.linenumberarea{
-    -webkit-user-select: none;
-    -khtml-user-select: none;
+.linenumberarea {
     -moz-user-select: none;
-    -o-user-select: none;
-    user-select: none;
     line-height: 1.25em;
 }
-
-.code-area{
-    line-height: 1.25em;
+.code-area {
     display: block;
-    top: 4px;
+    line-height: 1.25em;
     position: absolute;
-
+    top: 0;
 }
 .code-line {
     display: block;
@@ -231,20 +203,16 @@ input.button {
     text-decoration: none;
 }
 a:link, a:visited {
-    color: Navy;
+    color: #206BA4;
     font-family: Helvetica;
     font-style: normal;
     text-decoration: none;
 }
 pre {
-
-    margin-bottom: 0;
-    margin-left: 0;
-    margin-right: 0;
-    margin-top: 0;
+    margin: 0;
 }
-
 .show-repo {
+    background: none repeat scroll 0 0 AliceBlue;
     border: 1px solid LightSlateGrey;
     border-radius: 0 0 5px 5px;
     font-family: monospace,Helvetica,sans-serif;
@@ -255,7 +223,6 @@ pre {
     padding: 5px 0;
     position: relative;
     z-index: 1;
-    background: AliceBlue;
 }
 .main-container input.button {
     background-color: WhiteSmoke;
@@ -269,6 +236,7 @@ pre {
     padding: 0;
 }
 .new-repo {
+    background: none repeat scroll 0 0 HoneyDew;
     border: 1px solid LightSteelBlue;
     border-radius: 0 0 5px 5px;
     font-family: monospace,Helvetica,sans-serif;
@@ -279,7 +247,6 @@ pre {
     padding: 5px 0;
     position: relative;
     z-index: 1;
-    background: HoneyDew;
 }
 #addRepoPH input.button {
     background-color: HoneyDew;
@@ -288,7 +255,7 @@ pre {
     font-family: sans-serif;
     font-size: 11px;
     font-weight: normal;
-    margin: 0px 0px 4px 3px;
+    margin: 0 0 4px 3px;
     padding: 0;
 }
 textarea.inputTextarea {
@@ -296,15 +263,15 @@ textarea.inputTextarea {
     width: 70em;
 }
 html body#manage table {
+    background-color: AliceBlue;
     border-style: solid;
     border-width: thin;
     text-align: left;
-    background-color: AliceBlue;
 }
 html body#manage table tbody td {
     border-top-style: dotted;
     border-top-width: thin;
 }
 .hover {
-  background-color: silver;
-}  
+    background-color: silver;
+}

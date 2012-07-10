@@ -79,6 +79,8 @@ page renewAdmin(){
     rule ajaxtemplate addProject(*){true}
     rule ajaxtemplate refreshScheduleControl(*){loggedIn()}
     rule ajaxtemplate showLog(*){loggedIn()}
+    rule ajaxtemplate viewFacets(*){true}
+    rule ajaxtemplate highlightedResultToggled(*){true}
     rule page pendingRequests(*){true}
     rule page skippedFiles(*){true}
     rule page autocompleteService(*){true}
