@@ -3,6 +3,9 @@ package svn;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -16,21 +19,24 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
 import org.tmatesoft.svn.core.SVNNodeKind;
-import org.tmatesoft.svn.core.SVNProperties;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
+import org.tmatesoft.svn.core.wc.SVNClientManager;
+import org.tmatesoft.svn.core.wc.SVNRevision;
+import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 
 import webdsl.generated.domain.Entry;
+
+import com.google.common.io.Files;
 
 public class Svn {
     private static StringBuilder logBuilder = new StringBuilder();
@@ -109,7 +115,7 @@ public class Svn {
                 List<String> entriesForRemoval = new ArrayList<String>();
                 if (fromRev < 1) {
                     log("Checkout: " + repoUrl);
-                    addEntryRecursive("", repository, entriesForAddition);
+                    doSVNCheckout(repoUrl, entriesForAddition);
                     log("Finished checking out: " + repoUrl);
                 } else {
                     log("Updating: " + repoUrl + " from " + fromRev + " to HEAD (r" + repoUrlHeadRev + ")");
@@ -188,31 +194,105 @@ public class Svn {
     }
 
 
-    private static void addEntryRecursive(String dir,SVNRepository repository,List<Entry> entries) throws SVNException {
-        SVNProperties props = null;
-        Collection<?> nullcol = null;
-        log("getdir: " + repository.getLocation().getPath() + "/" + dir);
-        Collection<?> col = repository.getDir(dir, latestRevision, props, SVNDirEntry.DIRENT_KIND, nullcol);
-        @SuppressWarnings("rawtypes")
-        Iterator i = col.iterator();
-        //System.out.println(i.hasNext());
-        while(i.hasNext()){
-            SVNDirEntry o = (SVNDirEntry) i.next();
-            //System.out.println(o.getName());
-            //System.out.println(o.getKind());
-            if(o.getKind()==SVNNodeKind.DIR){
-                //System.out.println("dir: "+o.getName());
-                addEntryRecursive(dir+o.getName()+"/",repository, entries);
-                continue;
+
+    public static void doSVNCheckout(String url, List<Entry> entriesForAddition) {
+        setupLibrary();
+        File dst = null;
+
+        try {
+            dst = Files.createTempDir();
+            log("checkout in temp dir: " + dst);
+            SVNURL svnurl = SVNURL.parseURIEncoded(url);
+
+            SVNClientManager cm = SVNClientManager.newInstance();
+            SVNUpdateClient uc = cm.getUpdateClient();
+
+            uc.doCheckout(svnurl, dst, SVNRevision.UNDEFINED, SVNRevision.HEAD, true);
+
+            if(!url.endsWith("/")){
+                url = url+"/";
             }
-            else{
-                //System.out.println("file: "+o.getName());
-                try {
-                    getFile(dir+o.getName(), repository, entries);
-                } catch (SVNException e) {
-                    log(e.getMessage());
-                    e.printStackTrace();
+            addEntryRecursive(url,"",dst, entriesForAddition);
+
+        } catch (SVNException svne) {
+            svne.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //delete temp checkout dir
+        try {
+            delete(dst);
+            log("Removed temp dir: " + dst );
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static void delete(File f) throws IOException {
+      if(f == null)
+          return;
+      if (f.isDirectory()) {
+        for (File c : f.listFiles())
+          delete(c);
+      }
+      if (!f.delete())
+        throw new FileNotFoundException("Failed to delete file: " + f);
+
+    }
+
+
+
+    private static void addEntryRecursive(String repo, String dir, File dst, List<Entry> entries) throws SVNException, IOException {
+        File[] files = dst.listFiles();
+        if (files != null) { // Either dir does not exist or is not a directory
+            String content =null, contentFixed =null;
+            for (File f : files) {
+                if(f.isDirectory()){
+                    if(!f.getName().equals(".svn")){
+                        log("dir: "+f.getName());
+                        addEntryRecursive(repo,dir+f.getName()+"/",f,entries);
+                    }
                 }
+                else{
+                    boolean isBinFile = true;
+                    Entry c = new Entry();
+                    c.setNameNoEventsOrValidation( f.getName() );
+                    c.setUrlNoEventsOrValidation( fixUrl(repo+dir+f.getName()) );
+
+                    if( !hasBinaryFileExtension( f.getName() ) ){
+                        //We use a File property instead of String property
+                        //to workaround encoding exceptions.
+                        utils.File webdslFile = new utils.File();
+                        FileInputStream in = null;
+                        try{
+                            in = new FileInputStream(f);
+                            webdslFile.setContentStream(in);
+
+                            content = webdslFile.getContentAsString();
+                            contentFixed = fixEncoding( content );
+                            isBinFile = ( contentFixed.length() < 1 && !contentFixed.equals( content ) ) ;
+                        } catch(IOException ex){
+                            log(ex.getMessage());
+                            ex.printStackTrace();
+                        } finally {
+                            try{
+                                if (in != null)
+                                    in.close();
+                            } catch (java.io.IOException ex){
+                                log("file close exception during getFile reposearch:");
+                                ex.printStackTrace();
+                            }
+                        }
+                    }
+                    if (isBinFile){
+                        c.setContentNoEventsOrValidation( addLines("BINFILE") );
+                    } else {
+                        c.setContentNoEventsOrValidation( addLines( contentFixed ) );
+                    }
+                    entries.add(c);
+                }
+
             }
         }
     }
@@ -238,12 +318,7 @@ public class Svn {
         c.setNameNoEventsOrValidation(fileName);
         c.setUrlNoEventsOrValidation( fixUrl(url) );
 
-        if(! (fileName.endsWith(".zip")
-        ||fileName.endsWith(".tbl")
-        ||fileName.endsWith(".png")
-        ||fileName.endsWith(".jpg")
-        ||fileName.endsWith(".bmp")
-        ||fileName.endsWith(".jar") ) ) {
+        if(! hasBinaryFileExtension(fileName) ) {
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -254,13 +329,13 @@ public class Svn {
             repository.getFile(path, latestRevision, null, out);
 
             //Use utils.File as container for converting to String with proper encoding
-            utils.File f = new utils.File();
+            utils.File webdslFile = new utils.File();
             ByteArrayInputStream in = null;
             try{
                 in = new ByteArrayInputStream(out.toByteArray());
-                f.setContentStream(in);
+                webdslFile.setContentStream(in);
 
-                content = f.getContentAsString();
+                content = webdslFile.getContentAsString();
                 contentFixed = fixEncoding( content );
                 isBinFile = ( contentFixed.length() < 1 && !contentFixed.equals( content ) ) ;
             } catch(IOException ex){
@@ -284,10 +359,17 @@ public class Svn {
             c.setContentNoEventsOrValidation( addLines( contentFixed ) );
         }
         entries.add(c);
-
-
     }
 
+
+    private static boolean hasBinaryFileExtension(String fileName) {
+        return (fileName.endsWith(".zip")
+                ||fileName.endsWith(".tbl")
+                ||fileName.endsWith(".png")
+                ||fileName.endsWith(".jpg")
+                ||fileName.endsWith(".bmp")
+                ||fileName.endsWith(".jar") );
+    }
 
     /*
      * Initializes the library to work with a repository via
