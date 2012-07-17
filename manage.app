@@ -158,7 +158,19 @@ section pages/templates
     div[class="top-container"]{<b>"SVN Log"</b>}
     div[class="main-container"]{
       placeholder log {showLog()}<br />
-      submit action{replace(log, showLog());}{"refresh"}
+      "Auto-refreshes every 5 seconds" <br />
+      submit action{replace(log, showLog());}[id = "autoRefresh", ajax]{"force refresh log"}
+      <script>
+        var refreshtimer;
+        function setrefreshtimer(){
+          clearTimeout(refreshtimer);
+          refreshtimer = setTimeout(function() {
+            $("#autoRefresh").click();
+            setrefreshtimer();
+          },5000);
+        }
+        setrefreshtimer();
+      </script>
     }
   }
 
@@ -424,9 +436,12 @@ section functions
   }
 
   function updateLog(){
+      var toAdd := Svn.getLog();
       if (manager.log == null){ manager.log := "";}
-      manager.log := manager.log + Svn.getLog();
-      if(manager.log.length() > 20000){ manager.log := manager.log.substring(manager.log.length()-20000);}
+      if (toAdd.length() > 0) {
+          manager.log := manager.log + toAdd;
+          if(manager.log.length() > 20000){ manager.log := manager.log.substring(manager.log.length()-20000);}
+      }
   }
 
   //If settings.reindex is set to true and no refresh is going on, refresh suggestions/facet readers

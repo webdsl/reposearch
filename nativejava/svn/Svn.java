@@ -444,7 +444,10 @@ public class Svn {
         String toReturn = null;
         try {
             lock.tryLock(3, TimeUnit.SECONDS);
-            toReturn = logBuilder.toString();
+            if(logBuilder.length() < 1)
+                toReturn = "";
+            else
+                toReturn = logBuilder.toString();
             logBuilder = new StringBuilder();
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
