@@ -153,6 +153,7 @@ input.button {
 }
 .nolinenumbera {
     background: -moz-linear-gradient(center top , #EBF4FA, WhiteSmoke) repeat scroll 0 0 #EBF4FA;
+    border: 1px solid #BBD9EE;
     color: Black;
     float: left;
     left: 0;
@@ -174,6 +175,7 @@ input.button {
 }
 .nolinenumberb {
     background: -moz-linear-gradient(center top , WhiteSmoke, #EBF4FA) repeat scroll 0 0 WhiteSmoke;
+    border: 1px solid #BBD9EE;
     color: Black;
     float: left;
     left: 0;
