@@ -186,7 +186,7 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String){
   div[class="top-container"]{
     div[class="facet-area"]{"Filter on file extension:"}
     div{
-      for(f : Facet in all fileExt facets from searcher ) {    showFacet(searcher, f, ext_hasSel, namespace) }
+      for(f : Facet in fileExt facets from searcher ) {    showFacet(searcher, f, ext_hasSel, namespace) }
     }
     div[class="facet-area"]{"Filter on file location:"}
     for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace) <br /> }
@@ -211,7 +211,7 @@ define ajax showPathFacets(searcher : EntrySearcher, hasSelection : Bool, namesp
 
 function interestingPathFacets(searcher : EntrySearcher) : List<Facet> {
   var previous : Facet;
-  var allFacets:= all repoPath facets from searcher;
+  var allFacets:= repoPath facets from searcher;
   var toReturn := List<Facet>();
   for(f : Facet in allFacets) {
     if(previous != null && (!f.getValue().startsWith(previous.getValue()) || f.getCount() != previous.getCount() )) {
