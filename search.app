@@ -141,8 +141,8 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
         output(location)
       }
       <b>output(if(linkText.length()>0) linkText else "-")</b>
-      "[" actionLink(toggleText,toggleAllFragments()) "]"
     }
+    "[" actionLink(toggleText,toggleAllFragments()) "]"
   }
   <div class="search-result-highlight">
     <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(highlightedContent[0].concat("<br />"))</div>

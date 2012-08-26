@@ -133,7 +133,7 @@ application reposearch
     "Add your project/repository!"
     form{
       table {
-        row { column{"Your email: "}       column{input(submitter)} }
+        row { column{"Your email (hidden): "}       column{input(submitter)} }
         row { column{"Project name: "}     column{input(p)} }
         row { column{"SVN or Github URL: "}column{input(n)} }
         row { column{"This URL is/resides within a github tag"}  column{input(tag){"this is a location within a tag on Github."} } }
