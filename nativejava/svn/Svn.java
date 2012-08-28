@@ -127,6 +127,14 @@ public class Svn {
             log(svne.getMessage());
             svne.printStackTrace();
             return null;
+        } finally {
+            if (repository != null){
+                try{
+                    repository.closeSession();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 
