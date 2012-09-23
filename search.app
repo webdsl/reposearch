@@ -118,11 +118,12 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
       ruleOffset := "1";
     } else {
       ruleOffset := /.+#(\d+).>.*/.replaceFirst("$1",highlightedContent[0][0]);
-      if( !(/^\d+$/.match(ruleOffset))  && highlightedContent[0].length > 1){
-        ruleOffset := /.+#(\d+).>.*/.replaceFirst("$1",highlightedContent[0][1]);
-      }
-      if( !(/^\d+$/.match(ruleOffset)) ) {
+      if( !(/^\d+$/.match(ruleOffset)) ){
+        if(highlightedContent[0].length > 1) {
+          ruleOffset := /.+#(\d+).>.*/.replaceFirst("$1",highlightedContent[0][1]);
+        } else {
         ruleOffset := "3";
+        }
       }
     }
     ruleOffset := "" + (ruleOffset.parseInt() - 3);
@@ -413,6 +414,7 @@ function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLen
   var listLines := List<String>();
   var lists := List<List<String>>();
   var lineNum : String;
+  var fixPrevious := false;
   var alt := false;
   var style := "b";
   for(s:String in splitted){
@@ -432,12 +434,17 @@ function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLen
       if(/^\D/.find(s)){
         listLines.add("<div class=\"linenumber" + style + "\">-</div>");
         listCode.add(s);
+        fixPrevious := true;
       } else {
         // line numbers are added at the beginning of code lines followed by a whitespace
         // original: 'foo:bar'
         // modified: '34 foo:bar '
         lineNum := /^(\d+).*/.replaceFirst("$1", s);
         listLines.add("<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap(viewFileUri, lineNum)  ) + "</div>" );
+        if (fixPrevious) {
+            listLines.set( listLines.length-2 , "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap(viewFileUri, ""+(lineNum.parseInt()-1))  ) + "</div>" );
+            fixPrevious := false;
+        }
         if (s.length() != lineNum.length()){
           listCode.add(s.substring(lineNum.length() + 1));
         } else {
