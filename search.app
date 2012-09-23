@@ -32,14 +32,6 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
 
   <script>
     setupcompletion("~source");
-    //// avoid too many request while typing in a field with onkeyup trigger
-    // var onkeyupdelay = function(){
-    //   var timer = 0; //scoped inside this function block, triggering onkeyup again before timeout resets the timer for that particular action
-    //   return function(callback){
-    //     clearTimeout(timer);
-    //     timer = setTimeout(callback, 500);
-    //   }
-    // }();
   </script>
 
   <center>
@@ -113,30 +105,31 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
   var linkText := "";
   var toggleText := if(nOfFragments != 10) "show all fragments" else "less fragments";
   var location := e.url.substring(0, e.url.length() - e.name.length() );
+  var viewFileUri := navigate(viewFile(searcher.getQuery(), e.url, e.projectname));
 
   init{
     linkText := searcher.highlight("fileName", e.name, "<u>","</u>", 1, 256, "");
     if(linkText.length() < 1){
       linkText := e.name;
     }
-    highlightedContent := highlightCodeLines(searcher, e, 150, nOfFragments, false);
+    highlightedContent := highlightCodeLines(searcher, e, 150, nOfFragments, false, viewFileUri);
     ruleOffset := "";
     if(highlightedContent[0].length < 1){
       ruleOffset := "1";
     } else {
-      ruleOffset := /\D+>(\d+).*/.replaceFirst("$1",highlightedContent[0][0]);
+      ruleOffset := /.+#(\d+).>.*/.replaceFirst("$1",highlightedContent[0][0]);
       if( !(/^\d+$/.match(ruleOffset))  && highlightedContent[0].length > 1){
-        ruleOffset := /\D+\>(\d+).*/.replaceFirst("$1",highlightedContent[0][1]);
+        ruleOffset := /.+#(\d+).>.*/.replaceFirst("$1",highlightedContent[0][1]);
       }
       if( !(/^\d+$/.match(ruleOffset)) ) {
-        ruleOffset := "1";
+        ruleOffset := "3";
       }
     }
     ruleOffset := "" + (ruleOffset.parseInt() - 3);
   }
 
   div[class="search-result-link"]{
-    navWithAnchor(navigate(viewFile(searcher.getQuery(), e.url, e.projectname)), ruleOffset){
+    navWithAnchor(viewFileUri , ruleOffset){
       div[class="search-result-location"]{
         output(location)
       }
@@ -345,6 +338,7 @@ define page showFile(searcher : EntrySearcher, e : Entry){
 
 define page viewFile(query : String, url:URL, projectName:String){
   var e := (from Entry as e where e.url=~url and e.projectname = ~projectName)[0]
+  var viewFileUri := navigate(viewFile(query, url, projectName));
   var linkText    := "";
   var location    : String;
   var lineNumbers : String;
@@ -359,11 +353,11 @@ define page viewFile(query : String, url:URL, projectName:String){
       linkText := e.name;
     }
     location := e.url.substring(0, e.url.length() - e.name.length() );
-    highlighted := highlightCodeLines( searcher, e, 1000000, 1, true);
+    highlighted := highlightCodeLines( searcher, e, 1000000, 1, true, viewFileUri );
     lineNumbers := highlighted[0].concat("<br />");
     codeLines := highlighted[1].concat("<br />");
     //add line number anchors
-    lineNumbers := />(\d+)</.replaceAll( "><a name=\"$1\">$1</a><", lineNumbers );
+    lineNumbers := />(\d+)</.replaceAll( " a name=\"$1\">$1<", lineNumbers );
   }
   prettifyCode(projectName)
 
@@ -402,7 +396,7 @@ function toSearcher(q:String, ns:String) : EntrySearcher{
   return searcher;
 }
 
-function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int, fullContentFallback: Bool) : List<List<String>>{
+function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int, fullContentFallback: Bool, q : String) : List<List<String>>{
   var raw : String;
   if(SearchPrefs.caseSensitive){
     raw := searcher.highlightLargeText("contentCase", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
@@ -412,7 +406,7 @@ function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLen
   if(fullContentFallback && raw.length() < 1) {
     raw := entry.content;
   }
-
+  var viewFileUri := q;
   var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"hlcontent\">").replace("$CHL$","</span>");//.replace("\r", "");
   var splitted := highlighted.split("\n");
   var listCode := List<String>();
@@ -443,7 +437,7 @@ function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLen
         // original: 'foo:bar'
         // modified: '34 foo:bar '
         lineNum := /^(\d+).*/.replaceFirst("$1", s);
-        listLines.add("<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + lineNum + "</div>" );
+        listLines.add("<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap(viewFileUri, lineNum)  ) + "</div>" );
         if (s.length() != lineNum.length()){
           listCode.add(s.substring(lineNum.length() + 1));
         } else {
@@ -456,4 +450,8 @@ function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLen
   lists.add(listLines);
   lists.add(listCode);
   return lists;
+}
+
+define issue599wrap(viewFileUri: String, lineNum: String) {
+    navWithAnchor(viewFileUri, lineNum){ output(lineNum) }
 }
