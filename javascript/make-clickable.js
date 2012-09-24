@@ -12,7 +12,7 @@ function prettifyAndMakeClickable(projectName){
       else{
         var urlstart = contextpath+"/search/"+projectName+"/";
       }
-      var searchterm = $.trim($(this).html().replace(/"/g,''));
+      var searchterm = $.trim($(this).html().replace(/["']/g,''));
       //$(this).html("<a href='"+urlstart+$(this).html()+"'>"+$(this).html()+"</a>");
       $(this).click(function(){ window.open(urlstart+searchterm); });
       $(this).mouseover(function(){
