@@ -207,14 +207,12 @@ function interestingPathFacets(searcher : EntrySearcher) : List<Facet> {
   var previous : Facet;
   var allFacets:= repoPath facets from searcher;
   var toReturn := List<Facet>();
-  for(f : Facet in allFacets) {
-    if(previous != null && (!f.getValue().startsWith(previous.getValue()) || f.getCount() != previous.getCount() )) {
-      toReturn.add(f);
+  for(f : Facet in allFacets order by f.getValue()) {
+    if(previous != null && (f.getValue().startsWith(previous.getValue()) && f.getCount() == previous.getCount() )) {
+      toReturn.removeAt(toReturn.length - 1);
     }
+    toReturn.add(f);
     previous := f;
-  }
-  if(allFacets.length > 0){
-    toReturn.add(allFacets.get(allFacets.length-1));
   }
   return toReturn;
 }
