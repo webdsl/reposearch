@@ -4,9 +4,10 @@ application reposearch
   imports search
   imports searchconfiguration
   imports ac
+  imports patterns
 
-  var fpMsg := if( (from Message).length > 0) (from Message)[0]  else Message{msg := ""};
-  var manager := if( (from RepoSearchManager).length > 0) (from RepoSearchManager)[0] else RepoSearchManager{hourCounter := 0 nextInvocation := now().addHours(12) log:="" adminEmails:=""};
+  var fpMsg := if( (from Message).length > 0) (from Message)[0]  else Message{msg := ""}
+  var manager := if( (from RepoSearchManager).length > 0) (from RepoSearchManager)[0] else RepoSearchManager{hourCounter := 0 nextInvocation := now().addHours(12) log:="" adminEmails:=""}
   var settings := if( (from Settings).length > 0) (from Settings)[0] else Settings{reindex := false projects := List<Project>()}
 
   function resetSchedule(){
@@ -61,6 +62,7 @@ application reposearch
     <br/>navigate(manage()){"Manage"}
     <br/>navigate(searchStats()){"Search statistics"}<br/><br/>
     navigate(dologin()){<span class="login">"Admin log in/out"</span>}
+    googleAnalytics()
   }
 
   define homeLink(){
@@ -220,12 +222,14 @@ application reposearch
         }
       }
     }
+    googleAnalytics()
   }
 
   session SearchPrefs{
       resultsPerPage :: Int  (default=10)
       caseSensitive  :: Bool (default=false)
       exactMatch     :: Bool (default=true)
+      regex          :: Bool (default=false)
   }
 
   entity Request {
@@ -244,7 +248,6 @@ application reposearch
     weekStartSearchCount :: Int      (default=0)
     countSince           :: DateTime (default=now())
 
-
     validate(name.length() > 2, "length must be greater than 2")
 
     function resetSearchCount(){
@@ -259,6 +262,7 @@ application reposearch
         weekStartSearchCount := searchCount;
     }
   }
+
   entity Repo{
     project     -> Project  (inverse=Project.repos)
     refresh     :: Bool
@@ -297,6 +301,7 @@ application reposearch
       + name    using filename_analyzer   as fileName ^ 100.0 (autocomplete)
       name      using extension_analyzer  as fileExt
       url       using path_analyzer       as repoPath
+      patternMatches
       namespace by projectname
     }
 

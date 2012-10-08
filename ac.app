@@ -89,3 +89,7 @@ page renewAdmin(){
     rule page renewAdmin(){loggedIn()}
     rule page doSearch(*){ true }
     rule page searchStats(*){ loggedIn() }
+    rule page managePattern(){ loggedIn() }
+    rule page editPattern(arg : Pattern){ loggedIn() }
+    rule page pattern(arg : Pattern){ loggedIn() }
+    rule page createPattern(){ loggedIn() }

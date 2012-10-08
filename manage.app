@@ -2,7 +2,7 @@ module manage
 
   invoke queryRepoTask()      every 30 seconds
   invoke invokeCheckReindex() every 60 seconds
-  invoke manager.newHour()   every 1 hours
+  invoke manager.newHour()    every 1 hours
 
 section entities
   entity Message{
@@ -94,6 +94,9 @@ section pages/templates
             addRepoBtn(pr)
           }
         }
+        div[class="pattern-container"]{
+            managePatterns(pr)
+        }
       }
 
       if(fr.length > 0){
@@ -112,6 +115,7 @@ section pages/templates
         deleteAllRepoEntries(r);
           r.delete();
       }
+      pr.patterns.clear();
       settings.projects.remove(pr);
       pr.delete();
       settings.reindex := true;
@@ -411,11 +415,12 @@ section functions
           if(r.refreshSVN){
               deleteRepoEntries(r, col);
           } else {
-            deleteAllRepoEntries(r);
+              deleteAllRepoEntries(r);
           }
           for(c: Entry in col.getEntriesForAddition()){
               c.projectname := r.project.name;
               c.repo := r;
+              c.addPatternMatches();
               c.save();
           }
           settings.addProject(r.project);
@@ -469,4 +474,20 @@ section functions
           if (entries.length < 1)  { entries := (search Entry in namespace projectName matching repoPath:url).results(); }
           for(e : Entry in entries){ log("Reposearch: Deleted Entry: " + e.url); e.delete();}
       }
+  }
+
+  define googleAnalytics() {
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-10588367-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
   }

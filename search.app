@@ -43,6 +43,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
       submit action{return search(namespace,query);} {"search"} <br />
       input(SearchPrefs.caseSensitive)[onclick=updateResults(), title="Case sensitive search"]{"case sensitive"}
       input(SearchPrefs.exactMatch)[onclick=updateResults(), title="If enabled, the exact sequence of characters is matched in that order (recommended)"]{"exact match"}
+      input(SearchPrefs.regex)[onclick=updateResults(), title="Use regular expressions"]{"regular expressions"}
     }
   </center>
   <br />
@@ -68,6 +69,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
       clear(facetArea);
     }
   }
+  googleAnalytics()
 }
 
 function incSearchCount(prj : Project){
@@ -75,6 +77,7 @@ function incSearchCount(prj : Project){
 }
 
 function updateAreas(searcher : EntrySearcher, page : Int, namespace : String){
+  log("Lucene query: " + searcher.luceneQuery());
   replace(facetArea, viewFacets(searcher, namespace));
   replace(resultArea, paginatedTemplate(searcher, page, namespace));
 }
@@ -369,6 +372,7 @@ define page viewFile(query : String, url:URL, projectName:String){
     <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(codeLines)</pre></div>
   </ div>
   navigate(search(e.projectname, ""))[target:="_blank"]{"new search"}
+  googleAnalytics()
 }
 
 native class utils.URLFilter as URLFilter {
@@ -388,7 +392,11 @@ define prettifyCodeHelper(projectName : String){
 }
 
 function toSearcher(q:String, ns:String) : EntrySearcher{
+
   var searcher := search Entry in namespace ns with facets (fileExt, 120), (repoPath, 200) [no lucene, strict matching];
+  if (SearchPrefs.regex) {
+      return searcher.regexQuery( q );
+  }
   var slop := if(SearchPrefs.exactMatch) 0 else 100000;
   if(SearchPrefs.caseSensitive) { searcher:= ~searcher matching contentCase, fileName: q~slop; }
   else   { searcher:= ~searcher matching q~slop; }

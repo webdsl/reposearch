@@ -42,3 +42,11 @@ analyzer path_analyzer{
                 replacement="$2" )
   tokenizer = PathHierarchyTokenizer( delimiter="/" )
 }
+
+  analyzer definedPatternMatchAnalyzer{
+      //charfilter = aCharFilter
+      tokenizer = PatternTokenizer(
+           pattern="#NEWITEM#([^#]+#MATCH#[^#]+)",
+           group="1" )
+      //tokenfilter = aTokenFilter
+  }
