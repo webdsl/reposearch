@@ -22,15 +22,11 @@ section pages/templates
   define page manage(){
     title { "Manage - Reposearch" }
     homeLink()
-
     manageRefresh()
-
     manageRequestReceipts()
-
     placeholder requestsPH{
       showRequests()
     }
-
     manageProjects()
     <br />
     manageFrontpageMessage()
@@ -73,6 +69,23 @@ section pages/templates
       }
   }
 
+  define ajax showProject(pr : Project){
+    div[class="main-container"]{
+      searchCount(pr)
+      <br />
+      placeholder "reposPH" + pr.name{
+        showRepos(pr)
+      }
+      placeholder "addRepoPH" + pr.name{
+        addRepoBtn(pr)
+      }
+      <br />
+      div[class="pattern-container"]{
+        managePatterns(pr)
+      }
+    }
+  }
+
   define manageProjects(){
     var p := "";
     var fr := (from Repo where project is null);
@@ -84,23 +97,13 @@ section pages/templates
       }
       <br />
       for(pr:Project order by pr.displayName){
-        div[class="top-container"]{"Project: " <b>output(pr.name)</b> " [" submitlink("remove project*", removeProject(pr)) "] *this may take over a minute"}
-        div[class="main-container"]{
-          searchCount(pr)
-          placeholder "reposPH" + pr.name{
-            showRepos(pr)
-          }
-          placeholder "addRepoPH" + pr.name{
-            addRepoBtn(pr)
-          }
-          <br />
-          div[class="pattern-container"]{
-            managePatterns(pr)
-          }
-        }
-
+          div[class="top-container"]{<b>submitlink(pr.name, showProject(pr))</b>
+          div[class="float-right"]{"[" submitlink("remove project", removeProject(pr)) "]*"}}
+          //placeholder[style:="display:none;"] "projectPH" + pr.name { showProject(pr) }
+          <div id="projectPH"+pr.name class="webdsl-placeholder" style="display: none;">showProject(pr)</div>
       }
-
+      "* Removal of a project may take over a minute, please be patient."
+      <br />
       if(fr.length > 0){
         <br />
         submit action{
@@ -112,9 +115,12 @@ section pages/templates
       }
 
     }
+    action showProject(pr : Project){
+      visibility("projectPH"+pr.name, toggle);
+    }
     action removeProject(pr : Project){
       for(r:Repo in pr.repos){
-        deleteAllRepoEntries(r);
+          deleteAllRepoEntries(r);
           r.delete();
       }
       pr.patterns.clear();
@@ -126,7 +132,10 @@ section pages/templates
   }
 
   define searchCount(pr : Project){
-      "# of searches total / this week for project " output(pr.displayName) ": " <b>output(pr.searchCount)</b>  " (since " output(pr.countSince) ") / " <b>output(pr.weeklySearchCount)</b> " (since " output(manager.newWeekMoment) ") " submitlink("reset", action{pr.resetSearchCount();})
+      "searches this week (since " output(manager.newWeekMoment) "): " <b>output(pr.weeklySearchCount)</b>
+      <br />
+      "searches total (since " output(pr.countSince) "): " <b>output(pr.searchCount)</b> " " submitlink("reset", action{pr.resetSearchCount();})
+      <br />
   }
 
   define searchCountInTable(pr : Project){
@@ -392,6 +401,8 @@ section functions
   }
 
   function queryRepoTask(){
+    patternRenewSchedule.run();
+
     var repos := from Repo where refresh=true and (inrefresh=null or inrefresh=false);
     var skippedFiles := List<String>();
     if(repos.length > 0){
@@ -464,7 +475,7 @@ section functions
   }
 
   function deleteAllRepoEntries(r:Repo){
-    for(e:Entry where e.repo == r){  e.delete();}//e.patternMatches.clear();
+    for(e:Entry where e.repo == r){  e.delete();}
   }
 
   function deleteRepoEntries(r:Repo, rtr : RepoTaskResult){

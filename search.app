@@ -2,9 +2,9 @@ module search
 
 define page search(namespace:String, q:String){
   title { output(q + " - Reposearch") }
-  showSearch(toSearcher(q, namespace), namespace, "", 1)
+  showSearch(toSearcher(q, namespace, ""), namespace, "", 1)
 }
-//depricated
+//deprecated
 // define override page doSearch(searcher : EntrySearcher, namespace:String, pageNum: Int){
 //     init{return doSearch(searcher, namespace, "", pageNum);}
 // }
@@ -47,7 +47,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pattern : 
       submit action{return search(namespace,query);} {"search"} <br />
       input(SearchPrefs.caseSensitive)[onclick=updateResults(), title="Case sensitive search"]{"case sensitive"}
       input(SearchPrefs.exactMatch)[onclick=updateResults(), title="If enabled, the exact sequence of characters is matched in that order (recommended)"]{"exact match"}
-      input(SearchPrefs.regex)[onclick=updateResults(), title="Use regular expressions"]{"regular expressions"}
+      // input(SearchPrefs.regex)[onclick=updateResults(), title="Use regular expressions"]{"regular expressions"}
     }
   </center>
   <br />
@@ -63,7 +63,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pattern : 
 
   action updateResults(){
     if(query.length() > 2){
-      searcher := toSearcher(query,namespace); //update with entered query
+      searcher := toSearcher(query,namespace, pattern); //update with entered query
       updateAreas(searcher, 1, namespace, pattern);
       //HTML5 feature, replace url without causing page reload
       runscript("window.history.pushState('history','reposearch','" + navigate(doSearch(searcher, namespace, pattern, 1) ) + "');");
@@ -189,14 +189,14 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, pattern : S
     div{
       for(f : Facet in fileExt facets from searcher ) {    showFacet(searcher, f, ext_hasSel, namespace, pattern) }
     }
-    if (prj != null){
+    if (prj != null && prj.patterns.length > 0){
       div[class="facet-area"]{"Filter on pattern:"}
       if (pattern.length() > 0){
-          div[class="included-facet"]{ excludeFacetSym() navigate search(namespace, searcher.getQuery()) { output(pattern) } }
+          div[class="included-facet"]{ navigate search(namespace, searcher.getQuery()) { excludeFacetSym() output(pattern) } }
       } else {
           for(p : Pattern in prj.patterns){
-              div[class="included-facet"]{
-                  submitlink updateResults(searcher, p){ output(p.name)}
+              div[class="excluded-facet-pattern"]{
+                  submitlink updateResults(searcher, p){ output(p.name) }
               }
           }
       }
@@ -208,8 +208,9 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, pattern : S
       showPathFacets(searcher, path_hasSel, namespace, false, pattern)
     }
   }
-  action updateResults(searcher1 : EntrySearcher, p: Pattern){
-    return doSearch( (~searcher matching patternMatches.matches: +p.queryString( searcher.getQuery() ) ) , namespace, p.name, 1);
+  action updateResults(searcher : EntrySearcher, p: Pattern){
+      p.addPatternConstraint(searcher);
+    return doSearch(searcher , namespace, p.name, 1);
   }
 }
 
@@ -366,17 +367,14 @@ define page viewFile(query : String, url:URL, projectName:String, pattern : Stri
   var lineNumbers : String;
   var codeLines   : String;
   var highlighted : List<List<String>>;
-  var searcher    := toSearcher(query, "");
+  var searcher    := toSearcher(query, "", pattern);
 
   title { output(e.name + " - Reposearch") }
 
   init{
     linkText := searcher.highlight("fileName", e.name, "<u>","</u>", 1, 256, "");
-    if(linkText.length() < 1){
-      linkText := e.name;
-    }
+    if(linkText.length() < 1) { linkText := e.name; }
     location := e.url.substring(0, e.url.length() - e.name.length() );
-    if (pattern.length() > 0) { ~searcher matching patternMatches.matches: + queryString( pattern, searcher.getQuery() ); }
     highlighted := highlightCodeLines( searcher, e, 1000000, 1, true, viewFileUri, pattern );
     lineNumbers := highlighted[0].concat("<br />");
     codeLines := highlighted[1].concat("<br />");
@@ -413,25 +411,32 @@ define prettifyCodeHelper(projectName : String){
   </script>
 }
 
-function toSearcher(q:String, ns:String) : EntrySearcher{
+function toSearcher(q:String, ns:String, pattern:String) : EntrySearcher{
 
   var searcher := search Entry in namespace ns with facets (fileExt, 120), (repoPath, 200) [no lucene, strict matching];
-  if (SearchPrefs.regex) {
-      return searcher.regexQuery( q );
-  }
+  // if (SearchPrefs.regex) {
+  //     return searcher.regexQuery( q );
+  // }
   var slop := if(SearchPrefs.exactMatch) 0 else 100000;
+
   if(SearchPrefs.caseSensitive) { searcher:= ~searcher matching contentCase, fileName: q~slop; }
   else   { searcher:= ~searcher matching q~slop; }
+
+  if(pattern.length()>0){ addPatternConstraint(searcher, pattern); }
   return searcher;
 }
 
-function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int, fullContentFallback: Bool, q : String, patternStr : String) : List<List<String>>{
+function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int, fullContentFallback: Bool, viewFileUri : String, patternStr : String) : List<List<String>>{
   var raw : String;
   if(patternStr.length() > 0){
-       var pattern : Pattern := findPattern(patternStr);
-       var content := MatchExtractor.replaceAll(pattern.name, pattern.pattern, pattern.group, pattern.caseSensitive, entry.content);
-       raw := searcher.highlightLargeText("patternMatches.matches", content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
-       raw := /\s\$OHL\$\w+#MATCH#(\w+)\$CHL\$\s/.replaceAll("\\$OHL\\$$1\\$CHL\\$", raw);
+      //a pattern is used
+      var pattern : Pattern := findPattern(patternStr);
+      //decorate the pattern matches such that these will match for field patternMatches.matches
+      var content := MatchExtractor.decorateMatches(pattern, entry.content, searcher.getQuery());
+      //highlight
+      raw := searcher.highlightLargeText("patternMatches.matches", content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
+      //undecorate highlighted matches again
+      raw := /\s\$OHL\$\w+#MATCH#([\w\-]+)\$CHL\$\s/.replaceAll("\\$OHL\\$$1\\$CHL\\$", raw);
   } else {
       if(SearchPrefs.caseSensitive){
         raw := searcher.highlightLargeText("contentCase", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
@@ -442,7 +447,6 @@ function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLen
   if(fullContentFallback && raw.length() < 1) {
     raw := entry.content;
   }
-  var viewFileUri := q;
   var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"hlcontent\">").replace("$CHL$","</span>");//.replace("\r", "");
   var splitted := highlighted.split("\n");
   var listCode := List<String>();

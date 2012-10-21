@@ -30,7 +30,7 @@ body {
     border-radius: 0 0 15px 15px;
     clear: both;
     margin-right: 10px;
-    padding: 5px 5px 0 7px;
+    padding: 5px 5px 5px 7px;
 }
 .top-container:after {
     clear: both;
@@ -61,6 +61,15 @@ body {
     margin: 1px 3px;
     padding: 0 0 0 3px;
 }
+.excluded-facet-pattern{
+    background-color: #EBF4FA;
+    border-radius: 5px 5px 5px 5px;
+    color: black;
+    float: left;
+    font-size: 12px;
+    margin: 1px 3px;
+    padding: 0 3px;
+}
 .included-facet {
     background-color: #EBF4FA;
     border-radius: 5px 5px 5px 5px;
@@ -75,7 +84,7 @@ body {
     color: black;
     text-decoration: none;
 }
-.excluded-facet a:link, .excluded-facet a:visited {
+.excluded-facet a:link, .excluded-facet a:visited, .excluded-facet-pattern a:link, .excluded-facet-pattern a:visited {
     color: black;
     text-decoration: none;
 }
@@ -291,4 +300,7 @@ html body#manage table tbody td {
 }
 .hover {
     background-color: silver;
+}
+html body#manage div.main-container div.top-container div.float-right {
+    float: right;
 }

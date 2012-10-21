@@ -4,17 +4,18 @@ module patterns
     name    :: String (id, default="change me")
     pattern :: String
     group   :: Int
+    fileExts:: String
     caseSensitive :: Bool
+    nameNoSpaces :: String := name.replace(" ", "_")
     projects-> Set<Project> (inverse = Project.patterns)
 
-    search mapping{
-        name using none
-    }
-
-    function queryString(term : String) : String { return queryString(name, term); }
+    function addPatternConstraint(searcher : EntrySearcher) { addPatternConstraint(searcher, name); }
   }
 
-  function queryString(patternName: String, term : String) : String { return patternName+"#MATCH#"+term; }
+  function addPatternConstraint(searcher : EntrySearcher, patternName: String) {
+    var constraint := patternName.replace(" ", "_") + "#MATCH#" + searcher.getQuery();
+    ~searcher matching patternMatches.matches: +constraint;
+  }
   // derive crud Pattern
 
   extend entity Project{
@@ -27,11 +28,11 @@ module patterns
 
       /*store names of matches which are extracted by
        the pattern's group, preceded by pattern's name
-       and seperators, eg.: #NEWITEM#class#MATCH#SvnFetcher
+       and a seperator (#NEWITEM#), eg.: #NEWITEM#class#MATCH#SvnFetcher
       */
       matches :: Text := getMatches()
       function getMatches() : String{
-          return MatchExtractor.extract(pattern.name, pattern.pattern, pattern.group, pattern.caseSensitive, entry.content);
+          return MatchExtractor.extract(pattern.nameNoSpaces, pattern.pattern, pattern.group, pattern.caseSensitive, entry.content);
       }
 
       search mapping{
@@ -43,15 +44,19 @@ module patterns
       patternMatches <> Set<PatternMatch> (inverse = PatternMatch.entry)
 
       function addPatternMatches(){
-            for( pattern : Pattern in this.repo.project.patterns){
-                this.patternMatches.add( PatternMatch{ entry := this pattern := pattern } );
-            }
+          this.patternMatches.clear();
+          for( pattern : Pattern in this.repo.project.patterns){
+              var ext := /^.*\.([^\.]+)$/.replaceAll("$1", this.name);
+              if (pattern.fileExts.contains(ext)){
+                  this.patternMatches.add( PatternMatch{ entry := this pattern := pattern } );
+              }
+          }
       }
   }
 
   native class regex.MatchExtractor as MatchExtractor {
      static extract(String, String, Int, Bool, String) : String
-     static replaceAll(String, String, Int, Bool, String) : String
+     static decorateMatches(Pattern, String, String) : String
   }
 
   define managePatterns( pr : Project ){
@@ -65,8 +70,8 @@ module patterns
             }
         }
       }}
-      action addPattern(p : Pattern){ pr.patterns.add(p);}
-      action removePattern(p : Pattern){ pr.patterns.remove(p);}
+      action addPattern(p : Pattern){ pr.patterns.add(p); patternRenewSchedule.projects.add(pr); replace("projectPH"+pr.name, showProject(pr)); }
+      action removePattern(p : Pattern){ pr.patterns.remove(p); replace("projectPH"+pr.name, showProject(pr));}
       navigate( createPattern()){"new pattern"}
   }
 
@@ -83,18 +88,35 @@ module patterns
   define editPattern(p : Pattern){
       form{
           group("Details") {
-          derive editRows from p for (name,pattern,group,projects)
+          derive editRows from p for (name,fileExts,pattern,group,projects)
           }
-          action("Save", save())
+          action("Cancel", cancel()) " " action("Save", save()) " " action("Remove permanently", remove())
       }
-
+      action cancel(){ return manage(); }
       action save() {
         p.save();
+        patternRenewSchedule.projects.addAll(p.projects);
         return manage();
-    }
+      }
+      action remove() {
+          p.projects.clear();
+          p.delete();
+          return manage();
+      }
   }
 
-//
-//   define output( p : Pattern ){
-//
-//   }
+  entity PatternRenewSchedule{
+      projects -> List<Project>
+
+      function run(){
+          for(pr : Project in projects){
+              Svn.log("Reindexing entries for project '" + pr.name + "' because of a change in assigned patterns");
+              for( repo : Repo in pr.repos){
+                  for(e:Entry where e.repo == repo){
+                      e.addPatternMatches();
+                  }
+              }
+          }
+          projects.clear();
+      }
+  }

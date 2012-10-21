@@ -9,6 +9,7 @@ application reposearch
   var fpMsg := if( (from Message).length > 0) (from Message)[0]  else Message{msg := ""}
   var manager := if( (from RepoSearchManager).length > 0) (from RepoSearchManager)[0] else RepoSearchManager{hourCounter := 0 nextInvocation := now().addHours(12) log:="" adminEmails:=""}
   var settings := if( (from Settings).length > 0) (from Settings)[0] else Settings{reindex := false projects := List<Project>()}
+  var patternRenewSchedule := if( (from PatternRenewSchedule).length > 0) (from PatternRenewSchedule)[0] else PatternRenewSchedule{ projects := List<Project>()}
 
   function resetSchedule(){
     manager.hourCounter := 0;
@@ -123,11 +124,11 @@ application reposearch
   }
 
   define ajax addProject(){
-    var p := "";
-    var gu := "";
-    var gr := "";
+    var p    := "";
+    var gu   := "";
+    var gr   := "";
     var path := "trunk";
-    var tag := false;
+    var tag  := false;
     var n : URL := "";
     var submitter : Email := "";
     var r : Request := Request{};
@@ -233,10 +234,10 @@ application reposearch
   }
 
   entity Request {
-      project     :: String
-      svn         :: URL
-      isGithubTag :: Bool
-      submitter   :: Email
+    project     :: String
+    svn         :: URL
+    isGithubTag :: Bool
+    submitter   :: Email
   }
 
   entity Project {
@@ -276,23 +277,23 @@ application reposearch
     url :: URL
   }
   entity GithubRepo : Repo{
-    user::String    (default="")
-    repo::String    (default="")
-    svnPath::String (default="")
+    user    ::String (default="")
+    repo    ::String (default="")
+    svnPath ::String (default="")
   }
   entity Commit{
-    rev :: Long
-    author :: String
+    rev     :: Long
+    author  :: String
     message :: Text
-    date :: DateTime
+    date    :: DateTime
   }
 
   entity Entry {
-    name :: String
-    content :: Text
-    url :: URL
+    name        :: String
+    content     :: Text
+    url         :: URL
     projectname :: String
-    repo -> Repo
+    repo        -> Repo
   }
     search mapping Entry {
       + content using keep_all_chars      as content
@@ -301,7 +302,7 @@ application reposearch
       + name    using filename_analyzer   as fileName ^ 100.0 (autocomplete)
       name      using extension_analyzer  as fileExt
       url       using path_analyzer       as repoPath
-      patternMatches with depth 2
+      patternMatches with depth 1
       namespace by projectname
     }
 
@@ -314,12 +315,12 @@ application reposearch
     }
 
   native class svn.Svn as Svn{
-    //static getCommits(String):List<Commit>
     static test()
     static checkout(String):RepoTaskResult
     static updateFromRevOrCheckout(String,Long):RepoTaskResult
     static checkout(String,String,String):RepoTaskResult
     static updateFromRevOrCheckout(String,String,String,Long):RepoTaskResult
+    static log(String)
     static getLog() : String
   }
 

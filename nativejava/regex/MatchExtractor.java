@@ -3,14 +3,12 @@ package regex;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import svn.Svn;
-
 public class MatchExtractor {
     public static final String SEP = " ";
     public static final String INFIX = "#MATCH#";
     public static String extract(String patternName, String pattern, int group, boolean caseSensitive, String text){
         try{
-            Matcher matcher = getMatcher(patternName, pattern, group, caseSensitive, text);
+            Matcher matcher = getMatcher(pattern, caseSensitive, text);
             String prefix = getPrefix( patternName );
             StringBuffer sb = new StringBuffer();
 
@@ -28,14 +26,19 @@ public class MatchExtractor {
 
     }
 
-    public static String replaceAll(String patternName, String pattern, int group, boolean caseSensitive, String text){
-        Matcher matcher = getMatcher(patternName, pattern, group, caseSensitive, text);
+    public static String decorateMatches(webdsl.generated.domain.Pattern pattern, String text, String queryTerm){
+        Matcher matcher = getMatcher(pattern.getPattern(), pattern.getCaseSensitive(), text);
 
-        String currentMatch, currentReplacement;
+        String currentMatchTerm, currentReplacement;
         StringBuffer sb = new StringBuffer();
         while(matcher.find()){
-            currentMatch = matcher.group();
-            currentReplacement = currentMatch.replace(matcher.group(group), getPrefix( patternName ) + matcher.group(group) + SEP);
+            currentMatchTerm = matcher.group(pattern.getGroup());
+            //now, only replace instances for query matches
+            if ( currentMatchTerm.equalsIgnoreCase( queryTerm ) ) {
+                currentReplacement = matcher.group().replace(currentMatchTerm, getPrefix( pattern.getName() ) + matcher.group( pattern.getGroup() ) + SEP);
+            } else {
+                currentReplacement = matcher.group();
+            }
             matcher.appendReplacement(sb, currentReplacement);
         }
         matcher.appendTail(sb);
@@ -43,10 +46,10 @@ public class MatchExtractor {
     }
 
     private static String getPrefix(String patternName){
-        return SEP + patternName + INFIX;
+        return SEP + patternName.replaceAll(" ", "_") + INFIX;
     }
 
-    private static Matcher getMatcher(String patternName, String pattern, int group, boolean caseSensitive, String text){
+    private static Matcher getMatcher(String pattern, boolean caseSensitive, String text){
         Pattern p = caseSensitive ? Pattern.compile( pattern ) : Pattern.compile( pattern, Pattern.CASE_INSENSITIVE);
         return p.matcher( text );
     }
