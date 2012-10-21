@@ -301,7 +301,7 @@ application reposearch
       + name    using filename_analyzer   as fileName ^ 100.0 (autocomplete)
       name      using extension_analyzer  as fileExt
       url       using path_analyzer       as repoPath
-      patternMatches
+      patternMatches with depth 2
       namespace by projectname
     }
 

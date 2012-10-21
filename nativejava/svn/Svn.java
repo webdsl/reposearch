@@ -432,7 +432,7 @@ public class Svn {
       }
     }
 
-    private static void log(String msg){
+    public static void log(String msg){
         try {
             lock.tryLock(3, TimeUnit.SECONDS);
             System.out.println("Reposearch: " + msg);

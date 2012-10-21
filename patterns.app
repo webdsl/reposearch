@@ -6,9 +6,16 @@ module patterns
     group   :: Int
     caseSensitive :: Bool
     projects-> Set<Project> (inverse = Project.patterns)
-    matches -> Set<PatternMatch> (inverse = PatternMatch.pattern)
+
+    search mapping{
+        name using none
+    }
+
+    function queryString(term : String) : String { return queryString(name, term); }
   }
-  derive crud Pattern
+
+  function queryString(patternName: String, term : String) : String { return patternName+"#MATCH#"+term; }
+  // derive crud Pattern
 
   extend entity Project{
       patterns -> Set<Pattern>
@@ -44,16 +51,49 @@ module patterns
 
   native class regex.MatchExtractor as MatchExtractor {
      static extract(String, String, Int, Bool, String) : String
+     static replaceAll(String, String, Int, Bool, String) : String
   }
 
   define managePatterns( pr : Project ){
-      list{
-        for( pattern : Pattern in pr.patterns){
-            listitem{ output( pattern ) "-" navigate(editPattern( pattern )){"edit"} }
+      "Available match patterns:"
+      list{form{
+        for( pattern : Pattern in from Pattern){
+            listitem{
+                output( pattern ) " [" navigate(editPattern( pattern )){"edit"}  "] "
+                if (pattern in pr.patterns) {"[" submitlink("remove",removePattern(pattern)) "]"}
+                else                        {"[" submitlink("add",addPattern(pattern)) "]"}
+            }
         }
-      }
+      }}
+      action addPattern(p : Pattern){ pr.patterns.add(p);}
+      action removePattern(p : Pattern){ pr.patterns.remove(p);}
       navigate( createPattern()){"new pattern"}
   }
+
+
+  define page createPattern(){
+      var p:= Pattern{ }
+      editPattern(p)
+  }
+
+  define page editPattern(p : Pattern){
+      editPattern(p)
+  }
+
+  define editPattern(p : Pattern){
+      form{
+          group("Details") {
+          derive editRows from p for (name,pattern,group,projects)
+          }
+          action("Save", save())
+      }
+
+      action save() {
+        p.save();
+        return manage();
+    }
+  }
+
 //
 //   define output( p : Pattern ){
 //

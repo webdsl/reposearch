@@ -93,10 +93,12 @@ section pages/templates
           placeholder "addRepoPH" + pr.name{
             addRepoBtn(pr)
           }
-        }
-        div[class="pattern-container"]{
+          <br />
+          div[class="pattern-container"]{
             managePatterns(pr)
+          }
         }
+
       }
 
       if(fr.length > 0){
@@ -462,7 +464,7 @@ section functions
   }
 
   function deleteAllRepoEntries(r:Repo){
-    for(e:Entry where e.repo == r){e.delete();}
+    for(e:Entry where e.repo == r){  e.delete();}//e.patternMatches.clear();
   }
 
   function deleteRepoEntries(r:Repo, rtr : RepoTaskResult){

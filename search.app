@@ -2,15 +2,19 @@ module search
 
 define page search(namespace:String, q:String){
   title { output(q + " - Reposearch") }
-  showSearch(toSearcher(q, namespace), namespace, 1)
+  showSearch(toSearcher(q, namespace), namespace, "", 1)
 }
+//depricated
+// define override page doSearch(searcher : EntrySearcher, namespace:String, pageNum: Int){
+//     init{return doSearch(searcher, namespace, "", pageNum);}
+// }
 
-define page doSearch(searcher : EntrySearcher, namespace:String, pageNum: Int){
+define page doSearch(searcher : EntrySearcher, namespace:String, pattern : String, pageNum: Int){
     title { output("Reposearch - '" + searcher.getQuery() +  "' in " + namespace) }
-    showSearch(searcher, namespace, pageNum)
+    showSearch(searcher, namespace, pattern, pageNum)
 }
 
-define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: Int){
+define showSearch (entrySearcher : EntrySearcher, namespace : String, pattern : String, pageNum: Int ){
   var prj := findProject(namespace);
   var source := "/autocompleteService"+"/"+URLFilter.filter(namespace);
   var searcher := entrySearcher;
@@ -50,19 +54,19 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pageNum: I
   homeLink()
 
   placeholder facetArea{
-    if(query.length() > 0){ viewFacets(searcher, namespace) }
+    if(query.length() > 0){ viewFacets(searcher, namespace, pattern) }
   }
 
   placeholder resultArea{
-    if(query.length() > 0){ paginatedTemplate(searcher, pageNum, namespace) }
+    if(query.length() > 0){ paginatedTemplate(searcher, pageNum, namespace, pattern) }
   }
 
   action updateResults(){
     if(query.length() > 2){
       searcher := toSearcher(query,namespace); //update with entered query
-      updateAreas(searcher, 1, namespace);
+      updateAreas(searcher, 1, namespace, pattern);
       //HTML5 feature, replace url without causing page reload
-      runscript("window.history.pushState('history','reposearch','" + navigate(doSearch(searcher, namespace, 1) ) + "');");
+      runscript("window.history.pushState('history','reposearch','" + navigate(doSearch(searcher, namespace, pattern, 1) ) + "');");
       incSearchCount(prj);
     } else {
       clear(resultArea);
@@ -76,10 +80,9 @@ function incSearchCount(prj : Project){
   if(prj != null){prj.incSearchCount();}
 }
 
-function updateAreas(searcher : EntrySearcher, page : Int, namespace : String){
-  log("Lucene query: " + searcher.luceneQuery());
-  replace(facetArea, viewFacets(searcher, namespace));
-  replace(resultArea, paginatedTemplate(searcher, page, namespace));
+function updateAreas(searcher : EntrySearcher, page : Int, namespace : String, pattern : String){
+  replace(facetArea, viewFacets(searcher, namespace, pattern));
+  replace(resultArea, paginatedTemplate(searcher, page, namespace, pattern));
 }
 
 service autocompleteService(namespace:String, term : String){
@@ -97,25 +100,25 @@ define navWithAnchor(n:String,a:String){
     rawoutput{ <a all attributes href=n+"#"+a> elements </a> }
   }
 
-define ajax highlightedResultToggled(e : Entry, searcher : EntrySearcher, nOfFragments : Int){
-  highlightedResult(e, searcher, nOfFragments)
+define ajax highlightedResultToggled(e : Entry, searcher : EntrySearcher, nOfFragments : Int, pattern : String){
+  highlightedResult(e, searcher, nOfFragments, pattern)
   prettifyCode(e.projectname)
 }
 
-define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int){
+define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int, pattern : String){
   var highlightedContent : List<List<String>>;
   var ruleOffset : String;
   var linkText := "";
   var toggleText := if(nOfFragments != 10) "show all fragments" else "less fragments";
   var location := e.url.substring(0, e.url.length() - e.name.length() );
-  var viewFileUri := navigate(viewFile(searcher.getQuery(), e.url, e.projectname));
+  var viewFileUri := navigate(viewFile(searcher.getQuery(), e.url, e.projectname, pattern));
 
   init{
     linkText := searcher.highlight("fileName", e.name, "<u>","</u>", 1, 256, "");
     if(linkText.length() < 1){
       linkText := e.name;
     }
-    highlightedContent := highlightCodeLines(searcher, e, 150, nOfFragments, false, viewFileUri);
+    highlightedContent := highlightCodeLines(searcher, e, 150, nOfFragments, false, viewFileUri, pattern);
     ruleOffset := "";
     if(highlightedContent[0].length < 1){
       ruleOffset := "1";
@@ -146,26 +149,27 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
     <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(highlightedContent[1].concat("<br />"))</pre></div>
   </ div>
   action toggleAllFragments(){
-      if(nOfFragments != 10) {replace("result-"+e.url, highlightedResultToggled(e, searcher, 10)); }
-      else                   {replace("result-"+e.url, highlightedResultToggled(e, searcher, 3)); }
+      if(nOfFragments != 10) {replace("result-"+e.url, highlightedResultToggled(e, searcher, 10, pattern)); }
+      else                   {replace("result-"+e.url, highlightedResultToggled(e, searcher, 3, pattern)); }
 
   }
 
 }
 
-define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String){
+define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String, pattern : String){
   prettifyCode(ns)
   if(searcher.getQuery().length() > 0) {
     div[class="main-container"]{
-      paginatedResults(searcher, pageNum, ns)
+      paginatedResults(searcher, pageNum, ns, pattern)
     }
   }
 }
 
-define ajax viewFacets(searcher : EntrySearcher, namespace : String){
+define ajax viewFacets(searcher : EntrySearcher, namespace : String, pattern : String){
   var selected         := searcher.getFacetSelection();
   var path_hasSel      := false;
   var ext_hasSel       := false;
+  var prj              := findProject(namespace);
   var path_selection   := List<Facet>();
   init {
     for ( f : Facet in selected ){
@@ -183,26 +187,42 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String){
   div[class="top-container"]{
     div[class="facet-area"]{"Filter on file extension:"}
     div{
-      for(f : Facet in fileExt facets from searcher ) {    showFacet(searcher, f, ext_hasSel, namespace) }
+      for(f : Facet in fileExt facets from searcher ) {    showFacet(searcher, f, ext_hasSel, namespace, pattern) }
     }
+    if (prj != null){
+      div[class="facet-area"]{"Filter on pattern:"}
+      if (pattern.length() > 0){
+          div[class="included-facet"]{ excludeFacetSym() navigate search(namespace, searcher.getQuery()) { output(pattern) } }
+      } else {
+          for(p : Pattern in prj.patterns){
+              div[class="included-facet"]{
+                  submitlink updateResults(searcher, p){ output(p.name)}
+              }
+          }
+      }
+    }
+
     div[class="facet-area"]{"Filter on file location:"}
-    for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace) <br /> }
+    for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace, pattern) <br /> }
     placeholder repoPathPh{
-      showPathFacets(searcher, path_hasSel, namespace, false)
+      showPathFacets(searcher, path_hasSel, namespace, false, pattern)
     }
+  }
+  action updateResults(searcher1 : EntrySearcher, p: Pattern){
+    return doSearch( (~searcher matching patternMatches.matches: +p.queryString( searcher.getQuery() ) ) , namespace, p.name, 1);
   }
 }
 
-define ajax showPathFacets(searcher : EntrySearcher, hasSelection : Bool, namespace : String, show : Bool){
+define ajax showPathFacets(searcher : EntrySearcher, hasSelection : Bool, namespace : String, show : Bool, pattern : String){
   if( show ){
-    submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false));}{"collapse"}
+    submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, pattern));}{"collapse"}
     div{
       for(f : Facet in interestingPathFacets(searcher)) {
-        showFacet(searcher, f, hasSelection, namespace) <br />
+        showFacet(searcher, f, hasSelection, namespace, pattern) <br />
       }
     }
   } else {
-    submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, true));}{"expand"}
+    submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, pattern));}{"expand"}
   }
 }
 
@@ -220,7 +240,7 @@ function interestingPathFacets(searcher : EntrySearcher) : List<Facet> {
   return toReturn;
 }
 
-define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String) {
+define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String, pattern : String) {
   if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
     div[class="excluded-facet"]{
       if(f.isSelected()) {
@@ -244,7 +264,7 @@ define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, names
   }
 
   action updateResults(searcher : EntrySearcher){
-    return doSearch(searcher, namespace, 1);
+    return doSearch(searcher, namespace, pattern, 1);
   }
 }
 
@@ -255,7 +275,7 @@ define includeFacetSym(){
   <div class="include-facet-sym">"v"</div>
 }
 
-define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespace : String){
+define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespace : String, pattern : String){
   var resultsPerPage := SearchPrefs.resultsPerPage;
   var options := [5, 10, 25, 50, 100, 500];
   var resultList := results from (~searcher offset ((pagenumber - 1) * resultsPerPage) limit resultsPerPage);
@@ -274,7 +294,7 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
           output(size) " results found in " output(searchtime from searcher) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
           " [results per page: "
           for(i : Int in options) {
-            if(resultsPerPage != i){ showOption(searcher, namespace, i) } else { output(i) } " "
+            if(resultsPerPage != i){ showOption(searcher, namespace, i, pattern) } else { output(i) } " "
           }
          "]"
         } else {
@@ -283,22 +303,22 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
       </center>
     }
     par{
-      <center>resultIndex(searcher, pagenumber, resultsPerPage, namespace)</center>
+      <center>resultIndex(searcher, pagenumber, resultsPerPage, namespace, pattern)</center>
     }
     for (e : Entry in resultList){
-      placeholder "result-"+e.url {highlightedResult(e, searcher, 3)}
+      placeholder "result-"+e.url {highlightedResult(e, searcher, 3, pattern)}
     }
     par{
-      <center>resultIndex(searcher, pagenumber, resultsPerPage, namespace)</center>
+      <center>resultIndex(searcher, pagenumber, resultsPerPage, namespace, pattern)</center>
     }
   }
 }
 
-define showOption(searcher : EntrySearcher, namespace : String, new : Int) {
-  submitlink action{ SearchPrefs.resultsPerPage := new; return doSearch(searcher, namespace, 1); }{ output(new) }
+define showOption(searcher : EntrySearcher, namespace : String, new : Int, pattern : String) {
+  submitlink action{ SearchPrefs.resultsPerPage := new; return doSearch(searcher, namespace, pattern, 1); }{ output(new) }
 }
 
-define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int, ns : String){
+define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int, ns : String, pattern : String){
   var totalPages := ( (count from searcher).floatValue() / resultsPerPage.floatValue() ).ceil()
   var start : Int := SearchHelper.firstIndexLink(pagenumber,totalPages, 9) //9 index links at most
   var end : Int := SearchHelper.lastIndexLink(pagenumber,totalPages, 9)
@@ -308,11 +328,11 @@ define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : 
       submit("<", showResultsPage(searcher, pagenumber-1))
     }
     for(pagenum:Int from start to pagenumber){
-     gotoresultpage(searcher, pagenum, ns)
+     gotoresultpage(searcher, pagenum, ns, pattern)
     }
     "-"output(pagenumber)"-"
     for(pagenum:Int from pagenumber+1 to end+1){
-     gotoresultpage(searcher, pagenum, ns)
+     gotoresultpage(searcher, pagenum, ns, pattern)
     }
     if(pagenumber < totalPages){
       submit(">", showResultsPage(searcher, pagenumber+1))
@@ -320,12 +340,12 @@ define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : 
     }
   }
   action showResultsPage(searcher: EntrySearcher, pagenumber : Int){
-    return doSearch(searcher, ns, pagenumber);
+    return doSearch(searcher, ns, pattern, pagenumber);
   }
 }
 
-define gotoresultpage(searcher: EntrySearcher, pagenum: Int, ns : String){
-  submit action{return doSearch(searcher, ns, pagenum);}{output(pagenum)}
+define gotoresultpage(searcher: EntrySearcher, pagenum: Int, ns : String, pattern : String){
+  submit action{return doSearch(searcher, ns, pattern, pagenum);}{output(pagenum)}
 }
 
 native class org.webdsl.search.SearchHelper as SearchHelper {
@@ -335,18 +355,19 @@ native class org.webdsl.search.SearchHelper as SearchHelper {
 
 //backwards compatibility
 define page showFile(searcher : EntrySearcher, e : Entry){
-    init{return viewFile(searcher.getQuery(),e.url, e.projectname);}
+    init{return viewFile(searcher.getQuery(),e.url, e.projectname, "");}
 }
 
-define page viewFile(query : String, url:URL, projectName:String){
+define page viewFile(query : String, url:URL, projectName:String, pattern : String){
   var e := (from Entry as e where e.url=~url and e.projectname = ~projectName)[0]
-  var viewFileUri := navigate(viewFile(query, url, projectName));
+  var viewFileUri := navigate(viewFile(query, url, projectName, pattern));
   var linkText    := "";
   var location    : String;
   var lineNumbers : String;
   var codeLines   : String;
   var highlighted : List<List<String>>;
   var searcher    := toSearcher(query, "");
+
   title { output(e.name + " - Reposearch") }
 
   init{
@@ -355,7 +376,8 @@ define page viewFile(query : String, url:URL, projectName:String){
       linkText := e.name;
     }
     location := e.url.substring(0, e.url.length() - e.name.length() );
-    highlighted := highlightCodeLines( searcher, e, 1000000, 1, true, viewFileUri );
+    if (pattern.length() > 0) { ~searcher matching patternMatches.matches: + queryString( pattern, searcher.getQuery() ); }
+    highlighted := highlightCodeLines( searcher, e, 1000000, 1, true, viewFileUri, pattern );
     lineNumbers := highlighted[0].concat("<br />");
     codeLines := highlighted[1].concat("<br />");
     //add line number anchors
@@ -403,12 +425,19 @@ function toSearcher(q:String, ns:String) : EntrySearcher{
   return searcher;
 }
 
-function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int, fullContentFallback: Bool, q : String) : List<List<String>>{
+function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int, fullContentFallback: Bool, q : String, patternStr : String) : List<List<String>>{
   var raw : String;
-  if(SearchPrefs.caseSensitive){
-    raw := searcher.highlightLargeText("contentCase", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
-  } else{
-    raw := searcher.highlightLargeText("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
+  if(patternStr.length() > 0){
+       var pattern : Pattern := findPattern(patternStr);
+       var content := MatchExtractor.replaceAll(pattern.name, pattern.pattern, pattern.group, pattern.caseSensitive, entry.content);
+       raw := searcher.highlightLargeText("patternMatches.matches", content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
+       raw := /\s\$OHL\$\w+#MATCH#(\w+)\$CHL\$\s/.replaceAll("\\$OHL\\$$1\\$CHL\\$", raw);
+  } else {
+      if(SearchPrefs.caseSensitive){
+        raw := searcher.highlightLargeText("contentCase", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
+      } else{
+        raw := searcher.highlightLargeText("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
+      }
   }
   if(fullContentFallback && raw.length() < 1) {
     raw := entry.content;

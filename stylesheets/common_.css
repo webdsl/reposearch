@@ -39,6 +39,19 @@ body {
     height: 0;
     visibility: hidden;
 }
+.pattern-container{
+    background: none repeat scroll 0 0 AliceBlue;
+    border: 1px solid LightSlateGrey;
+    border-radius: 0 0 5px 5px;
+    font-family: monospace,Helvetica,sans-serif;
+    font-size: 13px;
+    margin: 0 4px 4px 0;
+    outline: medium none;
+    overflow: auto;
+    padding: 5px 0;
+    position: relative;
+    z-index: 1;
+}
 .excluded-facet {
     background-color: LightSteelBlue;
     border-radius: 5px 5px 5px 5px;

@@ -45,8 +45,7 @@ analyzer path_analyzer{
 
   analyzer definedPatternMatchAnalyzer{
       //charfilter = aCharFilter
-      tokenizer = PatternTokenizer(
-           pattern="#NEWITEM#([^#]+#MATCH#[^#]+)",
-           group="1" )
+      tokenizer    = WhitespaceTokenizer
+      token filter = LowerCaseFilter
       //tokenfilter = aTokenFilter
   }
