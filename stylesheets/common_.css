@@ -39,8 +39,7 @@ body {
     height: 0;
     visibility: hidden;
 }
-.pattern-container{
-    background: none repeat scroll 0 0 AliceBlue;
+.langCons-container{
     border: 1px solid LightSlateGrey;
     border-radius: 0 0 5px 5px;
     font-family: monospace,Helvetica,sans-serif;
@@ -61,7 +60,7 @@ body {
     margin: 1px 3px;
     padding: 0 0 0 3px;
 }
-.excluded-facet-pattern{
+.excluded-facet-langCons{
     background-color: #EBF4FA;
     border-radius: 5px 5px 5px 5px;
     color: black;
@@ -84,7 +83,7 @@ body {
     color: black;
     text-decoration: none;
 }
-.excluded-facet a:link, .excluded-facet a:visited, .excluded-facet-pattern a:link, .excluded-facet-pattern a:visited {
+.excluded-facet a:link, .excluded-facet a:visited, .excluded-facet-langCons a:link, .excluded-facet-langCons a:visited {
     color: black;
     text-decoration: none;
 }
@@ -304,3 +303,10 @@ html body#manage table tbody td {
 html body#manage div.main-container div.top-container div.float-right {
     float: right;
 }
+html body#manage div.main-container div.top-container {
+    background-color: palegoldenrod;
+}
+html body#manage div.main-container div.main-container {
+    background-color: lightgoldenrodyellow;
+}
+

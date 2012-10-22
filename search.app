@@ -9,12 +9,12 @@ define page search(namespace:String, q:String){
 //     init{return doSearch(searcher, namespace, "", pageNum);}
 // }
 
-define page doSearch(searcher : EntrySearcher, namespace:String, pattern : String, pageNum: Int){
+define page doSearch(searcher : EntrySearcher, namespace:String, langCons : String, pageNum: Int){
     title { output("Reposearch - '" + searcher.getQuery() +  "' in " + namespace) }
-    showSearch(searcher, namespace, pattern, pageNum)
+    showSearch(searcher, namespace, langCons, pageNum)
 }
 
-define showSearch (entrySearcher : EntrySearcher, namespace : String, pattern : String, pageNum: Int ){
+define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons : String, pageNum: Int ){
   var prj := findProject(namespace);
   var source := "/autocompleteService"+"/"+URLFilter.filter(namespace);
   var searcher := entrySearcher;
@@ -54,19 +54,19 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, pattern : 
   homeLink()
 
   placeholder facetArea{
-    if(query.length() > 0){ viewFacets(searcher, namespace, pattern) }
+    if(query.length() > 0){ viewFacets(searcher, namespace, langCons) }
   }
 
   placeholder resultArea{
-    if(query.length() > 0){ paginatedTemplate(searcher, pageNum, namespace, pattern) }
+    if(query.length() > 0){ paginatedTemplate(searcher, pageNum, namespace, langCons) }
   }
 
   action updateResults(){
     if(query.length() > 2){
-      searcher := toSearcher(query,namespace, pattern); //update with entered query
-      updateAreas(searcher, 1, namespace, pattern);
+      searcher := toSearcher(query,namespace, langCons); //update with entered query
+      updateAreas(searcher, 1, namespace, langCons);
       //HTML5 feature, replace url without causing page reload
-      runscript("window.history.pushState('history','reposearch','" + navigate(doSearch(searcher, namespace, pattern, 1) ) + "');");
+      runscript("window.history.pushState('history','reposearch','" + navigate(doSearch(searcher, namespace, langCons, 1) ) + "');");
       incSearchCount(prj);
     } else {
       clear(resultArea);
@@ -80,9 +80,9 @@ function incSearchCount(prj : Project){
   if(prj != null){prj.incSearchCount();}
 }
 
-function updateAreas(searcher : EntrySearcher, page : Int, namespace : String, pattern : String){
-  replace(facetArea, viewFacets(searcher, namespace, pattern));
-  replace(resultArea, paginatedTemplate(searcher, page, namespace, pattern));
+function updateAreas(searcher : EntrySearcher, page : Int, namespace : String, langCons : String){
+  replace(facetArea, viewFacets(searcher, namespace, langCons));
+  replace(resultArea, paginatedTemplate(searcher, page, namespace, langCons));
 }
 
 service autocompleteService(namespace:String, term : String){
@@ -100,25 +100,25 @@ define navWithAnchor(n:String,a:String){
     rawoutput{ <a all attributes href=n+"#"+a> elements </a> }
   }
 
-define ajax highlightedResultToggled(e : Entry, searcher : EntrySearcher, nOfFragments : Int, pattern : String){
-  highlightedResult(e, searcher, nOfFragments, pattern)
+define ajax highlightedResultToggled(e : Entry, searcher : EntrySearcher, nOfFragments : Int, langCons : String){
+  highlightedResult(e, searcher, nOfFragments, langCons)
   prettifyCode(e.projectname)
 }
 
-define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int, pattern : String){
+define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int, langCons : String){
   var highlightedContent : List<List<String>>;
   var ruleOffset : String;
   var linkText := "";
   var toggleText := if(nOfFragments != 10) "show all fragments" else "less fragments";
   var location := e.url.substring(0, e.url.length() - e.name.length() );
-  var viewFileUri := navigate(viewFile(searcher.getQuery(), e.url, e.projectname, pattern));
+  var viewFileUri := navigate(viewFile(searcher.getQuery(), e.url, e.projectname, langCons));
 
   init{
     linkText := searcher.highlight("fileName", e.name, "<u>","</u>", 1, 256, "");
     if(linkText.length() < 1){
       linkText := e.name;
     }
-    highlightedContent := highlightCodeLines(searcher, e, 150, nOfFragments, false, viewFileUri, pattern);
+    highlightedContent := highlightCodeLines(searcher, e, 150, nOfFragments, false, viewFileUri, langCons);
     ruleOffset := "";
     if(highlightedContent[0].length < 1){
       ruleOffset := "1";
@@ -149,23 +149,23 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
     <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(highlightedContent[1].concat("<br />"))</pre></div>
   </ div>
   action toggleAllFragments(){
-      if(nOfFragments != 10) {replace("result-"+e.url, highlightedResultToggled(e, searcher, 10, pattern)); }
-      else                   {replace("result-"+e.url, highlightedResultToggled(e, searcher, 3, pattern)); }
+      if(nOfFragments != 10) {replace("result-"+e.url, highlightedResultToggled(e, searcher, 10, langCons)); }
+      else                   {replace("result-"+e.url, highlightedResultToggled(e, searcher, 3, langCons)); }
 
   }
 
 }
 
-define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String, pattern : String){
+define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String, langCons : String){
   prettifyCode(ns)
   if(searcher.getQuery().length() > 0) {
     div[class="main-container"]{
-      paginatedResults(searcher, pageNum, ns, pattern)
+      paginatedResults(searcher, pageNum, ns, langCons)
     }
   }
 }
 
-define ajax viewFacets(searcher : EntrySearcher, namespace : String, pattern : String){
+define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : String){
   var selected         := searcher.getFacetSelection();
   var path_hasSel      := false;
   var ext_hasSel       := false;
@@ -187,43 +187,43 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, pattern : S
   div[class="top-container"]{
     div[class="facet-area"]{"Filter on file extension:"}
     div{
-      for(f : Facet in fileExt facets from searcher ) {    showFacet(searcher, f, ext_hasSel, namespace, pattern) }
+      for(f : Facet in fileExt facets from searcher ) {    showFacet(searcher, f, ext_hasSel, namespace, langCons) }
     }
-    if (prj != null && prj.patterns.length > 0){
-      div[class="facet-area"]{"Filter on pattern:"}
-      if (pattern.length() > 0){
-          div[class="included-facet"]{ navigate search(namespace, searcher.getQuery()) { excludeFacetSym() output(pattern) } }
+    if (prj != null && prj.langConstructs.length > 0){
+      div[class="facet-area"]{"Filter on language construct:"}
+      if (langCons.length() > 0){
+          div[class="included-facet"]{ navigate search(namespace, searcher.getQuery()) { excludeFacetSym() output(langCons) } }
       } else {
-          for(p : Pattern in prj.patterns){
-              div[class="excluded-facet-pattern"]{
-                  submitlink updateResults(searcher, p){ output(p.name) }
+          for(lc : LangConstruct in prj.langConstructs){
+              div[class="excluded-facet-langCons"]{
+                  submitlink updateResults(searcher, lc){ output(lc.name) }
               }
           }
       }
     }
 
     div[class="facet-area"]{"Filter on file location:"}
-    for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace, pattern) <br /> }
+    for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace, langCons) <br /> }
     placeholder repoPathPh{
-      showPathFacets(searcher, path_hasSel, namespace, false, pattern)
+      showPathFacets(searcher, path_hasSel, namespace, false, langCons)
     }
   }
-  action updateResults(searcher : EntrySearcher, p: Pattern){
-      p.addPatternConstraint(searcher);
+  action updateResults(searcher : EntrySearcher, p: LangConstruct){
+      p.addLangConstructConstraint(searcher);
     return doSearch(searcher , namespace, p.name, 1);
   }
 }
 
-define ajax showPathFacets(searcher : EntrySearcher, hasSelection : Bool, namespace : String, show : Bool, pattern : String){
+define ajax showPathFacets(searcher : EntrySearcher, hasSelection : Bool, namespace : String, show : Bool, langCons : String){
   if( show ){
-    submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, pattern));}{"collapse"}
+    submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, langCons));}{"collapse"}
     div{
       for(f : Facet in interestingPathFacets(searcher)) {
-        showFacet(searcher, f, hasSelection, namespace, pattern) <br />
+        showFacet(searcher, f, hasSelection, namespace, langCons) <br />
       }
     }
   } else {
-    submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, pattern));}{"expand"}
+    submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, langCons));}{"expand"}
   }
 }
 
@@ -241,7 +241,7 @@ function interestingPathFacets(searcher : EntrySearcher) : List<Facet> {
   return toReturn;
 }
 
-define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String, pattern : String) {
+define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String, langCons : String) {
   if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
     div[class="excluded-facet"]{
       if(f.isSelected()) {
@@ -265,7 +265,7 @@ define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, names
   }
 
   action updateResults(searcher : EntrySearcher){
-    return doSearch(searcher, namespace, pattern, 1);
+    return doSearch(searcher, namespace, langCons, 1);
   }
 }
 
@@ -276,7 +276,7 @@ define includeFacetSym(){
   <div class="include-facet-sym">"v"</div>
 }
 
-define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespace : String, pattern : String){
+define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespace : String, langCons : String){
   var resultsPerPage := SearchPrefs.resultsPerPage;
   var options := [5, 10, 25, 50, 100, 500];
   var resultList := results from (~searcher offset ((pagenumber - 1) * resultsPerPage) limit resultsPerPage);
@@ -295,7 +295,7 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
           output(size) " results found in " output(searchtime from searcher) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
           " [results per page: "
           for(i : Int in options) {
-            if(resultsPerPage != i){ showOption(searcher, namespace, i, pattern) } else { output(i) } " "
+            if(resultsPerPage != i){ showOption(searcher, namespace, i, langCons) } else { output(i) } " "
           }
          "]"
         } else {
@@ -304,22 +304,22 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
       </center>
     }
     par{
-      <center>resultIndex(searcher, pagenumber, resultsPerPage, namespace, pattern)</center>
+      <center>resultIndex(searcher, pagenumber, resultsPerPage, namespace, langCons)</center>
     }
     for (e : Entry in resultList){
-      placeholder "result-"+e.url {highlightedResult(e, searcher, 3, pattern)}
+      placeholder "result-"+e.url {highlightedResult(e, searcher, 3, langCons)}
     }
     par{
-      <center>resultIndex(searcher, pagenumber, resultsPerPage, namespace, pattern)</center>
+      <center>resultIndex(searcher, pagenumber, resultsPerPage, namespace, langCons)</center>
     }
   }
 }
 
-define showOption(searcher : EntrySearcher, namespace : String, new : Int, pattern : String) {
-  submitlink action{ SearchPrefs.resultsPerPage := new; return doSearch(searcher, namespace, pattern, 1); }{ output(new) }
+define showOption(searcher : EntrySearcher, namespace : String, new : Int, langCons : String) {
+  submitlink action{ SearchPrefs.resultsPerPage := new; return doSearch(searcher, namespace, langCons, 1); }{ output(new) }
 }
 
-define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int, ns : String, pattern : String){
+define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int, ns : String, langCons : String){
   var totalPages := ( (count from searcher).floatValue() / resultsPerPage.floatValue() ).ceil()
   var start : Int := SearchHelper.firstIndexLink(pagenumber,totalPages, 9) //9 index links at most
   var end : Int := SearchHelper.lastIndexLink(pagenumber,totalPages, 9)
@@ -329,11 +329,11 @@ define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : 
       submit("<", showResultsPage(searcher, pagenumber-1))
     }
     for(pagenum:Int from start to pagenumber){
-     gotoresultpage(searcher, pagenum, ns, pattern)
+     gotoresultpage(searcher, pagenum, ns, langCons)
     }
     "-"output(pagenumber)"-"
     for(pagenum:Int from pagenumber+1 to end+1){
-     gotoresultpage(searcher, pagenum, ns, pattern)
+     gotoresultpage(searcher, pagenum, ns, langCons)
     }
     if(pagenumber < totalPages){
       submit(">", showResultsPage(searcher, pagenumber+1))
@@ -341,12 +341,12 @@ define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : 
     }
   }
   action showResultsPage(searcher: EntrySearcher, pagenumber : Int){
-    return doSearch(searcher, ns, pattern, pagenumber);
+    return doSearch(searcher, ns, langCons, pagenumber);
   }
 }
 
-define gotoresultpage(searcher: EntrySearcher, pagenum: Int, ns : String, pattern : String){
-  submit action{return doSearch(searcher, ns, pattern, pagenum);}{output(pagenum)}
+define gotoresultpage(searcher: EntrySearcher, pagenum: Int, ns : String, langCons : String){
+  submit action{return doSearch(searcher, ns, langCons, pagenum);}{output(pagenum)}
 }
 
 native class org.webdsl.search.SearchHelper as SearchHelper {
@@ -359,15 +359,15 @@ define page showFile(searcher : EntrySearcher, e : Entry){
     init{return viewFile(searcher.getQuery(),e.url, e.projectname, "");}
 }
 
-define page viewFile(query : String, url:URL, projectName:String, pattern : String){
+define page viewFile(query : String, url:URL, projectName:String, langCons : String){
   var e := (from Entry as e where e.url=~url and e.projectname = ~projectName)[0]
-  var viewFileUri := navigate(viewFile(query, url, projectName, pattern));
+  var viewFileUri := navigate(viewFile(query, url, projectName, langCons));
   var linkText    := "";
   var location    : String;
   var lineNumbers : String;
   var codeLines   : String;
   var highlighted : List<List<String>>;
-  var searcher    := toSearcher(query, "", pattern);
+  var searcher    := toSearcher(query, "", langCons);
 
   title { output(e.name + " - Reposearch") }
 
@@ -375,7 +375,7 @@ define page viewFile(query : String, url:URL, projectName:String, pattern : Stri
     linkText := searcher.highlight("fileName", e.name, "<u>","</u>", 1, 256, "");
     if(linkText.length() < 1) { linkText := e.name; }
     location := e.url.substring(0, e.url.length() - e.name.length() );
-    highlighted := highlightCodeLines( searcher, e, 1000000, 1, true, viewFileUri, pattern );
+    highlighted := highlightCodeLines( searcher, e, 1000000, 1, true, viewFileUri, langCons );
     lineNumbers := highlighted[0].concat("<br />");
     codeLines := highlighted[1].concat("<br />");
     //add line number anchors
@@ -411,7 +411,7 @@ define prettifyCodeHelper(projectName : String){
   </script>
 }
 
-function toSearcher(q:String, ns:String, pattern:String) : EntrySearcher{
+function toSearcher(q:String, ns:String, langCons:String) : EntrySearcher{
 
   var searcher := search Entry in namespace ns with facets (fileExt, 120), (repoPath, 200) [no lucene, strict matching];
   // if (SearchPrefs.regex) {
@@ -422,19 +422,19 @@ function toSearcher(q:String, ns:String, pattern:String) : EntrySearcher{
   if(SearchPrefs.caseSensitive) { searcher:= ~searcher matching contentCase, fileName: q~slop; }
   else   { searcher:= ~searcher matching q~slop; }
 
-  if(pattern.length()>0){ addPatternConstraint(searcher, pattern); }
+  if(langCons.length()>0){ addLangConstructConstraint(searcher, langCons); }
   return searcher;
 }
 
-function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int, fullContentFallback: Bool, viewFileUri : String, patternStr : String) : List<List<String>>{
+function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int, fullContentFallback: Bool, viewFileUri : String, langConsStr : String) : List<List<String>>{
   var raw : String;
-  if(patternStr.length() > 0){
-      //a pattern is used
-      var pattern : Pattern := findPattern(patternStr);
-      //decorate the pattern matches such that these will match for field patternMatches.matches
-      var content := MatchExtractor.decorateMatches(pattern, entry.content, searcher.getQuery());
+  if(langConsStr.length() > 0){
+      //a langCons is used
+      var langCons : LangConstruct := findLangConstruct(langConsStr);
+      //decorate the langCons matches such that these will match for field constructs.matches
+      var content := MatchExtractor.decorateMatches(langCons, entry.content, searcher.getQuery());
       //highlight
-      raw := searcher.highlightLargeText("patternMatches.matches", content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
+      raw := searcher.highlightLargeText("constructs.matches", content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
       //undecorate highlighted matches again
       raw := /\s\$OHL\$\w+#MATCH#([\w\-]+)\$CHL\$\s/.replaceAll("\\$OHL\\$$1\\$CHL\\$", raw);
   } else {

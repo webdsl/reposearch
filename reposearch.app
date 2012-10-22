@@ -4,12 +4,12 @@ application reposearch
   imports search
   imports searchconfiguration
   imports ac
-  imports patterns
+  imports language-constructs
 
   var fpMsg := if( (from Message).length > 0) (from Message)[0]  else Message{msg := ""}
   var manager := if( (from RepoSearchManager).length > 0) (from RepoSearchManager)[0] else RepoSearchManager{hourCounter := 0 nextInvocation := now().addHours(12) log:="" adminEmails:=""}
   var settings := if( (from Settings).length > 0) (from Settings)[0] else Settings{reindex := false projects := List<Project>()}
-  var patternRenewSchedule := if( (from PatternRenewSchedule).length > 0) (from PatternRenewSchedule)[0] else PatternRenewSchedule{ projects := List<Project>()}
+  var langConsRenewSchedule := if( (from LangConstructRenewSchedule).length > 0) (from LangConstructRenewSchedule)[0] else LangConstructRenewSchedule{ dirtyProjects := Set<Project>() enabled:=true}
 
   function resetSchedule(){
     manager.hourCounter := 0;
@@ -302,7 +302,7 @@ application reposearch
       + name    using filename_analyzer   as fileName ^ 100.0 (autocomplete)
       name      using extension_analyzer  as fileExt
       url       using path_analyzer       as repoPath
-      patternMatches with depth 1
+      constructs with depth 1
       namespace by projectname
     }
 

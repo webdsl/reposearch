@@ -6,16 +6,16 @@ import java.util.regex.Pattern;
 public class MatchExtractor {
     public static final String SEP = " ";
     public static final String INFIX = "#MATCH#";
-    public static String extract(String patternName, String pattern, int group, boolean caseSensitive, String text){
+    public static String extract(webdsl.generated.domain.LangConstruct langCons, String text){
         try{
-            Matcher matcher = getMatcher(pattern, caseSensitive, text);
-            String prefix = getPrefix( patternName );
+            Matcher matcher = getMatcher(langCons.getPattern(), langCons.getCaseSensitive(), text);
+            String prefix = getPrefix( langCons.getName() );
             StringBuffer sb = new StringBuffer();
 
             while(matcher.find()){
 
                 sb.append(prefix);
-                sb.append(matcher.group(group));
+                sb.append(matcher.group(langCons.getGroup()));
             }
 
             return sb.toString();
@@ -26,16 +26,16 @@ public class MatchExtractor {
 
     }
 
-    public static String decorateMatches(webdsl.generated.domain.Pattern pattern, String text, String queryTerm){
-        Matcher matcher = getMatcher(pattern.getPattern(), pattern.getCaseSensitive(), text);
+    public static String decorateMatches(webdsl.generated.domain.LangConstruct langCons, String text, String queryTerm){
+        Matcher matcher = getMatcher(langCons.getPattern(), langCons.getCaseSensitive(), text);
 
         String currentMatchTerm, currentReplacement;
         StringBuffer sb = new StringBuffer();
         while(matcher.find()){
-            currentMatchTerm = matcher.group(pattern.getGroup());
+            currentMatchTerm = matcher.group(langCons.getGroup());
             //now, only replace instances for query matches
             if ( currentMatchTerm.equalsIgnoreCase( queryTerm ) ) {
-                currentReplacement = matcher.group().replace(currentMatchTerm, getPrefix( pattern.getName() ) + matcher.group( pattern.getGroup() ) + SEP);
+                currentReplacement = matcher.group().replace(currentMatchTerm, getPrefix( langCons.getName() ) + matcher.group( langCons.getGroup() ) + SEP);
             } else {
                 currentReplacement = matcher.group();
             }

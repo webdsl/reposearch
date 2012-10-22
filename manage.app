@@ -20,6 +20,11 @@ section entities
 
 section pages/templates
   define page manage(){
+      init{
+          if(langConsRenewSchedule.enabled == null){
+              langConsRenewSchedule.enabled := true;
+          }
+      }
     title { "Manage - Reposearch" }
     homeLink()
     manageRefresh()
@@ -80,10 +85,14 @@ section pages/templates
         addRepoBtn(pr)
       }
       <br />
-      div[class="pattern-container"]{
-        managePatterns(pr)
+      div[class="langCons-container"]{
+        manageLangConstructs(pr)
       }
     }
+  }
+
+  native class utils.URLFilter as Utils{
+      static filter(String) : String
   }
 
   define manageProjects(){
@@ -97,10 +106,9 @@ section pages/templates
       }
       <br />
       for(pr:Project order by pr.displayName){
-          div[class="top-container"]{<b>submitlink(pr.name, showProject(pr))</b>
+          div[class="top-container"]{<b>submitlink(pr.name, showProject(pr))[ajax]</b>
           div[class="float-right"]{"[" submitlink("remove project", removeProject(pr)) "]*"}}
-          //placeholder[style:="display:none;"] "projectPH" + pr.name { showProject(pr) }
-          <div id="projectPH"+pr.name class="webdsl-placeholder" style="display: none;">showProject(pr)</div>
+          <div id=Utils.filter("projectPH"+pr.name) class="webdsl-placeholder" style="display: none;">showProject(pr)</div>
       }
       "* Removal of a project may take over a minute, please be patient."
       <br />
@@ -123,7 +131,7 @@ section pages/templates
           deleteAllRepoEntries(r);
           r.delete();
       }
-      pr.patterns.clear();
+      pr.langConstructs.clear();
       settings.projects.remove(pr);
       pr.delete();
       settings.reindex := true;
@@ -207,6 +215,7 @@ section pages/templates
       row{ column{"Update all repos to HEAD: "}                   column{submit action{refreshAllRepos();         replace(refreshManagement, refreshScheduleControl());} {"refresh all"} } }
       row{ column{"Force a fresh checkout for all repos: "}       column{submit action{forceCheckoutAllRepos();   replace(refreshManagement, refreshScheduleControl());} {"force checkout all"} } }
       row{ column{"Cancel all scheduled refresh/checkouts: "}     column{submit action{cancelScheduledRefreshes();replace(refreshManagement, refreshScheduleControl());} {"cancel all"} } }
+      row{ column{"Auto renewal of language construct matches: "} column{ "enabled? " form{ input(langConsRenewSchedule.enabled) submit action{langConsRenewSchedule.save(); replace(refreshManagement, refreshScheduleControl());} {"apply"} } }}
       }
     }
   }
@@ -401,7 +410,7 @@ section functions
   }
 
   function queryRepoTask(){
-    patternRenewSchedule.run();
+    langConsRenewSchedule.run();
 
     var repos := from Repo where refresh=true and (inrefresh=null or inrefresh=false);
     var skippedFiles := List<String>();
@@ -433,7 +442,7 @@ section functions
           for(c: Entry in col.getEntriesForAddition()){
               c.projectname := r.project.name;
               c.repo := r;
-              c.addPatternMatches();
+              c.addconstructs();
               c.save();
           }
           settings.addProject(r.project);

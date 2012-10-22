@@ -90,5 +90,5 @@ page renewAdmin(){
     rule page renewAdmin(){loggedIn()}
     rule page doSearch(*){ true }
     rule page searchStats(*){ loggedIn() }
-    rule page editPattern(arg : Pattern){ loggedIn() }
-    rule page createPattern(){ loggedIn() }
+    rule page editLangConstruct(arg : LangConstruct){ loggedIn() }
+    rule page createLangConstruct(){ loggedIn() }

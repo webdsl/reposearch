@@ -43,7 +43,7 @@ analyzer path_analyzer{
   tokenizer = PathHierarchyTokenizer( delimiter="/" )
 }
 
-  analyzer definedPatternMatchAnalyzer{
+  analyzer definedConstructMatchAnalyzer{
       //charfilter = aCharFilter
       tokenizer    = WhitespaceTokenizer
       token filter = LowerCaseFilter
