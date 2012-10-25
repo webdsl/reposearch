@@ -1,4 +1,4 @@
-module Language-constructs
+module language-constructs
 
   entity LangConstruct {
     name    :: String (id, default="change me")
@@ -6,15 +6,21 @@ module Language-constructs
     group   :: Int
     fileExts:: String
     caseSensitive :: Bool
-    nameNoSpaces :: String := name.replace(" ", "_")
-    projects-> Set<Project> (inverse = Project.langConstructs)
+    nameNoSpaces  :: String := name.replace(" ", "_")
+    projects      -> Set<Project> (inverse = Project.langConstructs)
 
     function addLangConstructConstraint(searcher : EntrySearcher) { addLangConstructConstraint(searcher, name); }
+    function replaceLangConstructConstraint(searcher : EntrySearcher) : EntrySearcher { return replaceLangConstructConstraint(searcher, name); }
   }
 
   function addLangConstructConstraint(searcher : EntrySearcher, constructName: String) {
     var constraint := constructName.replace(" ", "_") + "#MATCH#" + searcher.getQuery();
     ~searcher matching constructs.matches: +constraint;
+  }
+  function replaceLangConstructConstraint(oldSearcher : EntrySearcher, constructName : String) : EntrySearcher{
+      var newSearcher := toSearcher(oldSearcher.getQuery(), oldSearcher.getNamespace(), constructName);
+      newSearcher.addFacetSelection(oldSearcher.getFacetSelection());
+      return newSearcher;
   }
   // derive crud LangConstruct
 
@@ -62,7 +68,7 @@ module Language-constructs
   define manageLangConstructs( pr : Project ){
       "Language constructs management:"
       table{form{
-        for( lc : LangConstruct in from LangConstruct){
+        for( lc : LangConstruct in ( from LangConstruct order by name)){
             row{
                 column {output( lc ) }
                 column {" [" navigate(editLangConstruct( lc )){"edit"}  "] "
@@ -87,26 +93,26 @@ module Language-constructs
       editLangConstruct(p)
   }
 
-  define editLangConstruct(p : LangConstruct){
+  define editLangConstruct(lc : LangConstruct){
       form{
           group("Details") {
-          derive editRows from p for (name,fileExts,pattern,group,projects)
+          derive editRows from lc for (name,fileExts,pattern,group,projects)
           }
           action("Cancel", cancel()) " " action("Save", save()) " " action("Remove permanently", remove())
       }
       action cancel(){ return manage(); }
       action save() {
-        p.save();
-        langConsRenewSchedule.dirtyProjects.addAll(p.projects);
+        lc.save();
+        langConsRenewSchedule.dirtyProjects.addAll(lc.projects);
         return manage();
       }
       action remove() {
-          p.projects.clear();
-          for(cm in from ConstructMatch as c where (c.langConstruct = ~p)){
+          lc.projects.clear();
+          for(cm in from ConstructMatch as c where (c.langConstruct = ~lc)){
               cm.langConstruct := null;
           }
 
-          p.delete();
+          lc.delete();
           return manage();
       }
   }

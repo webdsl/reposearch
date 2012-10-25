@@ -116,6 +116,7 @@ section pages/templates
         <br />
         submit action{
           for(r:Repo in fr){
+            deleteAllRepoEntries( r );
             r.delete();
           }
           return manage();
@@ -494,7 +495,7 @@ section functions
           entries := (from Entry as e where e.url=~url and e.repo = ~r);
           //when no hits are retrieved, we might be dealing with a directory, so try to delete all files within that directory using search
           if (entries.length < 1)  { entries := (search Entry in namespace projectName matching repoPath:url).results(); }
-          for(e : Entry in entries){ log("Reposearch: Deleted Entry: " + e.url); e.delete();}
+          for(e : Entry in entries){ e.delete(); log("Reposearch: Deleted Entry: " + e.url); }
       }
   }
 

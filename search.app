@@ -169,6 +169,7 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
   var selected         := searcher.getFacetSelection();
   var path_hasSel      := false;
   var ext_hasSel       := false;
+  var lc_hasSel        := langCons.length() > 0;
   var prj              := findProject(namespace);
   var path_selection   := List<Facet>();
   init {
@@ -191,14 +192,19 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
     }
     if (prj != null && prj.langConstructs.length > 0){
       div[class="facet-area"]{"Filter on language construct:"}
-      if (langCons.length() > 0){
-          div[class="included-facet"]{ navigate search(namespace, searcher.getQuery()) { excludeFacetSym() output(langCons) } }
-      } else {
-          for(lc : LangConstruct in prj.langConstructs){
-              div[class="excluded-facet-langCons"]{
-                  submitlink updateResults(searcher, lc){ output(lc.name) }
-              }
+      for(lc : LangConstruct in prj.langConstructs order by lc.name){
+        if(lc_hasSel){
+          if(lc.name == langCons){
+            div[class="included-facet"]{ navigate search(namespace, searcher.getQuery()) { excludeFacetSym() output(langCons) } }
+          } else {
+            div[class="excluded-facet"]{ submitlink updateResults( lc ){ output(lc.name) } }
           }
+
+        } else {
+          div[class="excluded-facet-langCons"]{
+            submitlink updateResults( lc ){ output(lc.name) }
+          }
+        }
       }
     }
 
@@ -208,9 +214,13 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
       showPathFacets(searcher, path_hasSel, namespace, false, langCons)
     }
   }
-  action updateResults(searcher : EntrySearcher, p: LangConstruct){
-      p.addLangConstructConstraint(searcher);
-    return doSearch(searcher , namespace, p.name, 1);
+  action updateResults(p: LangConstruct){
+    if( lc_hasSel ){
+      return doSearch( p.replaceLangConstructConstraint ( searcher ), namespace, p.name, 1 );
+    } else {
+      p.addLangConstructConstraint( searcher );
+      return doSearch( searcher , namespace, p.name, 1 );
+    }
   }
 }
 
