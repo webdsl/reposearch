@@ -92,3 +92,4 @@ page renewAdmin(){
     rule page searchStats(*){ loggedIn() }
     rule page editLangConstruct(arg : LangConstruct){ loggedIn() }
     rule page createLangConstruct(){ loggedIn() }
+    rule logsql { loggedIn() }

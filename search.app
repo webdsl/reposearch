@@ -446,7 +446,7 @@ function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLen
       //highlight
       raw := searcher.highlightLargeText("constructs.matches", content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
       //undecorate highlighted matches again
-      raw := /\s?\$OHL\$\w+#MATCH#([\w\-]+)\$CHL\$\s?/.replaceAll("\\$OHL\\$$1\\$CHL\\$", raw);
+      raw := /\s?\$OHL\$[^#]+#MATCH#([^\$]+)\$CHL\$\s?/.replaceAll("\\$OHL\\$$1\\$CHL\\$", raw);
   } else {
       if(SearchPrefs.caseSensitive){
         raw := searcher.highlightLargeText("contentCase", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
