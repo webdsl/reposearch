@@ -38,27 +38,39 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
     setupcompletion("~source");
   </script>
 
-  <center>
-    <b>"project: " output(namespace)</b>
-    form {
-      <span class="ui-widget">
-        input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()]
-      </span>
-      submit action{return search(namespace,query);} {"search"} <br />
-      input(SearchPrefs.caseSensitive)[onclick=updateResults(), title="Case sensitive search"]{"case sensitive"}
-      input(SearchPrefs.exactMatch)[onclick=updateResults(), title="If enabled, the exact sequence of characters is matched in that order (recommended)"]{"exact match"}
-      // input(SearchPrefs.regex)[onclick=updateResults(), title="Use regular expressions"]{"regular expressions"}
+  mainResponsive(namespace){
+    gridContainerFluid{
+      gridRowFluid{ gridSpan(12){
+        wellSmall{
+          gridRowFluid{ gridSpan(10,1){
+              // pageHeader{ "Search " output(namespace) }
+              inlForm{
+                formEntry("Search " + namespace)  { input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()] }
+                gridRowFluid{
+                    input(SearchPrefs.caseSensitive)[onclick=updateResults(), title="Case sensitive search"]{"case sensitive"}
+                                     " " input(SearchPrefs.exactMatch)[onclick=updateResults(), title="If enabled, the exact sequence of characters is matched in that order (recommended)"]{"exact match"}
+                                     " " submit action{return search(namespace,query);} [class="btn btn-primary"] { "search" }
+                }
+
+                formActions{
+                    placeholder facetArea{
+                      if(query.length() > 0){ viewFacets(searcher, namespace, langCons) }
+                    }
+                }
+               //  formActions{
+               //    submit action{return search(namespace,query);} [class="btn btn-primary"] { "search" }
+               // // navigate register() [class="btn"] { "Sign Up" } " "
+               // // navigate resetpassword() [class="btn"] { "Reset Password" }
+               //  }
+              }
+          } }
+        }
+        }
+      }
+      placeholder resultArea{
+        if(query.length() > 0){ paginatedTemplate(searcher, pageNum, namespace, langCons) }
+      }
     }
-  </center>
-  <br />
-  homeLink()
-
-  placeholder facetArea{
-    if(query.length() > 0){ viewFacets(searcher, namespace, langCons) }
-  }
-
-  placeholder resultArea{
-    if(query.length() > 0){ paginatedTemplate(searcher, pageNum, namespace, langCons) }
   }
 
   action updateResults(){
@@ -157,11 +169,11 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
 }
 
 define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String, langCons : String){
-  prettifyCode(ns)
-  if(searcher.getQuery().length() > 0) {
-    div[class="main-container"]{
-      paginatedResults(searcher, pageNum, ns, langCons)
-    }
+  wellSmall{
+      prettifyCode(ns)
+      if(searcher.getQuery().length() > 0) {
+        paginatedResults(searcher, pageNum, ns, langCons)
+      }
   }
 }
 
@@ -185,35 +197,45 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
     }
   }
 
-  div[class="top-container"]{
-    div[class="facet-area"]{"Filter on file extension:"}
-    div{
-      for(f : Facet in fileExt facets from searcher ) {    showFacet(searcher, f, ext_hasSel, namespace, langCons) }
-    }
-    if (prj != null && prj.langConstructs.length > 0){
-      div[class="facet-area"]{"Filter on language construct:"}
-      for(lc : LangConstruct in prj.langConstructs order by lc.name){
-        if(lc_hasSel){
-          if(lc.name == langCons){
-            div[class="included-facet"]{ navigate search(namespace, searcher.getQuery()) { excludeFacetSym() output(langCons) } }
-          } else {
-            div[class="excluded-facet"]{ submitlink updateResults( lc ){ output(lc.name) } }
-          }
 
-        } else {
-          div[class="excluded-facet-langCons"]{
-            submitlink updateResults( lc ){ output(lc.name) }
+    gridRowFluid{
+      // gridSpan(10,1){
+        formEntry("File extension"){
+            for(f : Facet in fileExt facets from searcher ) {    showFacet(searcher, f, ext_hasSel, namespace, langCons) }
+        }
+      // }
+    }
+    gridRowFluid{
+      // gridSpan(10,1){
+        formEntry("Language construct"){
+          if (prj != null && prj.langConstructs.length > 0){
+              for(lc : LangConstruct in prj.langConstructs order by lc.name){
+                if(lc_hasSel){
+                  if(lc.name == langCons){
+                     pullLeft{buttonMini{ navigate search(namespace, searcher.getQuery()) { excludeFacetSym() output(langCons) }}}
+                  } else {
+                     pullLeft{<div class="btn btn-mini disabled"> includeFacetSym() submitlink updateResults( lc ){ output(lc.name) } </div> }
+                  }
+
+                } else {
+                     pullLeft{buttonMini{ includeFacetSym() submitlink updateResults( lc ){ output(lc.name) }} }
+                }
+              }
           }
         }
-      }
+      // }
+    }
+    gridRowFluid{
+      // gridSpan(10,1){
+        formEntry("File location"){
+            placeholder repoPathPh{
+              showPathFacets(searcher, path_hasSel, namespace, false, langCons)
+            }
+            for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace, langCons) <br /> }
+        }
+      // }
     }
 
-    div[class="facet-area"]{"Filter on file location:"}
-    for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace, langCons) <br /> }
-    placeholder repoPathPh{
-      showPathFacets(searcher, path_hasSel, namespace, false, langCons)
-    }
-  }
   action updateResults(p: LangConstruct){
     if( lc_hasSel ){
       return doSearch( p.replaceLangConstructConstraint ( searcher ), namespace, p.name, 1 );
@@ -226,14 +248,14 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
 
 define ajax showPathFacets(searcher : EntrySearcher, hasSelection : Bool, namespace : String, show : Bool, langCons : String){
   if( show ){
-    submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, langCons));}{"collapse"}
+    buttonSmall{submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, langCons));}{"collapse"}}
     div{
       for(f : Facet in interestingPathFacets(searcher)) {
         showFacet(searcher, f, hasSelection, namespace, langCons) <br />
       }
     }
   } else {
-    submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, langCons));}{"expand"}
+     buttonSmall{submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, langCons));}{ "expand"}}
   }
 }
 
@@ -252,26 +274,32 @@ function interestingPathFacets(searcher : EntrySearcher) : List<Facet> {
 }
 
 define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String, langCons : String) {
-  if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
-    div[class="excluded-facet"]{
-      if(f.isSelected()) {
-        includeFacetSym()
-        submitlink updateResults(searcher.removeFacetSelection(f)){output(f.getValue()) " (" output(f.getCount()) ")"}
-      } else {
-        includeFacetSym()
-        submitlink updateResults(~searcher matching f.should()){output(f.getValue()) " (" output(f.getCount()) ")"}
-      }
-   }
-  } else {
-    div[class="included-facet"]{
-      if(f.isSelected()) {
-        submitlink updateResults(searcher.removeFacetSelection(f)){excludeFacetSym() output(f.getValue()) " (" output(f.getCount()) ") "}
-      } else {
-        submitlink updateResults(~searcher matching f.mustNot() ) {excludeFacetSym()}
-        submitlink updateResults(~searcher matching f.should()  ) {output(f.getValue()) " (" output(f.getCount()) ")"}
-        " "
-      }
-    }
+
+  pullLeft{
+    // buttonGroup{
+
+          if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
+            <div class="btn btn-mini disabled">
+              if(f.isSelected()) {
+                submitlink updateResults(searcher.removeFacetSelection(f)){ includeFacetSym() " " output(f.getValue()) " (" output(f.getCount()) ")"}
+              } else {
+                submitlink updateResults(~searcher matching f.should()){ includeFacetSym() " " output(f.getValue()) " (" output(f.getCount()) ")"}
+              }
+
+            </div>
+          } else {
+            buttonMini{
+              if(f.isSelected()) {
+                submitlink updateResults(searcher.removeFacetSelection(f)){excludeFacetSym() output(f.getValue()) " (" output(f.getCount()) ") "}
+              } else {
+                submitlink updateResults(~searcher matching f.mustNot() ){excludeFacetSym()} " "
+                submitlink updateResults(~searcher matching f.should()  ){output(f.getValue()) " (" output(f.getCount()) ")"}
+                " "
+              }
+            }
+          }
+      // }
+    // }
   }
 
   action updateResults(searcher : EntrySearcher){
@@ -280,10 +308,10 @@ define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, names
 }
 
 define excludeFacetSym(){
-  <div class="exclude-facet-sym">"x"</div>
+  iMinus()
 }
 define includeFacetSym(){
-  <div class="include-facet-sym">"v"</div>
+  iPlus()
 }
 
 define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespace : String, langCons : String){
@@ -314,13 +342,13 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
       </center>
     }
     par{
-      <center>resultIndex(searcher, pagenumber, resultsPerPage, namespace, langCons)</center>
+      <div class="pagination pagination-centered">resultIndex(searcher, pagenumber, resultsPerPage, namespace, langCons)</div>
     }
     for (e : Entry in resultList){
       placeholder "result-"+e.url {highlightedResult(e, searcher, 3, langCons)}
     }
     par{
-      <center>resultIndex(searcher, pagenumber, resultsPerPage, namespace, langCons)</center>
+      <div class="pagination pagination-centered">resultIndex(searcher, pagenumber, resultsPerPage, namespace, langCons)</div>
     }
   }
 }
@@ -330,9 +358,11 @@ define showOption(searcher : EntrySearcher, namespace : String, new : Int, langC
 }
 
 define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int, ns : String, langCons : String){
+
   var totalPages := ( (count from searcher).floatValue() / resultsPerPage.floatValue() ).ceil()
   var start : Int := SearchHelper.firstIndexLink(pagenumber,totalPages, 9) //9 index links at most
   var end : Int := SearchHelper.lastIndexLink(pagenumber,totalPages, 9)
+  <lu>
   if(totalPages > 1){
     if (pagenumber > 1){
       submit("|<<", showResultsPage(searcher, 1))
@@ -350,6 +380,7 @@ define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : 
       submit(">>|", showResultsPage(searcher, totalPages))
     }
   }
+  </lu>
   action showResultsPage(searcher: EntrySearcher, pagenumber : Int){
     return doSearch(searcher, ns, langCons, pagenumber);
   }

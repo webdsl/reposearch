@@ -1,0 +1,147 @@
+body {
+	font-size: 16px;
+	line-height: 1.5em;
+	font-family: Georgia, serif;
+}
+.footer{
+	font-size: 14px;
+}
+.navbar{
+	font-size: 14px;
+}
+h1, h2, h3, h4, h5, h6, .navbar, .byline, .wikibyline, .pagination, .attachments { 
+	font-family: Arial, sans-serif;
+}
+li{ 
+	line-height: 1.5em;
+}
+
+div.byline {
+  margin: 4px 0 20px 0;
+}
+div.byline .date {
+  font-size : 16px;
+  font-weight: bold;
+  padding: 0 0 5px 0;
+  border-bottom: 1px solid #ddd;
+}
+div.byline .draft {
+  font-size : 16px;
+  font-weight: bold;
+  padding: 10px 0 5px 0;
+  border-bottom: 1px solid #ddd;
+}
+div.wikibyline {
+  font-size : 14px;
+  border: 1px solid #E5E5E5;
+  background-color: #F5F5F5;
+  padding: 10px;
+  margin: 20px 0 20px 0;
+}
+div.attachments{
+	margin: 20px 0 20px 0;
+	font-size: 14px;
+}
+
+/* img {
+	margin: 10px;
+} */
+
+h1{
+	font-size: 26px;
+}
+
+h2 {
+	font-size: 20px;
+	margin: 20px 0 10px 0;
+	padding: 0 0 0px 0;
+  border-bottom: 1px solid #ddd;
+  line-height: 1.5em;
+}
+h3 {
+  font-size: 18px;
+  margin: 20px 0 10px 0;
+  padding: 0 0 0px 0;
+  border-bottom: 1px solid #ddd;
+  line-height: 1.5em;
+}
+.page-header h2, .page-header h3  {
+	border: 0
+}
+
+.postContent pre, .postContent pre code {
+	font-size: 15px;
+}
+.postContent code {
+	background-color: transparent;
+	border: none;
+	color: black;
+	padding: 0;
+	font-size: 15px;
+}
+.postContent p, .postContent ul, .postContent li {
+  font-size: 16px;
+  font-family: Georgia,serif;
+  line-height: 1.5em;
+}
+blockquote p, blockquote ul, blockquote li {
+  font-size: 16px;
+  line-height: 1.5em;
+}
+.postContent blockquote, .postContent ul, .postContent li  {
+  font-family: Georgia,serif;
+}
+
+h3 {
+  line-height: 1.2em;
+}
+h2 a, h3 a {
+  color: black;
+}
+
+
+/* --------------------------------------------------------------- */
+
+textarea {
+  width: 95%;
+  height: 150px;
+}
+
+form{
+	display: inline;
+}
+
+.checkbox-set-element label {
+	display: inline;
+	padding: 0 5px 0px 5px;
+}
+
+input.inputString {
+	width: 95%;
+}
+input.inputEmail {
+	width: 95%;
+}
+.ibtn {
+  height: 18px;
+}
+
+.table-striped tbody tr.alert:nth-child(2n+1) td, .table-striped tbody tr.alert:nth-child(2n+1) th {
+	 background-color: #FCF8E3;
+}
+.table-striped tbody tr.alert-error:nth-child(2n+1) td, .table-striped tbody tr.alert-error:nth-child(2n+1) th {
+	 background-color: #F2DEDE;
+}
+.table-striped tbody tr.alert-success:nth-child(2n+1) td, .table-striped tbody tr.alert-success:nth-child(2n+1) th {
+	 background-color: #DFF0D8;
+}
+
+.table-striped tbody tr:nth-child(2n+1) td.alert, .table-striped tbody tr:nth-child(2n+1) th.alert {
+	 background-color: #FCF8E3;
+}
+.table-striped tbody tr:nth-child(2n+1) td.alert-error, .table-striped tbody tr:nth-child(2n+1) th.alert-error {
+	 background-color: #F2DEDE;
+}
+.table-striped tbody tr:nth-child(2n+1) td.alert-success, .table-striped tbody tr:nth-child(2n+1) th.alert-success {
+	 background-color: #DFF0D8;
+}

@@ -5,6 +5,7 @@ application reposearch
   imports searchconfiguration
   imports ac
   imports language-constructs
+  imports elib/lib
 
   var fpMsg := if( (from Message).length > 0) (from Message)[0]  else Message{msg := ""}
   var manager := if( (from RepoSearchManager).length > 0) (from RepoSearchManager)[0] else RepoSearchManager{hourCounter := 0 nextInvocation := now().addHours(12) log:="" adminEmails:=""}
@@ -46,23 +47,78 @@ application reposearch
     }
   }
 
+  define mainResponsive(ns : String) {
+    var project := if (ns == "") "All projects" else ns;
+    includeCSS("bootstrap/css/bootstrap.css")
+    includeCSS("bootstrap/css/bootstrap-responsive.css")
+    includeCSS("bootstrap/css/bootstrap-adapt.css")
+    includeCSS("bootstrap-extension.css")
+    includeJS("jquery.js")
+    includeJS("bootstrap/js/bootstrap.js")
+    includeHead("<meta name='viewport' content='width=device-width, initial-scale=1.0'>")
+    //includeHead(rendertemplate(rssLink()))
+    //includeHead(rendertemplate(bitterfont))
+    //<link href="http://fonts.googleapis.com/css?family=Bitter" rel="stylesheet" type="text/css">
+    navbarResponsive{
+          navItems{
+            dropdownInNavbar(project){
+                dropdownMenu{
+                    dropdownMenuItem{ navigate search("","") {"All projects"} }
+                    for(p:Project order by p.displayName ){
+                        dropdownMenuItem{ navigate search(p.name, "") {output(p.displayName)} }
+                    }
+                }
+            }
+            navItems{
+                dropdownInNavbar("Add your project"){
+                    dropdownMenu{
+                        dropdownMenuItem{<a data-toggle="modal" href="#addProject">"New project request"</a>}
+                        dropdownMenuItem{ navigate(pendingRequests()){ "Pending requests" } }
+                    }
+                }
+            }
+            navItem{ navigate(manage())         { "Manage"           } }
+            navItem{ navigate(searchStats())    {"Search statistics" } }
+            navItem{ navigate(dologin())        {"Admin log in/out"  } }
+
+          }
+    }
+    placeholder notificationsPH
+
+    addProject()
+
+    elements
+  }
+
+  define override appname(){ "Reposearch" }
+
   define page root(){
     title { "Reposearch" }
-    <center>output(fpMsg.msg)</center>
-    <span class="home-text">"Search within project or " navigate(search("", "")){"all"} " projects:"</span>
-      <br/> <br/>
-    table{
-      for(p:Project order by p.displayName ){
-        row{
-          column{ navigate(search(p.name, "")){output(p.displayName)} } column{ reposLink(p) }
+    mainResponsive("Projects"){
+        gridContainerFluid{
+          gridRowFluid{
+            gridSpan(12){
+                wellSmall{
+                    <center>output(fpMsg.msg)</center>
+                }
+            }
+          }
+          gridRowFluid{
+            gridSpan(6,3){
+                <span class="home-text">"Search within project or " navigate(search("", "")){"all"} " projects:"</span>
+                <ul class="nav nav-list">
+                  <li class="nav-header">"Projects"</li>
+                  for(p:Project order by p.displayName ){
+                    <li>gridSpan(4){navigate(search(p.name, "")){output(p.displayName)}}
+                    gridSpan(8){reposLink(p) }</li>
+                  }
+                </ul>
+            }
+          }
         }
-      }
     }
-    <br/><br/>
-    placeholder requestPH{ req("") }
-    <br/>navigate(manage()){"Manage"}
-    <br/>navigate(searchStats()){"Search statistics"}<br/><br/>
-    navigate(dologin()){<span class="login">"Admin log in/out"</span>}
+
+
     googleAnalytics()
   }
 
@@ -111,12 +167,6 @@ application reposearch
       "]"
   }
 
-  define ajax req(msg : String){
-    <span class="home-text">output(msg)</span><br />
-    submit action{replace(requestPH, addProject());}{"Add your project/repository?"} <br />
-    submitlink action{return pendingRequests();}{nOfPendingRequests()}
-  }
-
   define nOfPendingRequests() {
       var cnt := select count(r) from Request as r;
       if(cnt < 1){ "no requests pending"}
@@ -132,33 +182,49 @@ application reposearch
     var n : URL := "";
     var submitter : Email := "";
     var r : Request := Request{};
+    <div id="addProject" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 
-    "Add your project/repository!"
-    form{
-      table {
-        row { column{"Your email (hidden): "}       column{input(submitter)} }
-        row { column{"Project name: "}     column{input(p)} }
-        row { column{"SVN or Github URL: "}column{input(n)} }
-        row { column{"This URL is/resides within a github tag"}  column{input(tag){"this is a location within a tag on Github."} } }
-        row { column{"Example links:"}     column{<i>"http://some.svn.url/repo/trunk"
-                        <br />"https://github.com/hibernate/hibernate-search (master branch)"
-                        <br />"https://github.com/hibernate/hibernate-search/tree/4.0 (4.0 branch)"
-                        <br />"https://github.com/hibernate/hibernate-search/tree/4.0.0.Final (4.0.0.Final tag)"
-                        <br />"https://github.com/mobl/mobl-lib/blob/v0.5.0/mobl/ui/generic/touchscroll.js (a file within v0.5.0 tag)"
-                      </i>}
-            }
-      }
-       validate(/[A-Za-z0-9][A-Za-z0-9\-_\.\s]{2,}/.match(p), "Project name should be at least 3 characters (allowed chars: a-z,A-Z,0-9,-,_, ,.)")
-       validate( (n.length() > 6), "please fill in a SVN or Github repository" )
-       validate(validateEmail(submitter), "please enter a valid email address")
-       submit action{replace("requestPH", req(""));}[ignore-validation] {"cancel"}
-       submit action{
-       r.project:=p; r.svn:=n; r.submitter:=submitter; r.isGithubTag:=tag; r.save(); replace("requestPH", req("Your request is sent to the administrators. You will receive an email when your request is processed")); emailRequest(r);} {"add request"}
 
-    }
-    submitlink openPendingRequests(){nOfPendingRequests()}
+        horizontalForm("Add your project/repository!"){
+          <div class="modal-body">
+            controlGroup("Your email (hidden)") {  input(submitter) }
+            controlGroup("Project name"){     input(p)}
+            controlGroup("SVN or Github URL"){ input(n)}
+            controlGroup("This URL is/resides within a github tag"){  input(tag){"this is a location within a tag on Github."} }
+            controlGroup("Example links:"){ <i>"http://some.svn.url/repo/trunk"
+                            <br />"https://github.com/hibernate/hibernate-search (master branch)"
+                            <br />"https://github.com/hibernate/hibernate-search/tree/4.0 (4.0 branch)"
+                            <br />"https://github.com/hibernate/hibernate-search/tree/4.0.0.Final (4.0.0.Final tag)"
+                            <br />"https://github.com/mobl/mobl-lib/blob/v0.5.0/mobl/ui/generic/touchscroll.js (a file within v0.5.0 tag)"
+                          </i>}
+
+           validate(/[A-Za-z0-9][A-Za-z0-9\-_\.\s]{2,}/.match(p), "Project name should be at least 3 characters (allowed chars: a-z,A-Z,0-9,-,_, ,.)")
+           validate( (n.length() > 6), "please fill in a SVN or Github repository" )
+           validate(validateEmail(submitter), "please enter a valid email address")
+         </div>
+         <div class="modal-footer">
+           submit action{  }[ignore-validation, class="btn"] {"close"}
+           submit action{
+             r.project:=p; r.svn:=n; r.submitter:=submitter; r.isGithubTag:=tag; r.save();
+             newSuccessMessage("Your request is sent to the administrators. You will receive an email when your request is processed");
+             emailRequest(r);
+           }[ignore-validation,class="btn btn-primary"] {"add request"}
+         </div>
+
+        }
+        submitlink openPendingRequests(){nOfPendingRequests()}
+    </div>
+
 
     action openPendingRequests(){return pendingRequests();}
+  }
+
+  function newSuccessMessage(msg : String){
+      append("notificationsPH", successMessage(msg));
+  }
+
+  define ignore-access-control ajax successMessage(msg : String){
+      alertSuccess{ output(msg) }
   }
 
   function validateEmail(mail : String) : Bool {

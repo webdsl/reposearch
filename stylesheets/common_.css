@@ -1,3 +1,20 @@
+.included-facet {
+    float: left;
+    margin: 3px 2px;
+}
+.excluded-facet {
+    float: left;
+    margin: 3px 2px;
+}
+
+
+.label.label-success > a {
+    color: #FFFFFF;
+}
+.label.label > a {
+    color: #FFFFFF;
+}
+
 
 body {
     background-color: #EBF4FA;
@@ -51,15 +68,7 @@ body {
     position: relative;
     z-index: 1;
 }
-.excluded-facet {
-    background-color: LightSteelBlue;
-    border-radius: 5px 5px 5px 5px;
-    color: #8F8F8F;
-    float: left;
-    font-size: 12px;
-    margin: 1px 3px;
-    padding: 0 0 0 3px;
-}
+
 .excluded-facet-langCons{
     background-color: #EBF4FA;
     border-radius: 5px 5px 5px 5px;
@@ -69,49 +78,9 @@ body {
     margin: 1px 3px;
     padding: 0 3px;
 }
-.included-facet {
-    background-color: #EBF4FA;
-    border-radius: 5px 5px 5px 5px;
-    color: black;
-    float: left;
-    font-size: 12px;
-    margin: 1px 3px;
-    padding: 0 0 0 3px;
-}
-.included-facet a:link, .included-facet a:visited {
-    background-color: #EBF4FA;
-    color: black;
-    text-decoration: none;
-}
-.excluded-facet a:link, .excluded-facet a:visited, .excluded-facet-langCons a:link, .excluded-facet-langCons a:visited {
-    color: black;
-    text-decoration: none;
-}
-.exclude-facet-sym {
-    background-color: #206BA4;
-    border-radius: 0 5px 5px 0;
-    color: white;
-    float: right;
-    font-size: 12px;
-    margin: 0 0 0 1px;
-    padding: 0 3px;
-}
-.include-facet-sym {
-    background-color: LightSlateGray;
-    border-radius: 0 5px 5px 0;
-    color: white;
-    float: right;
-    font-size: 12px;
-    margin: 0 0 0 1px;
-    padding: 0 3px;
-    visibility: hidden;
-}
-.included-facet.minus-image a:link, .included-facet.minus-image a:visited {
-    color: red;
-}
 .search-result-highlight {
     background-color: White;
-    border: 1px solid #BBD9EE;
+    border: 1px solid #E3E3E3;
     border-radius: 0 0 5px 5px;
     font-family: monospace,Helvetica,sans-serif;
     font-size: 13px;
@@ -124,26 +93,18 @@ body {
     min-height: 18px;
 }
 .search-result-link a:link, .search-result-link a:visited {
-    color: #206BA4;
+    color: #999999;
     text-decoration: none;
     font-family: monospace;
 }
 .search-result-link {
-    background-color: #BBD9EE;
-    border: 1px solid #BBD9EE;
+    background-color: #333333;
+    border: 1px solid #333333;
     border-radius: 5px 5px 0 0;
+    color: #999999;
     font-size: 13px;
     margin: 4px 4px 0 0;
     padding: 4px;
-}
-input.button {
-    background-color: #BBD9EE;
-    border-radius: 5px 5px 5px 5px;
-    color: Black;
-    font-family: sans-serif;
-    font-weight: normal;
-    padding: 0;
-    margin: 0 0 0 2px;
 }
 .login {
     bottom: 0;
@@ -158,14 +119,13 @@ input.button {
     font-family: Helvetica;
 }
 .search-result-location {
-    color: #206BA4;
     float: right;
     font-size: 13px;
     margin: 0 4px 0 0;
 }
 .linenumbera {
     -moz-user-select: none;
-    background-color: WhiteSmoke;
+    background-color: #F5F5F5;
     color: #206BA4;
     float: left;
     margin: 0 9px 0 0;
@@ -187,7 +147,7 @@ input.button {
 }
 .linenumberb {
     -moz-user-select: none;
-    background-color: #EBF4FA;
+    background-color: #F5F5F5;
     color: #206BA4;
     float: left;
     line-height: 1.25em;
@@ -208,6 +168,10 @@ input.button {
     text-align: center;
     width: 100%;
 }
+.linenumberarea > a {
+    color: #333333;
+}
+
 .linenumberarea {
     -moz-user-select: none;
     line-height: 1.25em;
@@ -225,12 +189,6 @@ input.button {
     background-color: #CCFF66;
 }
 .skipped-files-link a:link, .search-result-link a:visited {
-    text-decoration: none;
-}
-a:link, a:visited {
-    color: #206BA4;
-    font-family: Helvetica;
-    font-style: normal;
     text-decoration: none;
 }
 pre {

@@ -33,6 +33,7 @@ import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNUpdateClient;
+import org.webdsl.logging.Logger;
 
 import webdsl.generated.domain.Entry;
 
@@ -433,9 +434,9 @@ public class Svn {
     }
 
     public static void log(String msg){
+        Logger.info(msg);
         try {
             lock.tryLock(3, TimeUnit.SECONDS);
-            System.out.println("Reposearch: " + msg);
             logBuilder.append(new java.util.Date());
             logBuilder.append(": ");
             logBuilder.append(msg);
