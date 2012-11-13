@@ -83,7 +83,7 @@ application reposearch
 
           }
     }
-    placeholder notificationsPH
+    placeholder notificationsPH{}
 
     addProject()
 
@@ -173,7 +173,13 @@ application reposearch
       else       { output(cnt) " pending request(s)" }
   }
 
-  define ajax addProject(){
+  define addProject(){
+    <div id="addProject" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      placeholder boe addProjectModal()
+    </div>
+  }
+
+  define ajax addProjectModal(){
     var p    := "";
     var gu   := "";
     var gr   := "";
@@ -182,10 +188,11 @@ application reposearch
     var n : URL := "";
     var submitter : Email := "";
     var r : Request := Request{};
-    <div id="addProject" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 
 
-        horizontalForm("Add your project/repository!"){
+
+        modalHeader{"Add your project/repository!"}
+        form{
           <div class="modal-body">
             controlGroup("Your email (hidden)") {  input(submitter) }
             controlGroup("Project name"){     input(p)}
@@ -203,17 +210,17 @@ application reposearch
            validate(validateEmail(submitter), "please enter a valid email address")
          </div>
          <div class="modal-footer">
-           submit action{  }[ignore-validation, class="btn"] {"close"}
+           // submit action{  }[ignore-validation, class="btn"] {"close"}
            submit action{
              r.project:=p; r.svn:=n; r.submitter:=submitter; r.isGithubTag:=tag; r.save();
              newSuccessMessage("Your request is sent to the administrators. You will receive an email when your request is processed");
              emailRequest(r);
-           }[ignore-validation,class="btn btn-primary"] {"add request"}
+           }[class="btn btn-primary"] {"add request"}
          </div>
+         }
 
-        }
         submitlink openPendingRequests(){nOfPendingRequests()}
-    </div>
+
 
 
     action openPendingRequests(){return pendingRequests();}

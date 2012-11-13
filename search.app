@@ -45,7 +45,8 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
           gridRowFluid{ gridSpan(10,1){
               // pageHeader{ "Search " output(namespace) }
               inlForm{
-                formEntry("Search " + namespace)  { input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()] }
+                formEntry("Search " + namespace)  { <span class="ui-widget">input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()] </span>}
+
                 gridRowFluid{
                     input(SearchPrefs.caseSensitive)[onclick=updateResults(), title="Case sensitive search"]{"case sensitive"}
                                      " " input(SearchPrefs.exactMatch)[onclick=updateResults(), title="If enabled, the exact sequence of characters is matched in that order (recommended)"]{"exact match"}
@@ -57,11 +58,6 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
                       if(query.length() > 0){ viewFacets(searcher, namespace, langCons) }
                     }
                 }
-               //  formActions{
-               //    submit action{return search(namespace,query);} [class="btn btn-primary"] { "search" }
-               // // navigate register() [class="btn"] { "Sign Up" } " "
-               // // navigate resetpassword() [class="btn"] { "Reset Password" }
-               //  }
               }
           } }
         }

@@ -4,14 +4,14 @@ module elib/modal-dialog
     action close() { replace(context+"", empty); }
     <div class="modalDialogBG">
       <div class="modalDialog">
-         block[class="modalDialogClose"]{ 
+         block[class="modalDialogClose"]{
            submitlink close() { "[close]" }
          }
          elements
       </div>
     </div>
   }
-  
-  
 
-  
+
+
+
