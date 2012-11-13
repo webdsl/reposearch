@@ -20,6 +20,8 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
   var searcher := entrySearcher;
   var query := searcher.getQuery();
   var caseSensitive := SearchPrefs.caseSensitive;
+  var resultsPerPage := SearchPrefs.resultsPerPage;
+  var options := [5, 10, 25, 50, 100, 500];
   init{
     if ( prj == null  && namespace != "" ){ return root(); }
     if ( query.length() > 0 ){ incSearchCount(prj); }
@@ -45,7 +47,20 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
           gridRowFluid{ gridSpan(10,1){
               // pageHeader{ "Search " output(namespace) }
               inlForm{
-                formEntry("Search " + namespace)  { <span class="ui-widget">input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()] </span>}
+                  gridRowFluid{
+                  gridSpan(8){
+                    formEntry("Search " + namespace)  { <span class="ui-widget">input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()] </span>}
+                  } gridSpan(4){
+                      formEntry("Results per page")  {
+                          buttonGroup{
+                              for(i : Int in options) {
+                                showOption(searcher, namespace, i, langCons, (resultsPerPage != i) )
+                              }
+                          }
+                      }
+                  }
+
+                }
 
                 gridRowFluid{
                     input(SearchPrefs.caseSensitive)[onclick=updateResults(), title="Case sensitive search"]{"case sensitive"}
@@ -194,43 +209,44 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
   }
 
 
-    gridRowFluid{
+    // gridRowFluid{
       // gridSpan(10,1){
-        formEntry("File extension"){
+        gridContainer{ formEntry("File extension"){
             for(f : Facet in fileExt facets from searcher ) {    showFacet(searcher, f, ext_hasSel, namespace, langCons) }
-        }
+            }
+        // }
       // }
     }
-    gridRowFluid{
+    // gridRowFluid{
       // gridSpan(10,1){
-        formEntry("Language construct"){
+        gridContainer{ formEntry("Language construct"){
           if (prj != null && prj.langConstructs.length > 0){
               for(lc : LangConstruct in prj.langConstructs order by lc.name){
                 if(lc_hasSel){
                   if(lc.name == langCons){
-                     pullLeft{buttonMini{ navigate search(namespace, searcher.getQuery()) { excludeFacetSym() output(langCons) }}}
+                     gridSpan(2){buttonMini{ navigate search(namespace, searcher.getQuery()) { excludeFacetSym() output(langCons) }}}
                   } else {
-                     pullLeft{<div class="btn btn-mini disabled"> includeFacetSym() submitlink updateResults( lc ){ output(lc.name) } </div> }
+                     gridSpan(2){<div class="btn btn-mini disabled"> includeFacetSym() submitlink updateResults( lc ){ output(lc.name) } </div> }
                   }
 
                 } else {
-                     pullLeft{buttonMini{ includeFacetSym() submitlink updateResults( lc ){ output(lc.name) }} }
+                     gridSpan(2){buttonMini{ includeFacetSym() submitlink updateResults( lc ){ output(lc.name) }} }
                 }
               }
           }
-        }
+        } }
       // }
-    }
-    gridRowFluid{
+    // }
+    // gridRowFluid{
       // gridSpan(10,1){
-        formEntry("File location"){
+        gridContainer{ formEntry("File location"){
             placeholder repoPathPh{
               showPathFacets(searcher, path_hasSel, namespace, false, langCons)
             }
             for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace, langCons) <br /> }
-        }
+        } }
       // }
-    }
+    // }
 
   action updateResults(p: LangConstruct){
     if( lc_hasSel ){
@@ -271,7 +287,7 @@ function interestingPathFacets(searcher : EntrySearcher) : List<Facet> {
 
 define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String, langCons : String) {
 
-  pullLeft{
+  gridSpan(2){
     // buttonGroup{
 
           if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
@@ -312,7 +328,6 @@ define includeFacetSym(){
 
 define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespace : String, langCons : String){
   var resultsPerPage := SearchPrefs.resultsPerPage;
-  var options := [5, 10, 25, 50, 100, 500];
   var resultList := results from (~searcher offset ((pagenumber - 1) * resultsPerPage) limit resultsPerPage);
   var size := count from searcher;
   var lastResult := size;
@@ -326,26 +341,19 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
     div{
       <center>
         if(size > 0) {
-          output(size) " results found in " output(searchtime from searcher) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
-          " [results per page: "
-          for(i : Int in options) {
-            if(resultsPerPage != i){ showOption(searcher, namespace, i, langCons) } else { output(i) } " "
-          }
-         "]"
+          <p class="text-info">output(size) " results found in " output(searchtime from searcher) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)</p>
         } else {
-          "no results found"
+          <p class="text-info">"no results found"</p>
         }
       </center>
     }
-    par{
-      pageIndex(pagenumber, size, resultsPerPage, 10, 5)
-    }
+    pageIndex(pagenumber, size, resultsPerPage, 12, 3)
+
     for (e : Entry in resultList){
       placeholder "result-"+e.url {highlightedResult(e, searcher, 3, langCons)}
     }
-    par{
-     pageIndex(pagenumber, size, resultsPerPage, 10, 5)
-    }
+
+    pageIndex(pagenumber, size, resultsPerPage, 12, 3)
   }
 
   define pageIndexLink(page: Int, lab : String){
@@ -353,8 +361,12 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
   }
 }
 
-define showOption(searcher : EntrySearcher, namespace : String, new : Int, langCons : String) {
-  submitlink action{ SearchPrefs.resultsPerPage := new; return doSearch(searcher, namespace, langCons, 1); }{ output(new) }
+define showOption(searcher : EntrySearcher, namespace : String, new : Int, langCons : String, isCurrent : Bool) {
+  if(isCurrent){
+    submitlink action{ SearchPrefs.resultsPerPage := new; return doSearch(searcher, namespace, langCons, 1); }[class="btn btn-small"]{ output(new) }
+  } else {
+    submitlink action{ SearchPrefs.resultsPerPage := new; return doSearch(searcher, namespace, langCons, 1); }[class="btn btn-small disabled"]{ output(new) }
+  }
 }
 
 //backwards compatibility
