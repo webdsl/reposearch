@@ -338,57 +338,23 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
       </center>
     }
     par{
-      <div class="pagination pagination-centered">resultIndex(searcher, pagenumber, resultsPerPage, namespace, langCons)</div>
+      pageIndex(pagenumber, size, resultsPerPage, 10, 5)
     }
     for (e : Entry in resultList){
       placeholder "result-"+e.url {highlightedResult(e, searcher, 3, langCons)}
     }
     par{
-      <div class="pagination pagination-centered">resultIndex(searcher, pagenumber, resultsPerPage, namespace, langCons)</div>
+     pageIndex(pagenumber, size, resultsPerPage, 10, 5)
     }
+  }
+
+  define pageIndexLink(page: Int, lab : String){
+      navigate (doSearch(searcher, namespace, langCons, page)){ output(lab) }
   }
 }
 
 define showOption(searcher : EntrySearcher, namespace : String, new : Int, langCons : String) {
   submitlink action{ SearchPrefs.resultsPerPage := new; return doSearch(searcher, namespace, langCons, 1); }{ output(new) }
-}
-
-define resultIndex (searcher: EntrySearcher, pagenumber : Int, resultsPerPage : Int, ns : String, langCons : String){
-
-  var totalPages := ( (count from searcher).floatValue() / resultsPerPage.floatValue() ).ceil()
-  var start : Int := SearchHelper.firstIndexLink(pagenumber,totalPages, 9) //9 index links at most
-  var end : Int := SearchHelper.lastIndexLink(pagenumber,totalPages, 9)
-  <lu>
-  if(totalPages > 1){
-    if (pagenumber > 1){
-      submit("|<<", showResultsPage(searcher, 1))
-      submit("<", showResultsPage(searcher, pagenumber-1))
-    }
-    for(pagenum:Int from start to pagenumber){
-     gotoresultpage(searcher, pagenum, ns, langCons)
-    }
-    "-"output(pagenumber)"-"
-    for(pagenum:Int from pagenumber+1 to end+1){
-     gotoresultpage(searcher, pagenum, ns, langCons)
-    }
-    if(pagenumber < totalPages){
-      submit(">", showResultsPage(searcher, pagenumber+1))
-      submit(">>|", showResultsPage(searcher, totalPages))
-    }
-  }
-  </lu>
-  action showResultsPage(searcher: EntrySearcher, pagenumber : Int){
-    return doSearch(searcher, ns, langCons, pagenumber);
-  }
-}
-
-define gotoresultpage(searcher: EntrySearcher, pagenum: Int, ns : String, langCons : String){
-  submit action{return doSearch(searcher, ns, langCons, pagenum);}{output(pagenum)}
-}
-
-native class org.webdsl.search.SearchHelper as SearchHelper {
-  static firstIndexLink(Int, Int, Int): Int
-  static lastIndexLink(Int, Int, Int): Int
 }
 
 //backwards compatibility

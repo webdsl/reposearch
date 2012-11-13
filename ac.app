@@ -76,7 +76,6 @@ page renewAdmin(){
     rule ajaxtemplate repos(*){true}
     rule ajaxtemplate FpMsgPreview(*){true}
     rule ajaxtemplate addProjectModal(*){true}
-    rule ajaxtemplate addProject(*){true}
     rule ajaxtemplate refreshScheduleControl(*){loggedIn()}
     rule ajaxtemplate showLog(*){loggedIn()}
     rule ajaxtemplate viewFacets(*){true}
