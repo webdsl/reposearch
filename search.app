@@ -41,7 +41,6 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
   </script>
 
   mainResponsive(namespace){
-    gridContainerFluid{
       gridRowFluid{ gridSpan(12){
         wellSmall{
           gridRowFluid{ gridSpan(10,1){
@@ -81,7 +80,6 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
       placeholder resultArea{
         if(query.length() > 0){ paginatedTemplate(searcher, pageNum, namespace, langCons) }
       }
-    }
   }
 
   action updateResults(){
@@ -132,7 +130,7 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
   var highlightedContent : List<List<String>>;
   var ruleOffset : String;
   var linkText := "";
-  var toggleText := if(nOfFragments != 10) "show all fragments" else "less fragments";
+  var toggleText := if(nOfFragments != 10) "more fragments" else "less fragments";
   var location := e.url.substring(0, e.url.length() - e.name.length() );
   var viewFileUri := navigate(viewFile(searcher.getQuery(), e.url, e.projectname, langCons));
 
@@ -158,19 +156,25 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
     ruleOffset := "" + (ruleOffset.parseInt() - 3);
   }
 
-  div[class="search-result-link"]{
-    navWithAnchor(viewFileUri , ruleOffset){
-      div[class="search-result-location"]{
-        output(location)
+  // div[class="search-result-link"]{
+
+  gridRowFluid{
+      gridSpan(12){
+        navWithAnchor(viewFileUri , ruleOffset){
+          <span class="label badge-info"><b>output(if(linkText.length()>0) linkText else "-")</b></span>
+          <span class="label pull-right"> output(location) </span>
+        }
       }
-      <b>output(if(linkText.length()>0) linkText else "-")</b>
-    }
-    "[" actionLink(toggleText,toggleAllFragments()) "]"
   }
+  gridRowFluid{
   <div class="search-result-highlight">
     <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(highlightedContent[0].concat("<br />"))</div>
     <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(highlightedContent[1].concat("<br />"))</pre></div>
   </ div>
+  }
+
+  submitlink toggleAllFragments()[class="btn btn-mini"] { output(toggleText) }
+
   action toggleAllFragments(){
       if(nOfFragments != 10) {replace("result-"+e.url, highlightedResultToggled(e, searcher, 10, langCons)); }
       else                   {replace("result-"+e.url, highlightedResultToggled(e, searcher, 3, langCons)); }
@@ -180,12 +184,12 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
 }
 
 define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String, langCons : String){
-  wellSmall{
+
       prettifyCode(ns)
       if(searcher.getQuery().length() > 0) {
         paginatedResults(searcher, pageNum, ns, langCons)
       }
-  }
+
 }
 
 define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : String){
@@ -212,7 +216,7 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
     // gridRowFluid{
       // gridSpan(10,1){
         gridContainer{ formEntry("File extension"){
-            for(f : Facet in fileExt facets from searcher ) {    showFacet(searcher, f, ext_hasSel, namespace, langCons) }
+            for(f : Facet in fileExt facets from searcher ) {  gridSpan(2){  showFacet(searcher, f, ext_hasSel, namespace, langCons) } }
             }
         // }
       // }
@@ -224,13 +228,13 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
               for(lc : LangConstruct in prj.langConstructs order by lc.name){
                 if(lc_hasSel){
                   if(lc.name == langCons){
-                     gridSpan(2){buttonMini{ navigate search(namespace, searcher.getQuery()) { excludeFacetSym() output(langCons) }}}
+                     gridSpan(2){buttonMini{ navigate search(namespace, searcher.getQuery()) { excludeFacetSym() <b>output(langCons)</b> }}}
                   } else {
                      gridSpan(2){<div class="btn btn-mini disabled"> includeFacetSym() submitlink updateResults( lc ){ output(lc.name) } </div> }
                   }
 
                 } else {
-                     gridSpan(2){buttonMini{ includeFacetSym() submitlink updateResults( lc ){ output(lc.name) }} }
+                     gridSpan(2){buttonMini{ includeFacetSym() submitlink updateResults( lc ){ <b>output(lc.name)</b> }} }
                 }
               }
           }
@@ -239,12 +243,12 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
     // }
     // gridRowFluid{
       // gridSpan(10,1){
-        gridContainer{ formEntry("File location"){
+        gridContainer{ formEntry("File location"){ gridSpan(12){
             placeholder repoPathPh{
               showPathFacets(searcher, path_hasSel, namespace, false, langCons)
             }
             for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace, langCons) <br /> }
-        } }
+        } } }
       // }
     // }
 
@@ -260,14 +264,14 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
 
 define ajax showPathFacets(searcher : EntrySearcher, hasSelection : Bool, namespace : String, show : Bool, langCons : String){
   if( show ){
-    buttonSmall{submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, langCons));}{"collapse"}}
+    buttonSmall{submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, langCons));}{<b>"collapse"</b>}}
     div{
       for(f : Facet in interestingPathFacets(searcher)) {
         showFacet(searcher, f, hasSelection, namespace, langCons) <br />
       }
     }
   } else {
-     buttonSmall{submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, langCons));}{ "expand"}}
+     buttonSmall{submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, langCons));}{<b>"expand"</b>}}
   }
 }
 
@@ -287,7 +291,7 @@ function interestingPathFacets(searcher : EntrySearcher) : List<Facet> {
 
 define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String, langCons : String) {
 
-  gridSpan(2){
+
     // buttonGroup{
 
           if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
@@ -301,6 +305,7 @@ define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, names
             </div>
           } else {
             buttonMini{
+              <b>
               if(f.isSelected()) {
                 submitlink updateResults(searcher.removeFacetSelection(f)){excludeFacetSym() output(f.getValue()) " (" output(f.getCount()) ") "}
               } else {
@@ -308,8 +313,9 @@ define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, names
                 submitlink updateResults(~searcher matching f.should()  ){output(f.getValue()) " (" output(f.getCount()) ")"}
                 " "
               }
+              </b>
             }
-          }
+
       // }
     // }
   }
@@ -350,7 +356,9 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
     pageIndex(pagenumber, size, resultsPerPage, 12, 3)
 
     for (e : Entry in resultList){
-      placeholder "result-"+e.url {highlightedResult(e, searcher, 3, langCons)}
+      wellSmall{
+        placeholder "result-"+e.url {highlightedResult(e, searcher, 3, langCons)}
+      }
     }
 
     pageIndex(pagenumber, size, resultsPerPage, 12, 3)
@@ -396,17 +404,28 @@ define page viewFile(query : String, url:URL, projectName:String, langCons : Str
     //add line number anchors
     lineNumbers := />(\d+)</.replaceAll( " a name=\"$1\">$1<", lineNumbers );
   }
-  prettifyCode(projectName)
+  mainResponsive(projectName){
 
-  navigate(search(e.projectname, ""))[target:="_blank"]{"new search"}
-  div[class="search-result-link"]{
-    navigate(url(e.url)){ div[class="search-result-location"]{ output(location) } <b>rawoutput(linkText)</b> }
+    wellSmall{
+      gridRowFluid{
+          gridSpan(12){
+            navigate(url(e.url)){
+              <span class="label badge-info"><b>rawoutput(if(linkText.length()>0) linkText else "-")</b></span>
+              <span class="label pull-right"> output(location) </span>
+            }
+          }
+      }
+
+      gridRowFluid{
+          <div class="search-result-highlight">
+            <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(lineNumbers)</div>
+            <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(codeLines)</pre></div>
+          </ div>
+      }
+      navigate(search(e.projectname, ""))[target:="_blank"]{"new search"}
+      prettifyCode(projectName)
+    }
   }
-  <div class="search-result-highlight">
-    <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(lineNumbers)</div>
-    <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(codeLines)</pre></div>
-  </ div>
-  navigate(search(e.projectname, ""))[target:="_blank"]{"new search"}
   googleAnalytics()
 }
 

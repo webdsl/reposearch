@@ -87,7 +87,9 @@ application reposearch
 
     addProject()
 
-    elements
+    gridContainerFluid{
+      elements
+    }
   }
 
   define override appname(){ "Reposearch" }
@@ -95,7 +97,6 @@ application reposearch
   define page root(){
     title { "Reposearch" }
     mainResponsive("Projects"){
-        gridContainerFluid{
           gridRowFluid{
             gridSpan(12){
                 wellSmall{
@@ -115,7 +116,6 @@ application reposearch
                 </ul>
             }
           }
-        }
     }
 
 
