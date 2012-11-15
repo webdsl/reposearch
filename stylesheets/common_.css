@@ -22,10 +22,8 @@ body {
     margin-left: 15px;
 }
 
-.facet-area {
-    clear: both;
-    font-style: italic;
-    padding-top: 8px;
+.facet-area .btn-group {
+    margin: 0 5px 5px 0;
 }
 .top-container {
     background-color: #BBD9EE;

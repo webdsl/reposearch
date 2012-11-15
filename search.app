@@ -27,20 +27,10 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
     if ( query.length() > 0 ){ incSearchCount(prj); }
   }
 
-  includeJS("jquery-1.5.min.js")
-  includeJS("jquery-ui-1.8.9.custom.min.js")
-  includeJS("completion.js")
-  includeCSS("jquery-ui.css")
-
-  includeCSS("prettify.css")
-  includeJS("prettify.js")
-  includeJS("make-clickable.js")
-
-  <script>
-    setupcompletion("~source");
-  </script>
-
   mainResponsive(namespace){
+    <script>
+      setupcompletion("~source");
+    </script>
       gridRowFluid{ gridSpan(12){
         wellSmall{
           gridRowFluid{ gridSpan(10,1){
@@ -185,10 +175,10 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
 
 define ajax paginatedTemplate(searcher :EntrySearcher, pageNum : Int, ns : String, langCons : String){
 
-      prettifyCode(ns)
       if(searcher.getQuery().length() > 0) {
         paginatedResults(searcher, pageNum, ns, langCons)
       }
+      prettifyCode(ns)
 
 }
 
@@ -212,45 +202,48 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
     }
   }
 
-
-    // gridRowFluid{
+    div[class="facet-area"]{
+    gridRowFluid{
       // gridSpan(10,1){
-        gridContainer{ formEntry("File extension"){
-            for(f : Facet in fileExt facets from searcher ) {  gridSpan(2){  showFacet(searcher, f, ext_hasSel, namespace, langCons) } }
-            }
+        formEntry("File extension"){
+            for(f : Facet in fileExt facets from searcher ) {  pullLeft {  showFacet(searcher, f, ext_hasSel, namespace, langCons)  } }
+        }
         // }
       // }
     }
-    // gridRowFluid{
+    gridRowFluid{
       // gridSpan(10,1){
-        gridContainer{ formEntry("Language construct"){
+        formEntry("Language construct"){
           if (prj != null && prj.langConstructs.length > 0){
               for(lc : LangConstruct in prj.langConstructs order by lc.name){
-                if(lc_hasSel){
-                  if(lc.name == langCons){
-                     gridSpan(2){buttonMini{ navigate search(namespace, searcher.getQuery()) { excludeFacetSym() <b>output(langCons)</b> }}}
-                  } else {
-                     gridSpan(2){<div class="btn btn-mini disabled"> includeFacetSym() submitlink updateResults( lc ){ output(lc.name) } </div> }
-                  }
+                pullLeft{
+                    if(lc_hasSel){
+                      if(lc.name == langCons){
+                         navigate search(namespace, searcher.getQuery()) { buttonGroup{ buttonMini{excludeFacetSym()} buttonMini{output(langCons)} } }
+                      } else {
+                         buttonGroup{div[class="btn btn-mini disabled"]{ includeFacetSym()} div[class="btn btn-mini disabled"]{submitlink updateResults( lc ){ output(lc.name) }}}
+                      }
 
-                } else {
-                     gridSpan(2){buttonMini{ includeFacetSym() submitlink updateResults( lc ){ <b>output(lc.name)</b> }} }
+                    } else {
+                         buttonGroup{div[class="btn btn-mini disabled"]{ includeFacetSym()} div[class="btn btn-mini disabled"]{submitlink updateResults( lc ){ output(lc.name) }}}
+                    }
                 }
               }
           }
         } }
       // }
     // }
-    // gridRowFluid{
+    gridRowFluid{
       // gridSpan(10,1){
-        gridContainer{ formEntry("File location"){ gridSpan(12){
+       formEntry("File location"){
             placeholder repoPathPh{
               showPathFacets(searcher, path_hasSel, namespace, false, langCons)
             }
             for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace, langCons) <br /> }
-        } } }
+        } }
       // }
     // }
+    }
 
   action updateResults(p: LangConstruct){
     if( lc_hasSel ){
@@ -267,7 +260,9 @@ define ajax showPathFacets(searcher : EntrySearcher, hasSelection : Bool, namesp
     buttonSmall{submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, langCons));}{<b>"collapse"</b>}}
     div{
       for(f : Facet in interestingPathFacets(searcher)) {
-        showFacet(searcher, f, hasSelection, namespace, langCons) <br />
+        pullLeft{
+          showFacet(searcher, f, hasSelection, namespace, langCons) <br />
+        }
       }
     }
   } else {
@@ -291,34 +286,33 @@ function interestingPathFacets(searcher : EntrySearcher) : List<Facet> {
 
 define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String, langCons : String) {
 
-
-    // buttonGroup{
-
           if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
-            <div class="btn btn-mini disabled">
+
               if(f.isSelected()) {
-                submitlink updateResults(searcher.removeFacetSelection(f)){ includeFacetSym() " " output(f.getValue()) " (" output(f.getCount()) ")"}
+                submitlink updateResults(searcher.removeFacetSelection(f)){ buttonGroup{div[class="btn btn-mini disabled"]{includeFacetSym()} div[class="btn btn-mini disabled"]{output(f.getValue()) " (" output(f.getCount()) ")"}}}
               } else {
-                submitlink updateResults(~searcher matching f.should()){ includeFacetSym() " " output(f.getValue()) " (" output(f.getCount()) ")"}
+                submitlink updateResults(~searcher matching f.should()){ buttonGroup{div[class="btn btn-mini disabled"]{includeFacetSym()}    div[class="btn btn-mini disabled"]{ output(f.getValue()) " (" output(f.getCount()) ")"}}}
               }
 
-            </div>
+
           } else {
-            buttonMini{
-              <b>
+
+              // <b>
               if(f.isSelected()) {
-                submitlink updateResults(searcher.removeFacetSelection(f)){excludeFacetSym() output(f.getValue()) " (" output(f.getCount()) ") "}
+                submitlink updateResults(searcher.removeFacetSelection(f)){ buttonGroup{ buttonMini{excludeFacetSym()} buttonMini{output(f.getValue()) " (" output(f.getCount()) ") "} } }
               } else {
-                submitlink updateResults(~searcher matching f.mustNot() ){excludeFacetSym()} " "
-                submitlink updateResults(~searcher matching f.should()  ){output(f.getValue()) " (" output(f.getCount()) ")"}
+                buttonGroup{
+                buttonMini{submitlink updateResults(~searcher matching f.mustNot() ){ excludeFacetSym()} " "}
+                buttonMini{submitlink updateResults(~searcher matching f.should()  ){ output(f.getValue()) " (" output(f.getCount()) ")"}}
+                }
                 " "
               }
-              </b>
+              // </b>
             }
 
       // }
     // }
-  }
+  // }
 
   action updateResults(searcher : EntrySearcher){
     return doSearch(searcher, namespace, langCons, 1);
@@ -326,10 +320,10 @@ define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, names
 }
 
 define excludeFacetSym(){
-  iMinus()
+  "×"
 }
 define includeFacetSym(){
-  iPlus()
+  "+"
 }
 
 define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespace : String, langCons : String){
