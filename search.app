@@ -27,7 +27,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
     if ( query.length() > 0 ){ incSearchCount(prj); }
   }
 
-  mainResponsive(namespace){
+  mainResponsive(namespace, namespace){
     <script>
       setupcompletion("~source");
     </script>
@@ -207,34 +207,36 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
 
     div[class="facet-area"]{
     gridRowFluid{
-      // gridSpan(10,1){
-        formEntry("File extension"){
-            for(f : Facet in fileExt facets from searcher ) {  pullLeft {  showFacet(searcher, f, ext_hasSel, namespace, langCons)  } }
+        gridSpan(8){
+          formEntry("File extension"){
+              for(f : Facet in fileExt facets from searcher ) {  pullLeft {  showFacet(searcher, f, ext_hasSel, namespace, langCons)  } }
+          }
         }
-        // }
-      // }
-    }
-    gridRowFluid{
-      // gridSpan(10,1){
-      if (prj != null && prj.langConstructs.length > 0){
-        formEntry("Language construct"){
-              for(lc : LangConstruct in prj.langConstructs order by lc.name){
-                pullLeft{
-                    if(lc_hasSel){
-                      if(lc.name == langCons){
-                         navigate search(namespace, searcher.getQuery()) { buttonGroup{ buttonMini{excludeFacetSym()} buttonMini{output(langCons)} } }
-                      } else {
-                         buttonGroup{div[class="btn btn-mini disabled"]{ includeFacetSym()} div[class="btn btn-mini disabled"]{submitlink updateResults( lc ){ output(lc.name) }}}
-                      }
 
-                    } else {
-                         buttonGroup{buttonMini{ includeFacetSym()} buttonMini{submitlink updateResults( lc ){ output(lc.name) }}}
+        gridSpan(4){
+          if (prj != null && prj.langConstructs.length > 0){
+            formEntry("Language construct"){
+                  for(lc : LangConstruct in prj.langConstructs order by lc.name){
+                    pullLeft{
+                        if(lc_hasSel){
+                          if(lc.name == langCons){
+                             navigate search(namespace, searcher.getQuery()) { buttonGroup{ buttonMini{excludeFacetSym()} buttonMini{output(langCons)} } }
+                          } else {
+                             buttonGroup{div[class="btn btn-mini disabled"]{ includeFacetSym()} div[class="btn btn-mini disabled"]{submitlink updateResults( lc ){ output(lc.name) }}}
+                          }
+
+                        } else {
+                             buttonGroup{buttonMini{ includeFacetSym()} buttonMini{submitlink updateResults( lc ){ output(lc.name) }}}
+                        }
                     }
-                }
-              }
+                  }
+            }
+          }
         }
-      }
     }
+      // gridSpan(10,1){
+
+
       // }
     // }
     gridRowFluid{
@@ -344,16 +346,15 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
   }
   if(searcher.getQuery().length()>0){
     gridRowFluid{
-      <center>
-        if(size > 0) {
-          <p class="text-info">output(size) " results found in " output(searchtime from searcher) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)</p>
-        } else {
-          <p class="text-info">"no results found"</p>
-        }
-      </center>
-    }
-    gridRowFluid{
-      pageIndex(pagenumber, size, resultsPerPage, 12, 3)
+      pullLeft {
+        pageIndex(pagenumber, size, resultsPerPage, 12, 3)
+      } pullRight{
+          if(size > 0) {
+            output(size) " results found in " output(searchtime from searcher) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)
+          } else {
+            "no results found"
+          }
+      }
     }
     gridRowFluid{
         for (e : Entry in resultList){
@@ -362,9 +363,9 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
           }
         }
     }
-    gridRowFluid{
+    gridRowFluid{ pullLeft{
       pageIndex(pagenumber, size, resultsPerPage, 12, 3)
-    }
+    } }
   }
 
   define pageIndexLink(page: Int, lab : String){
@@ -395,7 +396,7 @@ define page viewFile(query : String, url:URL, projectName:String, langCons : Str
   var highlighted : List<List<String>>;
   var searcher    := toSearcher(query, "", langCons);
 
-  title { output(e.name + " - Reposearch") }
+
 
   init{
     linkText := searcher.highlight("fileName", e.name, "<span class=\"hlcontent\">","</span>", 1, 256, "");
@@ -407,7 +408,7 @@ define page viewFile(query : String, url:URL, projectName:String, langCons : Str
     //add line number anchors
     lineNumbers := />(\d+)</.replaceAll( " a name=\"$1\">$1<", lineNumbers );
   }
-  mainResponsive(projectName){
+  mainResponsive(projectName, e.name){
 
     wellSmall{
       gridRowFluid{

@@ -157,14 +157,12 @@ h5{
     width: 34px;
 }
 .nolinenumberb {
-    background: -moz-linear-gradient(center top , WhiteSmoke, #EBF4FA) repeat scroll 0 0 WhiteSmoke;
-    border-top: 1px solid #BBD9EE;
-    border-bottom: 1px solid #BBD9EE;
+    background-color: #F5F5F5;
+    border-bottom: 1px solid #E3E3E3;
+    border-top: 1px solid #E3E3E3;
     color: Black;
     float: left;
-    left: 0;
     line-height: 1.25em;
-    margin: 0 9px 0 0;
     position: absolute;
     text-align: center;
     width: 100%;
@@ -274,8 +272,17 @@ html body#manage div.main-container div.main-container {
     background-color: lightgoldenrodyellow;
 }
 
+.inlineForm .form-actions {
+    margin-bottom: 0px;
+    margin-top: 12px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
 .repoFolderLocation {
     color: #666666;
     font-size: 12px;
     font-weight: normal;
+}
+#resultArea .pagination {
+    margin: 0 0 13px;
 }

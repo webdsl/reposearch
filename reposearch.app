@@ -47,7 +47,7 @@ application reposearch
     }
   }
 
-  define mainResponsive(ns : String) {
+  define mainResponsive(ns : String, title : String) {
     var project := if (ns == "") "All projects" else ns;
     var query := "";
     includeCSS("bootstrap/css/bootstrap.css")
@@ -64,9 +64,9 @@ application reposearch
     includeJS("make-clickable.js")
 
     includeHead("<meta name='viewport' content='width=device-width, initial-scale=1.0'>")
-    //includeHead(rendertemplate(rssLink()))
-    //includeHead(rendertemplate(bitterfont))
-    //<link href="http://fonts.googleapis.com/css?family=Bitter" rel="stylesheet" type="text/css">
+
+    title { output("Reposearch - " + title) }
+
     navbarResponsive{
 
           navItems{
@@ -112,7 +112,7 @@ application reposearch
 
   define page root(){
     title { "Reposearch" }
-    mainResponsive("Projects"){
+    mainResponsive("Projects", "home"){
           gridRowFluid{
             gridSpan(12){
                 wellSmall{
