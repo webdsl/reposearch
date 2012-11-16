@@ -49,6 +49,7 @@ application reposearch
 
   define mainResponsive(ns : String) {
     var project := if (ns == "") "All projects" else ns;
+    var query := "";
     includeCSS("bootstrap/css/bootstrap.css")
     includeCSS("bootstrap/css/bootstrap-responsive.css")
     includeCSS("bootstrap/css/bootstrap-adapt.css")
@@ -67,23 +68,31 @@ application reposearch
     //includeHead(rendertemplate(bitterfont))
     //<link href="http://fonts.googleapis.com/css?family=Bitter" rel="stylesheet" type="text/css">
     navbarResponsive{
+
           navItems{
-            dropdownInNavbar(project){
-                dropdownMenu{
-                    dropdownMenuItem{ navigate search("","") {"All projects"} }
-                    for(p:Project order by p.displayName ){
-                        dropdownMenuItem{ navigate search(p.name, "") {output(p.displayName)} }
-                    }
-                }
+            if (ns != "Projects") {
+                navItem{ navigate(search(ns, "")){ iRefreshWhite() " New search"  } }
+                navItem{ navigate(search(ns, ""))[target:="_blank"]{ iPlusWhite() " New tab"  } }
             }
-            navItems{
-                dropdownInNavbar("Add your project"){
+            navItem{
+                dropdownInNavbar(project){
                     dropdownMenu{
-                        dropdownMenuItem{<a data-toggle="modal" href="#addProject">"New project request"</a>}
-                        dropdownMenuItem{ navigate(pendingRequests()){ "Pending requests" } }
+                        dropdownMenuItem{ navigate search("","") {"All projects"} }
+                        for(p:Project order by p.displayName ){
+                            dropdownMenuItem{ navigate search(p.name, "") {output(p.displayName)} }
+                        }
                     }
                 }
             }
+            navItem{
+              dropdownInNavbar("Add your project"){
+                dropdownMenu{
+                    dropdownMenuItem{<a data-toggle="modal" href="#addProject">"New project request"</a>}
+                    dropdownMenuItem{ navigate(pendingRequests()){ "Pending requests" } }
+                }
+              }
+            }
+
             navItem{ navigate(manage())         { "Manage"           } }
             navItem{ navigate(searchStats())    {"Search statistics" } }
             navItem{ navigate(dologin())        {"Admin log in/out"  } }
@@ -112,13 +121,13 @@ application reposearch
             }
           }
           gridRowFluid{
-            gridSpan(6,3){
+            gridSpan(10,1){
                 <span class="home-text">"Search within project or " navigate(search("", "")){"all"} " projects:"</span>
                 <ul class="nav nav-list">
                   <li class="nav-header">"Projects"</li>
                   for(p:Project order by p.displayName ){
-                    <li>gridSpan(4){navigate(search(p.name, "")){output(p.displayName)}}
-                    gridSpan(8){reposLink(p) }</li>
+                    <li>gridSpan(2){navigate(search(p.name, "")){output(p.displayName)}}
+                    gridSpan(10){reposLink(p) }</li>
                   }
                 </ul>
             }

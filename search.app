@@ -125,7 +125,7 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
   var viewFileUri := navigate(viewFile(searcher.getQuery(), e.url, e.projectname, langCons));
 
   init{
-    linkText := searcher.highlight("fileName", e.name, "<u>","</u>", 1, 256, "");
+    linkText := searcher.highlight("fileName", e.name, "<span class=\"hlcontent\">","</span>", 1, 256, "");
     if(linkText.length() < 1){
       linkText := e.name;
     }
@@ -149,12 +149,15 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
   // div[class="search-result-link"]{
 
   gridRowFluid{
-      gridSpan(12){
-        navWithAnchor(viewFileUri , ruleOffset){
-          <span class="label badge-info"><b>output(if(linkText.length()>0) linkText else "-")</b></span>
-          <span class="label pull-right"> output(location) </span>
-        }
-      }
+
+    navWithAnchor(viewFileUri , ruleOffset){
+      <h5>
+         output(if(linkText.length()>0) linkText else "-")
+         pullRight{ div[class="repoFolderLocation"]{ output(location) } }
+      </h5>
+
+    }
+
   }
   gridRowFluid{
   <div class="search-result-highlight">
@@ -213,8 +216,8 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
     }
     gridRowFluid{
       // gridSpan(10,1){
+      if (prj != null && prj.langConstructs.length > 0){
         formEntry("Language construct"){
-          if (prj != null && prj.langConstructs.length > 0){
               for(lc : LangConstruct in prj.langConstructs order by lc.name){
                 pullLeft{
                     if(lc_hasSel){
@@ -225,12 +228,13 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
                       }
 
                     } else {
-                         buttonGroup{div[class="btn btn-mini disabled"]{ includeFacetSym()} div[class="btn btn-mini disabled"]{submitlink updateResults( lc ){ output(lc.name) }}}
+                         buttonGroup{buttonMini{ includeFacetSym()} buttonMini{submitlink updateResults( lc ){ output(lc.name) }}}
                     }
                 }
               }
-          }
-        } }
+        }
+      }
+    }
       // }
     // }
     gridRowFluid{
@@ -239,7 +243,7 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
             placeholder repoPathPh{
               showPathFacets(searcher, path_hasSel, namespace, false, langCons)
             }
-            for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace, langCons) <br /> }
+            for (f : Facet in path_selection) { showFacet(searcher, f, path_hasSel, namespace, langCons) }
         } }
       // }
     // }
@@ -257,16 +261,17 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
 
 define ajax showPathFacets(searcher : EntrySearcher, hasSelection : Bool, namespace : String, show : Bool, langCons : String){
   if( show ){
-    buttonSmall{submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, langCons));}{<b>"collapse"</b>}}
+    buttonSmall{submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, langCons));}{"collapse"}}
+    <br />
     div{
       for(f : Facet in interestingPathFacets(searcher)) {
-        pullLeft{
-          showFacet(searcher, f, hasSelection, namespace, langCons) <br />
-        }
+        gridRowFluid{pullLeft{
+          showFacet(searcher, f, hasSelection, namespace, langCons)
+        }}
       }
     }
   } else {
-     buttonSmall{submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, langCons));}{<b>"expand"</b>}}
+     buttonSmall{submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, langCons));}{"expand"}}
   }
 }
 
@@ -338,7 +343,7 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
     }
   }
   if(searcher.getQuery().length()>0){
-    div{
+    gridRowFluid{
       <center>
         if(size > 0) {
           <p class="text-info">output(size) " results found in " output(searchtime from searcher) ", displaying results " output((pagenumber-1)*resultsPerPage + 1) "-" output(lastResult)</p>
@@ -347,15 +352,19 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
         }
       </center>
     }
-    pageIndex(pagenumber, size, resultsPerPage, 12, 3)
-
-    for (e : Entry in resultList){
-      wellSmall{
-        placeholder "result-"+e.url {highlightedResult(e, searcher, 3, langCons)}
-      }
+    gridRowFluid{
+      pageIndex(pagenumber, size, resultsPerPage, 12, 3)
     }
-
-    pageIndex(pagenumber, size, resultsPerPage, 12, 3)
+    gridRowFluid{
+        for (e : Entry in resultList){
+          wellSmall{
+            placeholder "result-"+e.url {highlightedResult(e, searcher, 3, langCons)}
+          }
+        }
+    }
+    gridRowFluid{
+      pageIndex(pagenumber, size, resultsPerPage, 12, 3)
+    }
   }
 
   define pageIndexLink(page: Int, lab : String){
@@ -389,7 +398,7 @@ define page viewFile(query : String, url:URL, projectName:String, langCons : Str
   title { output(e.name + " - Reposearch") }
 
   init{
-    linkText := searcher.highlight("fileName", e.name, "<u>","</u>", 1, 256, "");
+    linkText := searcher.highlight("fileName", e.name, "<span class=\"hlcontent\">","</span>", 1, 256, "");
     if(linkText.length() < 1) { linkText := e.name; }
     location := e.url.substring(0, e.url.length() - e.name.length() );
     highlighted := highlightCodeLines( searcher, e, 1000000, 1, true, viewFileUri, langCons );
@@ -402,11 +411,11 @@ define page viewFile(query : String, url:URL, projectName:String, langCons : Str
 
     wellSmall{
       gridRowFluid{
-          gridSpan(12){
             navigate(url(e.url)){
-              <span class="label badge-info"><b>rawoutput(if(linkText.length()>0) linkText else "-")</b></span>
-              <span class="label pull-right"> output(location) </span>
-            }
+              <h5>
+                 <b>rawoutput(if(linkText.length()>0) linkText else "-")</b>
+                 pullRight{ div[class="repoFolderLocation"]{ output(location) } }
+              </h5>
           }
       }
 
@@ -416,7 +425,6 @@ define page viewFile(query : String, url:URL, projectName:String, langCons : Str
             <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(codeLines)</pre></div>
           </ div>
       }
-      navigate(search(e.projectname, ""))[target:="_blank"]{"new search"}
       prettifyCode(projectName)
     }
   }

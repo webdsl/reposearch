@@ -25,6 +25,11 @@ body {
 .facet-area .btn-group {
     margin: 0 5px 5px 0;
 }
+
+h5{
+    border-bottom: 1px solid #999999;
+}
+
 .top-container {
     background-color: #BBD9EE;
     border-radius: 15px 15px 0 0;
@@ -131,14 +136,12 @@ body {
     width: 34px;
 }
 .nolinenumbera {
-    background: -moz-linear-gradient(center top , #EBF4FA, WhiteSmoke) repeat scroll 0 0 #EBF4FA;
-    border-top: 1px solid #BBD9EE;
-    border-bottom: 1px solid #BBD9EE;
+    background-color: #F5F5F5;
+    border-bottom: 1px solid #E3E3E3;
+    border-top: 1px solid #E3E3E3;
     color: Black;
     float: left;
-    left: 0;
     line-height: 1.25em;
-    margin: 0 9px 0 0;
     position: absolute;
     text-align: center;
     width: 100%;
@@ -184,7 +187,12 @@ body {
     display: block;
 }
 .hlcontent {
-    background-color: #CCFF66;
+    background-color: #BADBFF;
+    border-radius: 3px 3px 3px 3px;
+    padding: 0 3px;
+    vertical-align: baseline;
+    white-space: nowrap;
+    margin: -2px;
 }
 .skipped-files-link a:link, .search-result-link a:visited {
     text-decoration: none;
@@ -266,3 +274,8 @@ html body#manage div.main-container div.main-container {
     background-color: lightgoldenrodyellow;
 }
 
+.repoFolderLocation {
+    color: #666666;
+    font-size: 12px;
+    font-weight: normal;
+}
