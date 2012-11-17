@@ -266,9 +266,12 @@ section dropdowns
           elements
       }
   }
-  template subMenu() {
-      dropdownMenuDivider
-      elements
+  template dropdownSubMenu(menuText : String) {
+      listitem[class="dropdown-submenu", all attributes] {
+          <a href="#" tabindex="-1"> output(menuText) </a>
+          elements
+      }
+
   }
   template dropdownMenuItem() {
       listitem[all attributes]{ elements }

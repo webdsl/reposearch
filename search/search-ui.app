@@ -1,13 +1,9 @@
-module search
+module search/search-ui
 
 define page search(namespace:String, q:String){
   title { output(q + " - Reposearch") }
   showSearch(toSearcher(q, namespace, ""), namespace, "", 1)
 }
-//deprecated
-// define override page doSearch(searcher : EntrySearcher, namespace:String, pageNum: Int){
-//     init{return doSearch(searcher, namespace, "", pageNum);}
-// }
 
 define page doSearch(searcher : EntrySearcher, namespace:String, langCons : String, pageNum: Int){
     title { output("Reposearch - '" + searcher.getQuery() +  "' in " + namespace) }
@@ -84,27 +80,11 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
       clear(facetArea);
     }
   }
-  googleAnalytics()
-}
-
-function incSearchCount(prj : Project){
-  if(prj != null){prj.incSearchCount();}
 }
 
 function updateAreas(searcher : EntrySearcher, page : Int, namespace : String, langCons : String){
   replace(facetArea, viewFacets(searcher, namespace, langCons));
   replace(resultArea, paginatedTemplate(searcher, page, namespace, langCons));
-}
-
-service autocompleteService(namespace:String, term : String){
-  var jsonArray := JSONArray();
-  var results := EntrySearcher.autoCompleteSuggest(term,namespace,["codeIdentifiers","fileName"], 20);
-
-  for(sug : String in results){
-    jsonArray.put(sug);
-  }
-
-  return jsonArray;
 }
 
 define navWithAnchor(n:String,a:String){
@@ -277,20 +257,6 @@ define ajax showPathFacets(searcher : EntrySearcher, hasSelection : Bool, namesp
   }
 }
 
-function interestingPathFacets(searcher : EntrySearcher) : List<Facet> {
-  var previous : Facet;
-  var allFacets:= repoPath facets from searcher;
-  var toReturn := List<Facet>();
-  for(f : Facet in allFacets order by f.getValue()) {
-    if(previous != null && (f.getValue().startsWith(previous.getValue()) && f.getCount() == previous.getCount() )) {
-      toReturn.removeAt(toReturn.length - 1);
-    }
-    toReturn.add(f);
-    previous := f;
-  }
-  return toReturn;
-}
-
 define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String, langCons : String) {
 
           if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
@@ -381,160 +347,5 @@ define showOption(searcher : EntrySearcher, namespace : String, new : Int, langC
   }
 }
 
-//backwards compatibility
-define page showFile(searcher : EntrySearcher, e : Entry){
-    init{return viewFile(searcher.getQuery(),e.url, e.projectname, "");}
-}
-
-define page viewFile(query : String, url:URL, projectName:String, langCons : String){
-  var e := (from Entry as e where e.url=~url and e.projectname = ~projectName)[0]
-  var viewFileUri := navigate(viewFile(query, url, projectName, langCons));
-  var linkText    := "";
-  var location    : String;
-  var lineNumbers : String;
-  var codeLines   : String;
-  var highlighted : List<List<String>>;
-  var searcher    := toSearcher(query, "", langCons);
 
 
-
-  init{
-    linkText := searcher.highlight("fileName", e.name, "<span class=\"hlcontent\">","</span>", 1, 256, "");
-    if(linkText.length() < 1) { linkText := e.name; }
-    location := e.url.substring(0, e.url.length() - e.name.length() );
-    highlighted := highlightCodeLines( searcher, e, 1000000, 1, true, viewFileUri, langCons );
-    lineNumbers := highlighted[0].concat("<br />");
-    codeLines := highlighted[1].concat("<br />");
-    //add line number anchors
-    lineNumbers := />(\d+)</.replaceAll( " a name=\"$1\">$1<", lineNumbers );
-  }
-  mainResponsive(projectName, e.name){
-
-    wellSmall{
-      gridRowFluid{
-            navigate(url(e.url)){
-              <h5>
-                 <b>rawoutput(if(linkText.length()>0) linkText else "-")</b>
-                 pullRight{ div[class="repoFolderLocation"]{ output(location) } }
-              </h5>
-          }
-      }
-
-      gridRowFluid{
-          <div class="search-result-highlight">
-            <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(lineNumbers)</div>
-            <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(codeLines)</pre></div>
-          </ div>
-      }
-      prettifyCode(projectName)
-    }
-  }
-  googleAnalytics()
-}
-
-native class utils.URLFilter as URLFilter {
-  static filter(String):String
-}
-
-define prettifyCode(){ prettifyCodeHelper("") }
-define prettifyCode(projectName : String){ prettifyCodeHelper("\""+URLFilter.filter(projectName)+"\"") }
-define prettifyCodeHelper(projectName : String){
-  //highlight code using google-code-prettify
-  includeCSS("prettify.css")
-  includeJS("prettify.js")
-  includeJS("make-clickable.js")
-  <script>
-    prettifyAndMakeClickable(~projectName);
-  </script>
-}
-
-function toSearcher(q:String, ns:String, langCons:String) : EntrySearcher{
-
-  var searcher := search Entry in namespace ns with facets (fileExt, 120), (repoPath, 200) [no lucene, strict matching];
-  // if (SearchPrefs.regex) {
-  //     return searcher.regexQuery( q );
-  // }
-  var slop := if(SearchPrefs.exactMatch) 0 else 100000;
-
-  if(SearchPrefs.caseSensitive) { searcher:= ~searcher matching contentCase, fileName: q~slop; }
-  else   { searcher:= ~searcher matching q~slop; }
-
-  if(langCons.length()>0){ addLangConstructConstraint(searcher, langCons); }
-  return searcher;
-}
-
-function highlightCodeLines(searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int, fullContentFallback: Bool, viewFileUri : String, langConsStr : String) : List<List<String>>{
-  var raw : String;
-  if(langConsStr.length() > 0){
-      //a langCons is used
-      var langCons : LangConstruct := findLangConstruct(langConsStr);
-      //decorate the langCons matches such that these will match for field constructs.matches
-      var content := MatchExtractor.decorateMatches(langCons, entry.content, searcher.getQuery());
-      //highlight
-      raw := searcher.highlightLargeText("constructs.matches", content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
-      //undecorate highlighted matches again
-      raw := /\s?\$OHL\$[^#]+#MATCH#([^\$]+)\$CHL\$\s?/.replaceAll("\\$OHL\\$$1\\$CHL\\$", raw);
-  } else {
-      if(SearchPrefs.caseSensitive){
-        raw := searcher.highlightLargeText("contentCase", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
-      } else{
-        raw := searcher.highlightLargeText("content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n");
-      }
-  }
-  if(fullContentFallback && raw.length() < 1) {
-    raw := entry.content;
-  }
-  var highlighted := rendertemplate(output(raw)).replace("$OHL$","<span class=\"hlcontent\">").replace("$CHL$","</span>");//.replace("\r", "");
-  var splitted := highlighted.split("\n");
-  var listCode := List<String>();
-  var listLines := List<String>();
-  var lists := List<List<String>>();
-  var lineNum : String;
-  var fixPrevious := false;
-  var alt := false;
-  var style := "b";
-  for(s:String in splitted){
-      //We alternate between style a and b for different fragments
-    if(/^%frgmtsep%/.find(s)){
-      if(alt) {
-        style := "b";
-        alt := false;
-      } else {
-        alt := true;
-        style := "a";
-      }
-      listLines.add("<div class=\"nolinenumber" + style +"\">...</div>" );
-      listCode.add("");
-    } else {
-      //If line number is stripped off by highlighting, put a hyphen as line number
-      if(/^\D/.find(s)){
-        listLines.add("<div class=\"linenumber" + style + "\">-</div>");
-        listCode.add(s);
-        fixPrevious := true;
-      } else {
-        // line numbers are added at the beginning of code lines followed by a whitespace
-        // original: 'foo:bar'
-        // modified: '34 foo:bar '
-        lineNum := /^(\d+).*/.replaceFirst("$1", s);
-        listLines.add("<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap(viewFileUri, lineNum)  ) + "</div>" );
-        if (fixPrevious) {
-            listLines.set( listLines.length-2 , "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap(viewFileUri, ""+(lineNum.parseInt()-1))  ) + "</div>" );
-            fixPrevious := false;
-        }
-        if (s.length() != lineNum.length()){
-          listCode.add(s.substring(lineNum.length() + 1));
-        } else {
-          //if code line itself is an empty line, substring will encounter an empty string -> exception
-          listCode.add("");
-        }
-      }
-    }
-  }
-  lists.add(listLines);
-  lists.add(listCode);
-  return lists;
-}
-
-define issue599wrap(viewFileUri: String, lineNum: String) {
-    navWithAnchor(viewFileUri, lineNum){ output(lineNum) }
-}
