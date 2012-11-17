@@ -39,27 +39,26 @@ section pages/templates
   }
 
   page searchStats(){
-    title { output("Reposearch Search Statistics") }
-
     var startDate := if(manager.newWeekMoment!=null) manager.newWeekMoment else now();
     var projectsInOrder := from Project order by searchCount desc;
 
-    showSearchStats()
-    submit action{SearchStatistics.clear();}{"Reset global statistics"}
+    mainResponsive("Projects", "Search statistics"){
+        showSearchStats()
+        submit action{SearchStatistics.clear();}{"Reset global statistics"}
 
-    header{"Search counts per project"}
-    table{
-      row{ column{ <i>"Project name"</i> } column{ <i>"total"</i> } column{ <i>"this week"</i> } column{ <center><i>"since"</i></center> } column{ <i>"reset"</i> }}
-      for(pr : Project in projectsInOrder order by pr.weeklySearchCount desc){
-        searchCountInTable(pr)
-      }
+        header{"Search counts per project"}
+        table{
+          row{ column{ <i>"Project name"</i> } column{ <i>"total"</i> } column{ <i>"this week"</i> } column{ <center><i>"since"</i></center> } column{ <i>"reset"</i> }}
+          for(pr : Project in projectsInOrder order by pr.weeklySearchCount desc){
+            searchCountInTable(pr)
+          }
+        }
+        form{
+          "Change the day at which the week counters reset (date of last reset): " input(startDate)
+          submit action{manager.newWeekMoment := startDate;}{"set"}
+        } <br />
+        submit action{for(pr : Project){ pr.resetSearchCount(); }}{"Reset search statistics for all projects"}
     }
-    form{
-      "Change the day at which the week counters reset (date of last reset): " input(startDate)
-      submit action{manager.newWeekMoment := startDate;}{"set"}
-    } <br />
-    submit action{for(pr : Project){ pr.resetSearchCount(); }}{"Reset search statistics for all projects"}
-
   }
 
   define manageRequestReceipts(){
