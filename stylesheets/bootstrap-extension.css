@@ -1,15 +1,4 @@
-body {
-	font-size: 14px;
-	line-height: 1.5em;
-	font-family: Georgia, serif;
-}
-.footer{
-	font-size: 14px;
-}
-.navbar{
-	font-size: 14px;
-}
-h1, h2, h3, h4, h5, h6, .navbar, .byline, .wikibyline, .pagination, .attachments { 
+h1, h2, h3, h4, h5, h6, .navbar, .byline, .wikibyline, .pagination, .attachments, .footer { 
 	font-family: Arial, sans-serif;
 }
 li{ 

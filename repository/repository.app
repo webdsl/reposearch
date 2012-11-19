@@ -48,6 +48,8 @@ section pages/templates
       "Rev: " output(r.rev)
       } gridRowFluid {
       "Last refresh: " output(r.lastRefresh)
+      } gridRowFluid {
+        navigate(skippedFiles(r))[target:="_blank"]{"Files marked as binary (not indexed)"}
       }
     }
   }
@@ -59,8 +61,7 @@ section pages/templates
       }
       for(r : Repo in p.repos){
         gridRowFluid {
-          gridSpan(9) { output(r) }
-          gridSpan(3) { navigate(skippedFiles(r))[target:="_blank"]{"skipped files"} }
+          output(r)
         }
       }
     }

@@ -19,7 +19,7 @@ section pages/templates
 
   define addProject(){
     <div id="addProject" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      placeholder boe addProjectModal()
+      placeholder addProjectPH addProjectModal()
     </div>
   }
 

@@ -140,6 +140,13 @@ section tables
           elements
       }
   }
+
+  template tableNotBordered(){
+      table[class="table table-striped table-condensed",  all attributes]{
+          elements
+      }
+  }
+
   template theader() {
       <thead all attributes>elements</thead>
   }

@@ -24,8 +24,8 @@ application reposearch
     var query := "";
     var projects := [p | p : Project in (from Project) order by p.displayName];
     var half  : Int := projects.length/2;
-    includeCSS("bootstrap/css/bootstrap.css")
-    includeCSS("bootstrap/css/bootstrap-responsive.css")
+    includeCSS("bootstrap/css/bootstrap.min.css")
+    // includeCSS("bootstrap/css/bootstrap-responsive.css")
     includeCSS("bootstrap/css/bootstrap-adapt.css")
     includeCSS("bootstrap-extension.css")
     includeCSS("prettify.css")
@@ -88,17 +88,29 @@ application reposearch
 
             navItem{ navigate(manage())         { "Manage"           } }
             navItem{ navigate(searchStats())    {"Search statistics" } }
-            navItem{ navigate(dologin())        {"Admin log in/out"  } }
 
           }
     }
-    placeholder notificationsPH{}
-
     addProject()
 
-    gridContainerFluid{
+    gridContainerFluid[id="content"]{
+      placeholder notificationsPH{}
       elements
     }
+
+    footer{
+        gridContainerFluid{
+            gridRowFluid{
+                    navigate(url("http://yellowgrass.org/project/Reposearch")) { "Issue tracker" } " - "
+                    navigate(dologin()) {"Admin log in/out"  }
+              pullRight{
+                  "Powered by " navigate(url("http://www.webdsl.org")){"WebDSL"}
+              }
+            }
+        }
+    }
+
+
     googleAnalytics()
   }
 
@@ -116,13 +128,19 @@ application reposearch
           }
           gridRowFluid{
             gridSpan(10,1){
-                <span class="home-text">"Search within project or " navigate(search("", "")){"all"} " projects:"</span>
+                header4{ "Search within project or " navigate(search("", "")){"all"} " projects:" }
+                tableNotBordered{
+                  theader{ row{
+                      th[class="span4"]{ "Project" } th[class="span8"]{ "Repositories" }
+                  } }
                   for(p:Project order by p.displayName ){
-                    gridRowFluid{
-                      gridSpan(2){navigate(search(p.name, "")){output(p.displayName)}}
-                      gridSpan(10){reposLink(p) }
+                    row{
+                      column{ navigate(search(p.name, "")){output(p.displayName)}}
+                      column{ reposLink(p) }
                     }
                   }
+                }
+
             }
           }
     }

@@ -29,9 +29,9 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
     </script>
       gridRowFluid{ gridSpan(12){
         wellSmall{
-          gridRowFluid{ gridSpan(10,1){
               // pageHeader{ "Search " output(namespace) }
-              inlForm{
+          inlForm{
+              gridRowFluid{ gridSpan(10,1){
                   gridRowFluid{
                   gridSpan(8){
                     formEntry("Search " + namespace)  { <span class="ui-widget">input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()] </span>}
@@ -52,13 +52,13 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
                                      " " input(SearchPrefs.exactMatch)[onclick=updateResults(), title="If enabled, the exact sequence of characters is matched in that order (recommended)"]{"exact match"}
                                      " " submit action{return search(namespace,query);} [class="btn btn-primary"] { "search" }
                 }
-
-                formActions{
+            }
+            gridRowFluid{ gridSpan(12) {
                     placeholder facetArea{
                       if(query.length() > 0){ viewFacets(searcher, namespace, langCons) }
                     }
-                }
-              }
+            } }
+
           } }
         }
         }
@@ -127,24 +127,23 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
   }
 
   // div[class="search-result-link"]{
+      gridRowFluid{
 
-  gridRowFluid{
+        navWithAnchor(viewFileUri , ruleOffset){
+          <h5>
+             output(if(linkText.length()>0) linkText else "-")
+             pullRight{ div[class="repoFolderLocation"]{ output(location) } }
+          </h5>
 
-    navWithAnchor(viewFileUri , ruleOffset){
-      <h5>
-         output(if(linkText.length()>0) linkText else "-")
-         pullRight{ div[class="repoFolderLocation"]{ output(location) } }
-      </h5>
+        }
+      }
 
-    }
-
-  }
-  gridRowFluid{
-  <div class="search-result-highlight">
-    <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(highlightedContent[0].concat("<br />"))</div>
-    <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(highlightedContent[1].concat("<br />"))</pre></div>
-  </ div>
-  }
+      gridRowFluid{
+      <div class="search-result-highlight">
+        <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput(highlightedContent[0].concat("<br />"))</div>
+        <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput(highlightedContent[1].concat("<br />"))</pre></div>
+      </ div>
+      }
 
   submitlink toggleAllFragments()[class="btn btn-mini"] { output(toggleText) }
 
@@ -184,16 +183,16 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
       } }
     }
   }
-
+  formActions{
     div[class="facet-area"]{
     gridRowFluid{
-        gridSpan(8){
+        gridSpan(7){
           formEntry("File extension"){
               for(f : Facet in fileExt facets from searcher ) {  pullLeft {  showFacet(searcher, f, ext_hasSel, namespace, langCons)  } }
           }
         }
 
-        gridSpan(4){
+        gridSpan(5){
           if (prj != null && prj.langConstructs.length > 0){
             formEntry("Language construct"){
                   for(lc : LangConstruct in prj.langConstructs order by lc.name){
@@ -230,6 +229,7 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
       // }
     // }
     }
+  }
 
   action updateResults(p: LangConstruct){
     if( lc_hasSel ){
