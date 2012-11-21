@@ -27,7 +27,7 @@ section pages/templates
   }
 
   define ajax showReposLink(p : Project){
-    buttonSmall{ submitlink action{replace("repos-"+p.displayName, repos(p));}{"info"} }
+    submitlink action{replace("repos-"+p.displayName, repos(p));}{  buttonMini{"info"} }
   }
 
   define output(r : Repo){
@@ -55,14 +55,13 @@ section pages/templates
   }
 
   define ajax repos(p : Project){
-    wellSmall{
       gridRowFluid(){
-        buttonSmall{ submitlink action{replace("repos-"+p.displayName, showReposLink(p));}{"hide"} }
+        submitlink action{replace("repos-"+p.displayName, showReposLink(p));}{ buttonMini{"hide"} }
       }
       for(r : Repo in p.repos){
         gridRowFluid {
           output(r)
         }
       }
-    }
+
   }

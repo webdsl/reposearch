@@ -37,11 +37,15 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
                     formEntry("Search " + namespace)  { <span class="ui-widget">input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()] </span>}
                   } gridSpan(4){
                       formEntry("Results per page")  {
-                          buttonGroup{
+                        placeholder paginationOptions{
+                          buttonGroup[data-toggle="buttons-radio"]{
                               for(i : Int in options) {
-                                showOption(searcher, namespace, i, langCons, (resultsPerPage != i) )
+                                submitlink action{ SearchPrefs.resultsPerPage := i; updateAreas(searcher, 1, namespace, langCons); }[class="btn btn-small", id="limit"+i] {  output(i) }
                               }
                           }
+                          <script>
+                          $("#limit~resultsPerPage").button('toggle');
+                          </script>
                       }
                   }
 
@@ -62,10 +66,11 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
           } }
         }
         }
-      }
+      }}
       placeholder resultArea{
         if(query.length() > 0){ paginatedTemplate(searcher, pageNum, namespace, langCons) }
       }
+
   }
 
   action updateResults(){
@@ -145,7 +150,7 @@ define highlightedResult(e : Entry, searcher : EntrySearcher, nOfFragments : Int
       </ div>
       }
 
-  submitlink toggleAllFragments()[class="btn btn-mini"] { output(toggleText) }
+  submitlink toggleAllFragments(){ buttonMini{ output(toggleText) } }
 
   action toggleAllFragments(){
       if(nOfFragments != 10) {replace("result-"+e.url, highlightedResultToggled(e, searcher, 10, langCons)); }
@@ -205,7 +210,7 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
                           }
 
                         } else {
-                             buttonGroup{buttonMini{ includeFacetSym()} buttonMini{submitlink updateResults( lc ){ output(lc.name) }}}
+                             submitlink updateResults( lc ){ buttonGroup{buttonMini{ includeFacetSym()} buttonMini{output(lc.name) }}}
                         }
                     }
                   }
@@ -243,7 +248,7 @@ define ajax viewFacets(searcher : EntrySearcher, namespace : String, langCons : 
 
 define ajax showPathFacets(searcher : EntrySearcher, hasSelection : Bool, namespace : String, show : Bool, langCons : String){
   if( show ){
-    buttonSmall{submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, langCons));}{"collapse"}}
+    submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, langCons));}[class="btn btn-small"]{"collapse"}
     <br />
     div{
       for(f : Facet in interestingPathFacets(searcher)) {
@@ -253,7 +258,7 @@ define ajax showPathFacets(searcher : EntrySearcher, hasSelection : Bool, namesp
       }
     }
   } else {
-     buttonSmall{submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, langCons));}{"expand"}}
+     submitlink action{replace(repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, langCons));}[class="btn btn-small"]{"expand"}
   }
 }
 
@@ -275,8 +280,8 @@ define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, names
                 submitlink updateResults(searcher.removeFacetSelection(f)){ buttonGroup{ buttonMini{excludeFacetSym()} buttonMini{output(f.getValue()) " (" output(f.getCount()) ") "} } }
               } else {
                 buttonGroup{
-                buttonMini{submitlink updateResults(~searcher matching f.mustNot() ){ excludeFacetSym()} " "}
-                buttonMini{submitlink updateResults(~searcher matching f.should()  ){ output(f.getValue()) " (" output(f.getCount()) ")"}}
+                  submitlink updateResults(~searcher matching f.mustNot() )[class="btn btn-mini"]{ excludeFacetSym()} " "
+                  submitlink updateResults(~searcher matching f.should()  )[class="btn btn-mini"]{ output(f.getValue()) " (" output(f.getCount()) ")"}
                 }
                 " "
               }
@@ -293,7 +298,7 @@ define showFacet(searcher : EntrySearcher, f : Facet, hasSelection : Bool, names
 }
 
 define excludeFacetSym(){
-  "×"
+  rawoutput("&times;")
 }
 define includeFacetSym(){
   "+"
