@@ -56,14 +56,13 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
                                      " " input(SearchPrefs.exactMatch)[onclick=updateResults(), title="If enabled, the exact sequence of characters is matched in that order (recommended)"]{"exact match"}
                                      " " submit action{return search(namespace,query);} [class="btn btn-primary"] { "search" }
                 }
-            }
+            } } }
             gridRowFluid{ gridSpan(12) {
                     placeholder facetArea{
                       if(query.length() > 0){ viewFacets(searcher, namespace, langCons) }
                     }
             } }
 
-          } }
         }
         }
       }}
