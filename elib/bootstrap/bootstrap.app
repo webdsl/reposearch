@@ -265,6 +265,59 @@ section buttons
       div[class="btn btn-small btn-primary", all attributes]{ elements }
   }
 
+  template button( disabled : Bool ) {
+      if ( disabled ) {
+        div[class="btn disabled", all attributes]{ elements }
+      } else {
+        div[class="btn", all attributes]{ elements }
+      }
+  }
+  template buttonMini( disabled : Bool ){
+      if ( disabled ) {
+        div[class="btn btn-mini disabled", all attributes]{ elements }
+      } else {
+        div[class="btn btn-mini", all attributes]{ elements }
+      }
+  }
+  template buttonSmall( disabled : Bool ){
+      if ( disabled ) {
+        div[class="btn btn-small disabled", all attributes]{ elements }
+      } else {
+        div[class="btn btn-small", all attributes]{ elements }
+      }
+  }
+  template buttonPrimary( disabled : Bool ) {
+      if ( disabled ) {
+        div[class="btn btn-primary disabled", all attributes]{ elements }
+      } else {
+        div[class="btn btn-primary ", all attributes]{ elements }
+      }
+  }
+  template buttonPrimaryMini( disabled : Bool ){
+      if ( disabled ) {
+        div[class="btn btn-mini btn-primary disabled", all attributes]{ elements }
+      } else {
+        div[class="btn btn-mini btn-primary", all attributes]{ elements }
+      }
+  }
+  template buttonPrimarySmall( disabled : Bool ){
+      if ( disabled ) {
+        div[class="btn btn-small btn-primary disabled", all attributes]{ elements }
+      } else {
+        div[class="btn btn-small btn-primary", all attributes]{ elements }
+      }
+  }
+
+  template buttonSmallRadio ( selected : Bool ){
+      if ( selected ) {
+          <div class="btn btn-small" data-toggle="button"> elements </div>
+      } else {
+          <div class="btn btn-small"> elements </div>
+      }
+
+  }
+
+
 
 section dropdowns
 

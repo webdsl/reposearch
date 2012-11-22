@@ -16,8 +16,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
   var searcher := entrySearcher;
   var query := searcher.getQuery();
   var caseSensitive := SearchPrefs.caseSensitive;
-  var resultsPerPage := SearchPrefs.resultsPerPage;
-  var options := [5, 10, 25, 50, 100, 500];
+
   init{
     if ( prj == null  && namespace != "" ){ return root(); }
     if ( query.length() > 0 ){ incSearchCount(prj); }
@@ -33,22 +32,16 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
           inlForm{
               gridRowFluid{ gridSpan(10,1){
                   gridRowFluid{
-                  gridSpan(8){
-                    formEntry("Search " + namespace)  { <span class="ui-widget">input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()] </span>}
-                  } gridSpan(4){
-                      formEntry("Results per page")  {
-                        placeholder paginationOptions{
-                          buttonGroup[data-toggle="buttons-radio"]{
-                              for(i : Int in options) {
-                                submitlink action{ SearchPrefs.resultsPerPage := i; updateAreas(searcher, 1, namespace, langCons); }[class="btn btn-small", id="limit"+i] {  output(i) }
-                              }
+                      gridSpan(8){
+                        formEntry("Search " + namespace)  { <span class="ui-widget">input(query)[autocomplete="off", id="searchfield", onkeyup=updateResults()] </span>}
+                      } gridSpan(4){
+                          formEntry("Results per page")  {
+                            placeholder paginationOptions{
+                                paginationButtons(searcher, namespace, langCons)
                           }
-                          <script>
-                          $("#limit~resultsPerPage").button('toggle');
-                          </script>
                       }
-                  }
 
+                      }
                 }
 
                 gridRowFluid{
@@ -56,7 +49,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
                                      " " input(SearchPrefs.exactMatch)[onclick=updateResults(), title="If enabled, the exact sequence of characters is matched in that order (recommended)"]{"exact match"}
                                      " " submit action{return search(namespace,query);} [class="btn btn-primary"] { "search" }
                 }
-            } } }
+            } }
             gridRowFluid{ gridSpan(12) {
                     placeholder facetArea{
                       if(query.length() > 0){ viewFacets(searcher, namespace, langCons) }
@@ -76,6 +69,7 @@ define showSearch (entrySearcher : EntrySearcher, namespace : String, langCons :
     if(query.length() > 2){
       searcher := toSearcher(query,namespace, langCons); //update with entered query
       updateAreas(searcher, 1, namespace, langCons);
+      replace(paginationOptions, paginationButtons(searcher, namespace, langCons));
       //HTML5 feature, replace url without causing page reload
       runscript("window.history.pushState('history','reposearch','" + navigate(doSearch(searcher, namespace, langCons, 1) ) + "');");
       incSearchCount(prj);
@@ -343,12 +337,16 @@ define ajax paginatedResults(searcher : EntrySearcher, pagenumber : Int, namespa
   }
 }
 
-define showOption(searcher : EntrySearcher, namespace : String, new : Int, langCons : String, isCurrent : Bool) {
-  if(isCurrent){
-    submitlink action{ SearchPrefs.resultsPerPage := new; return doSearch(searcher, namespace, langCons, 1); }[class="btn btn-small"]{ output(new) }
-  } else {
-    submitlink action{ SearchPrefs.resultsPerPage := new; return doSearch(searcher, namespace, langCons, 1); }[class="btn btn-small disabled"]{ output(new) }
-  }
+define ajax paginationButtons(searcher : EntrySearcher, namespace : String, langCons : String) {
+    var limit := SearchPrefs.resultsPerPage;
+    buttonGroup[data-toggle="buttons-radio"]{
+        for(i : Int in [5, 10, 25, 50, 100, 500]) {
+          submitlink action{ SearchPrefs.resultsPerPage := i; updateAreas(searcher, 1, namespace, langCons); }[class="btn btn-small", id="limit"+i] {  output(i) }
+        }
+    }
+    <script>
+      $("#limit~limit").button('toggle');
+    </script>
 }
 
 
