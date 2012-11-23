@@ -87,9 +87,9 @@ section functions
         listLines.add( "<div class=\"nolinenumber" + style +"\">...</div>" );
         listCode.add( "" );
       } else {
-        //If line number is stripped off by highlighting, put a 1 as line number
+        //If line number is stripped off by highlighting, just assume line num 1 for now
         if( /^\D/.find( s ) ) {
-          listLines.add( "<div class=\"linenumber" + style + "\">1</div>" );
+          listLines.add( "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap( viewFileUri, "1" )  ) + "</div>" );
           listCode.add( s );
           fixPrevious := true;
         } else {
@@ -99,7 +99,7 @@ section functions
           lineNum := /^ ( \d+ ).*/.replaceFirst( "$1", s );
           listLines.add( "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap( viewFileUri, lineNum )  ) + "</div>" );
           if( fixPrevious ) {
-            listLines.set( listLines.length-2 , "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap( viewFileUri, ""+ ( lineNum.parseInt()-1 ) )  ) + "</div>" );
+            listLines.set(listLines.length-2, /#1/.replaceFirst( "#" + ( lineNum.parseInt()-1 ), listLines[(listLines.length-2)] ) );
             fixPrevious := false;
           }
           if( s.length() != lineNum.length() ) {
