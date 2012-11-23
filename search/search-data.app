@@ -87,9 +87,9 @@ section functions
         listLines.add( "<div class=\"nolinenumber" + style +"\">...</div>" );
         listCode.add( "" );
       } else {
-        //If line number is stripped off by highlighting, put a hyphen as line number
+        //If line number is stripped off by highlighting, put a 1 as line number
         if( /^\D/.find( s ) ) {
-          listLines.add( "<div class=\"linenumber" + style + "\">-</div>" );
+          listLines.add( "<div class=\"linenumber" + style + "\">1</div>" );
           listCode.add( s );
           fixPrevious := true;
         } else {
