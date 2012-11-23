@@ -2,66 +2,68 @@ module repository/repository
 
 section entities
 
-  entity Repo{
-    project     -> Project  (inverse=Project.repos)
+  entity Repo {
+    project     -> Project  ( inverse=Project.repos )
     refresh     :: Bool
     refreshSVN  :: Bool
-    inRefresh   :: Bool     (default=false)
+    inRefresh   :: Bool     ( default=false )
     error       :: Bool
     rev         :: Long
-    lastRefresh :: DateTime (default=now().addYears(-20))
+    lastRefresh :: DateTime( default=now().addYears( -20 ) )
   }
-  entity SvnRepo : Repo{
+  
+  entity SvnRepo : Repo {
     url :: URL
   }
-  entity GithubRepo : Repo{
-    user    ::String (default="")
-    repo    ::String (default="")
-    svnPath ::String (default="")
+  
+  entity GithubRepo : Repo {
+    user    ::String( default="" )
+    repo    ::String( default="" )
+    svnPath ::String( default="" )
   }
 
 section pages/templates
 
-  define reposLink(p: Project){
-    placeholder "repos-"+p.displayName {showReposLink(p) }
+  define reposLink( p: Project ) {
+    placeholder "repos-"+p.displayName {showReposLink( p ) }
   }
 
-  define ajax showReposLink(p : Project){
-    submitlink action{replace("repos-"+p.displayName, repos(p));}{  buttonMini{"info"} }
+  define ajax showReposLink( p : Project ) {
+    submitlink action {replace( "repos-"+p.displayName, repos( p ) );} {  buttonMini{"info"} }
   }
 
-  define output(r : Repo){
-    wellSmall{
-      gridRowFluid(){
-          if(r isa SvnRepo){
-              "SVN: "
-              output((r as SvnRepo).url)
-          } else { //Github repo
-              "Github: "
-              output((r as GithubRepo).user)
-              " "
-              output((r as GithubRepo).repo)
-              " "
-              output((r as GithubRepo).svnPath)
-          }
+  define output( r : Repo ) {
+    wellSmall {
+      gridRowFluid() {
+        if( r isa SvnRepo ) {
+          "SVN: "
+          output( ( r as SvnRepo ).url )
+        } else { //Github repo
+          "Github: "
+          output( ( r as GithubRepo ).user )
+          " "
+          output( ( r as GithubRepo ).repo )
+          " "
+          output( ( r as GithubRepo ).svnPath )
+        }
+      }
+      gridRowFluid {
+        "Rev: " output( r.rev )
       } gridRowFluid {
-      "Rev: " output(r.rev)
+        "Last refresh: " output( r.lastRefresh )
       } gridRowFluid {
-      "Last refresh: " output(r.lastRefresh)
-      } gridRowFluid {
-        navigate(skippedFiles(r))[target:="_blank"]{"Files marked as binary (not indexed)"}
+        navigate( skippedFiles( r ) ) [target:="_blank"]{"Files marked as binary(not indexed)"}
       }
     }
   }
 
-  define ajax repos(p : Project){
-      gridRowFluid(){
-        submitlink action{replace("repos-"+p.displayName, showReposLink(p));}{ buttonMini{"hide"} }
+  define ajax repos( p : Project ) {
+    gridRowFluid() {
+      submitlink action {replace( "repos-"+p.displayName, showReposLink( p ) );} { buttonMini{"hide"} }
+    }
+    for( r : Repo in p.repos ) {
+      gridRowFluid {
+        output( r )
       }
-      for(r : Repo in p.repos){
-        gridRowFluid {
-          output(r)
-        }
-      }
-
+    }
   }
