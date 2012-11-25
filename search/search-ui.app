@@ -13,6 +13,7 @@ section pages/templates
   }
 
   define showSearch( entrySearcher : EntrySearcher, namespace : String, langCons : String, pageNum: Int ) {
+    
     var prj := findProject( namespace );
     var source := "/autocompleteService"+"/"+URLFilter.filter( namespace );
     var searcher := entrySearcher;
@@ -22,13 +23,17 @@ section pages/templates
       if( prj == null  && namespace != "" ) { return root(); }
       if( query.length() > 0 ) { incSearchCount( prj ); }
     }
+    
     mainResponsive( namespace, namespace ) {
       <script>
       setupcompletion( "~source" );
+      
+      window.onpopstate = function() {
+        $('body').load(location.href)
+      };
       </script>
       gridRowFluid { gridSpan( 12 ) {
         wellSmall {
-          // pageHeader{ "Search " output(namespace) }
           inlForm{
             gridRowFluid{
               gridSpan( 10,1 ) {
@@ -69,10 +74,12 @@ section pages/templates
     action updateResults() {
       if( query.length() > 2 ) {
         searcher := toSearcher( query,namespace, langCons ); //update with entered query
+        if( count from searcher  > 0 ){
+          //HTML5 feature, replace url without causing page reload
+          runscript( "window.history.pushState('history','reposearch','" + navigate( doSearch( searcher, namespace, langCons, 1 ) ) + "');" );
+        }
         updateAreas( searcher, 1, namespace, langCons );
         replace( paginationOptions, paginationButtons( searcher, namespace, langCons ) );
-        //HTML5 feature, replace url without causing page reload
-        runscript( "window.history.pushState('history','reposearch','" + navigate( doSearch( searcher, namespace, langCons, 1 ) ) + "');" );
         incSearchCount( prj );
       } else {
         clear( resultArea );
@@ -120,7 +127,6 @@ section pages/templates
         ruleOffset := "" + ( ruleOffset.parseInt() - 3 );
       }
     }
-    // div[class="search-result-link"]{
     gridRowFluid {
 
       navWithAnchor( viewFileUri , ruleOffset ) {
@@ -200,13 +206,8 @@ section pages/templates
             }
           }
         }
-        // gridSpan(10,1){
 
-
-        // }
-        // }
         gridRowFluid{
-          // gridSpan(10,1){
           formEntry( "File location" ) {
             placeholder repoPathPh {
               showPathFacets( searcher, path_hasSel, namespace, false, langCons )
@@ -214,8 +215,6 @@ section pages/templates
             for( f : Facet in path_selection ) { showFacet( searcher, f, path_hasSel, namespace, langCons ) }
           }
         }
-        // }
-        // }
       }
     }
     action updateResults( p: LangConstruct ) {
@@ -254,7 +253,6 @@ section pages/templates
         submitlink updateResults( ~searcher matching f.should() ) { buttonGroup {div[class="btn btn-mini disabled"]{includeFacetSym() }    div[class="btn btn-mini disabled"]{ output( f.getValue() ) " (" output( f.getCount() ) ")"}}}
       }
     } else {
-      // <b>
       if( f.isSelected() ) {
         submitlink updateResults( searcher.removeFacetSelection( f ) ) { buttonGroup { buttonMini{excludeFacetSym() } buttonMini{output( f.getValue() ) " (" output( f.getCount() ) ") "} } }
       } else {
@@ -264,11 +262,7 @@ section pages/templates
         }
         " "
       }
-      // </b>
     }
-    // }
-    // }
-    // }
     action updateResults( searcher : EntrySearcher ) {
       return doSearch( searcher, namespace, langCons, 1 );
     }

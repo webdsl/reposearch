@@ -88,6 +88,7 @@ section functions
         listCode.add( "" );
 		    if(fixPrevious){
 		      listLines.set( listLines.length-2 , "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap( viewFileUri, "?" )  ) + "</div>" );
+		      fixPrevious := false;
 		    }		    
       } else {
         //If line number is stripped off by highlighting, postpone line number determination to next iteration
