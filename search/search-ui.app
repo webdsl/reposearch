@@ -113,15 +113,12 @@ section pages/templates
         ruleOffset := "1";
       } else {
         ruleOffset := /.+#(\d+).>.*/.replaceFirst("$1",highlightedContent[0][0]);
-        if( ! ( /^\d+$/.match( ruleOffset ) ) ) {
-          if( highlightedContent[0].length > 1 ) {
-            ruleOffset := /.+#(\d+).>.*/.replaceFirst("$1",highlightedContent[0][1]);
-          } else {
-            ruleOffset := "3";
-          }
-        }
       }
-      ruleOffset := "" + ( ruleOffset.parseInt() - 3 );
+      if( ! ( /^\d+$/.match( ruleOffset ) ) ) {
+        ruleOffset := "?";
+      } else {
+        ruleOffset := "" + ( ruleOffset.parseInt() - 3 );
+      }
     }
     // div[class="search-result-link"]{
     gridRowFluid {

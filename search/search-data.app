@@ -86,10 +86,13 @@ section functions
         }
         listLines.add( "<div class=\"nolinenumber" + style +"\">...</div>" );
         listCode.add( "" );
+		    if(fixPrevious){
+		      listLines.set( listLines.length-2 , "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap( viewFileUri, "?" )  ) + "</div>" );
+		    }		    
       } else {
-        //If line number is stripped off by highlighting, just assume line num 1 for now
+        //If line number is stripped off by highlighting, postpone line number determination to next iteration
         if( /^\D/.find( s ) ) {
-          listLines.add( "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap( viewFileUri, "1" )  ) + "</div>" );
+          listLines.add( "" );
           listCode.add( s );
           fixPrevious := true;
         } else {
@@ -99,7 +102,7 @@ section functions
           lineNum := /^ ( \d+ ).*/.replaceFirst( "$1", s );
           listLines.add( "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap( viewFileUri, lineNum )  ) + "</div>" );
           if( fixPrevious ) {
-            listLines.set(listLines.length-2, /#1/.replaceFirst( "#" + ( lineNum.parseInt()-1 ), listLines[(listLines.length-2)] ) );
+            listLines.set( listLines.length-2 , "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap( viewFileUri, ""+ ( lineNum.parseInt()-1 ) )  ) + "</div>" );
             fixPrevious := false;
           }
           if( s.length() != lineNum.length() ) {
@@ -110,6 +113,10 @@ section functions
           }
         }
       }
+    }
+    //Line number unknown, link to line num 1
+    if(fixPrevious){
+      listLines.set( listLines.length-2 , "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap( viewFileUri, "?" )  ) + "</div>" );
     }
     lists.add( listLines );
     lists.add( listCode );
