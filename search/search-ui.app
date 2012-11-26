@@ -23,7 +23,7 @@ section pages/templates
     }
     
     if ( query.length() > 0 ) {
-      title       { output( query + " | " +  prjName + " | Reposearch" ) }
+      title       { output( query + " - " +  prjName + " | Reposearch" ) }
       description { output( "Search results for '" + query + "' in source code repositories of " + prjName) }
     } else {
       title       { output( "Search " + prjName + " | Reposearch" ) }
