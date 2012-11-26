@@ -19,13 +19,12 @@ application reposearch
     Project{name:="WebDSL" repos:=[ ( SvnRepo{url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac"} as Repo )]} .save();
   }
   
-  define mainResponsive( ns : String, title : String ) {
+  define mainResponsive( ns : String ) {
     var project := if( ns == "" ) "All projects" else ns;
     var query := "";
     var projects := [p | p : Project in( from Project ) order by p.displayName];
     var half  : Int := projects.length/2;
     includeCSS( "bootstrap/css/bootstrap.min.css" )
-    // includeCSS("bootstrap/css/bootstrap-responsive.css")
     includeCSS( "bootstrap/css/bootstrap-adapt.css" )
     includeCSS( "bootstrap-extension.css" )
     includeCSS( "prettify.css" )
@@ -37,7 +36,7 @@ application reposearch
     includeJS( "prettify.js" )
     includeJS( "make-clickable.js" )
     includeHead( "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" )
-    title { output( "Reposearch - " + title ) }
+    includeHead( "<script type=\"text/javascript\">var _gaq = _gaq || []; _gaq.push( ['_setAccount', 'UA-10588367-1'] ); _gaq.push( ['_trackPageview'] ); ( function() { var ga = document.createElement( 'script' ); ga.type = 'text/javascript'; ga.async = true; ga.src = ( 'https:' == document.location.protocol ? 'https://ssl' : 'http://www' ) + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName( 'script' ) [0]; s.parentNode.insertBefore( ga, s ); } ) ();</script>")
     navbarResponsive {
   
       navItems{
@@ -103,14 +102,14 @@ application reposearch
         }
       }
     }
-    googleAnalytics()
   }
   
   define override appname() { "Reposearch" }
   
   define page root() {
-    title { "Reposearch" }
-    mainResponsive( "Projects", "home" ) {
+    title       { "Reposearch - Good in finding code fragments" }
+    description { "A powerful source code search facility with project-scoped type ahead suggestions. With support for any SVN/Github repository location. Supports filtering on file extension, location and language construct." }
+    mainResponsive( "Projects" ) {
       gridRowFluid {
         gridSpan( 12 ) {
           wellSmall {
@@ -137,6 +136,10 @@ application reposearch
         }
       }
     }
+  }
+  
+  define description() {
+    includeHead("<meta name='description' content='" + /'/.replaceAll( "&#39;" ,rendertemplate(elements) ) +"'>")
   }
   
   native class svn.Svn as Svn {

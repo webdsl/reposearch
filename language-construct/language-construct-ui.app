@@ -24,13 +24,15 @@ section pages/templates
   
   define page createLangConstruct() {
     var p:= LangConstruct { }
-    mainResponsive( "Projects", "New language construct" ) {
+    title { output( "New language construct | Reposearch" ) }
+    mainResponsive( "Projects") {
       editLangConstruct( p )
     }
   }
   
   define page editLangConstruct( p : LangConstruct ) {
-    mainResponsive( "Projects", "Edit language construct" ) {
+    title { output( "Edit language construct | Reposearch" ) }
+    mainResponsive( "Projects" ) {
       editLangConstruct( p )
     }
   }

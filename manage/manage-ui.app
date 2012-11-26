@@ -8,8 +8,8 @@ section pages/templates
         langConsRenewSchedule.enabled := true;
       }
     }
-    mainResponsive( "Projects", "Manage" ) {
-      title { "Manage - Reposearch" }
+    title { output( "Manage Reposearch | Reposearch" ) }
+    mainResponsive( "Projects" ) {
       manageRefresh()
       manageRequestReceipts()
       placeholder requestsPH {
@@ -26,7 +26,8 @@ section pages/templates
   page searchStats() {
     var startDate := if( manager.newWeekMoment!=null ) manager.newWeekMoment else now();
     var projectsInOrder := from Project order by searchCount desc;
-    mainResponsive( "Projects", "Search statistics" ) {
+    title { output( "Search statistics | Reposearch" ) }
+    mainResponsive( "Projects" ) {
       showSearchStats()
       submit action {SearchStatistics.clear();} {"Reset global statistics"}
       header {"Search counts per project"}
@@ -70,10 +71,6 @@ section pages/templates
     }
   }
 
-  native class utils.URLFilter as Utils {
-    static filter( String ) : String
-  }
-
   define manageProjects() {
     var p := "";
     var fr := ( from Repo where project is null );
@@ -89,7 +86,7 @@ section pages/templates
           <b>submitlink( pr.name, showProject( pr ) ) [ajax]</b>
           div[class="float-right"]{"[" submitlink( "remove project", removeProject( pr ) ) "]*"}
         }
-        <div id=Utils.filter( "projectPH"+pr.name ) class="webdsl-placeholder" style="display: none;">showProject( pr ) </div>
+        <div id=URLFilter.filter( "projectPH"+pr.name ) class="webdsl-placeholder" style="display: none;">showProject( pr ) </div>
         }
               "* Removal of a project may take over a minute, please be patient."
               <br />
@@ -321,21 +318,4 @@ section pages/templates
       submitlink signoffAction() {"Logout"}
     }
     action signoffAction() { logout(); return root(); }
-  }
-
-
-  define googleAnalytics() {
-    <script type="text/javascript">
-                 var _gaq = _gaq || [];
-    _gaq.push( ['_setAccount', 'UA-10588367-1'] );
-    _gaq.push( ['_trackPageview'] );
-    ( function() {
-      var ga = document.createElement( 'script' );
-      ga.type = 'text/javascript';
-      ga.async = true;
-      ga.src = ( 'https:' == document.location.protocol ? 'https://ssl' : 'http://www' ) + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName( 'script' ) [0];
-      s.parentNode.insertBefore( ga, s );
-    } ) ();
-    </script>
   }

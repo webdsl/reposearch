@@ -29,7 +29,7 @@ section pages/templaets
 
   define page viewFile( query : String, url:URL, projectName:String, langCons : String ) {
     var e := ( from Entry as e where e.url=~url and e.projectname = ~projectName ) [0]
-             var viewFileUri := navigate( viewFile( query, url, projectName, langCons ) );
+    var viewFileUri := navigate( viewFile( query, url, projectName, langCons ) );
     var linkText    := "";
     var location    : String;
     var lineNumbers : String;
@@ -46,7 +46,15 @@ section pages/templaets
       //add line number anchors
       lineNumbers := /> ( \d+ ) </.replaceAll( " a name=\"$1\">$1<", lineNumbers );
     }
-    mainResponsive( projectName, e.name ) {
+    
+    title       { output( e.name + " | " + query + " | " + projectName + " | Reposearch" ) }
+    description { output (
+                  "Source code of file: " + e.name + 
+                  ", project: " + projectName  + 
+                  ", query: " + query + 
+                  ", repository url: " + e.url) }
+    
+    mainResponsive( projectName ) {
       wellSmall {
         gridRowFluid{
           navigate( url( e.url ) ) {

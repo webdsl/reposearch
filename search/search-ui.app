@@ -3,18 +3,16 @@ module search/search-ui
 section pages/templates
 
   define page search( namespace:String, q:String ) {
-    title { output( q + " - Reposearch" ) }
     showSearch( toSearcher( q, namespace, "" ), namespace, "", 1 )
   }
 
   define page doSearch( searcher : EntrySearcher, namespace:String, langCons : String, pageNum: Int ) {
-    title { output( "Reposearch - '" + searcher.getQuery() +  "' in " + namespace ) }
     showSearch( searcher, namespace, langCons, pageNum )
   }
 
-  define showSearch( entrySearcher : EntrySearcher, namespace : String, langCons : String, pageNum: Int ) {
-    
+  define showSearch( entrySearcher : EntrySearcher, namespace : String, langCons : String, pageNum: Int ) {    
     var prj := findProject( namespace );
+    var prjName := if ( prj == null ) "All projects" else prj.displayName;  
     var source := "/autocompleteService"+"/"+URLFilter.filter( namespace );
     var searcher := entrySearcher;
     var query := searcher.getQuery();
@@ -24,14 +22,23 @@ section pages/templates
       if( query.length() > 0 ) { incSearchCount( prj ); }
     }
     
-    mainResponsive( namespace, namespace ) {
+    if ( query.length() > 0 ) {
+      title       { output( query + " | " +  prjName + " | Reposearch" ) }
+      description { output( "Search results for '" + query + "' in source code repositories of " + prjName) }
+    } else {
+      title       { output( "Search " + prjName + " | Reposearch" ) }
+      description { output( "Search the " +  prjName + " source code repositories instantly with the ability to filter on file extension, file location and language construct.") }
+    }
+    mainResponsive( prjName ) {
       <script>
       setupcompletion( "~source" );
       
+      //When using browser history, load the url which is previously pushed to the history:
       window.onpopstate = function() {
         $('body').load(location.href)
       };
       </script>
+      
       gridRowFluid { gridSpan( 12 ) {
         wellSmall {
           inlForm{
@@ -39,7 +46,7 @@ section pages/templates
               gridSpan( 10,1 ) {
                 gridRowFluid {
                   gridSpan( 8 ) {
-                    formEntry( "Search " + namespace )  { <span class="ui-widget">input( query ) [autocomplete="off", id="searchfield", onkeyup=updateResults()] </span>}
+                    formEntry( "Search " + prj.displayName )  { <span class="ui-widget">input( query ) [autocomplete="off", id="searchfield", onkeyup=updateResults()] </span>}
                   }
                   gridSpan( 4 ) {
                     formEntry( "Results per page" )  {
@@ -60,13 +67,11 @@ section pages/templates
               placeholder facetArea {
                 if( query.length() > 0 ) { viewFacets( searcher, namespace, langCons ) }
               }
-            }
-                        }
+            } }
 
           }
         }
-      }
-                   }
+      } }
       placeholder resultArea {
         if( query.length() > 0 ) { paginatedTemplate( searcher, pageNum, namespace, langCons ) }
       }

@@ -101,8 +101,9 @@ section pages/templates
 
   define page pendingRequests() {
     var pendingRequests := from Request order by project;
-    mainResponsive( "Projects", "Pending requests" ) {
-      title { "Pending requests - Reposearch" }
+    title       { output( "Pending requests | Reposearch" ) }
+    description { "Pending project and repository addition requests" }
+    mainResponsive( "Projects" ) {
       if( pendingRequests.length < 1 ) {"There are no pending requests at this moment." <br />}
       for( r : Request in pendingRequests ) {
         div[class="top-container-green"] { output( r.project ) " (project name)"}
