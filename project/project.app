@@ -2,6 +2,7 @@ module project/project
 
 
   entity Project {
+    cache //Project entitities are retrieved on any page
     name                 :: String( id )
     repos                -> List<Repo>
     displayName          :: String   := capitalize(name)

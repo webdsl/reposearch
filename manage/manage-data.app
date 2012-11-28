@@ -13,6 +13,7 @@ module manage/manage-data
 section entities
 
   entity Message {
+    cache //home page message doesnt need to be fetched over and over again
     msg :: WikiText
   }
 

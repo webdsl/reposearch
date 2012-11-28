@@ -1,13 +1,14 @@
 module language-construct/language-construct-data
 
 section entities
-    entity LangConstruct {
-    name    :: String( id, default="change me" )
-        pattern :: String
-        group   :: Int
-        fileExts:: String
-        caseSensitive :: Bool
-        nameNoSpaces  :: String := name.replace( " ", "_" )
+    entity LangConstruct {      
+      cache //LangConstruct entities are fetched on every search page
+      name    :: String( id, default="change me" )
+      pattern :: String
+      group   :: Int
+      fileExts:: String
+      caseSensitive :: Bool
+      nameNoSpaces  :: String := name.replace( " ", "_" )
       projects      -> Set<Project> ( inverse = Project.langConstructs )
     
       function addLangConstructConstraint( searcher : EntrySearcher ) { addLangConstructConstraint( searcher, name ); }
