@@ -95,6 +95,7 @@ application reposearch
       gridContainerFluid{
         gridRowFluid{
           navigate( url( "http://yellowgrass.org/project/Reposearch" ) ) { "Issue tracker" } " - "
+          navigate( url( "https://github.com/webdsl/reposearch" ) ) { "Reposearch on GitHub" } " - "
           navigate( dologin() ) {"Admin log in/out"  }
           pullRight{
             "Powered by " navigate( url( "http://www.webdsl.org" ) ) {"WebDSL"}
