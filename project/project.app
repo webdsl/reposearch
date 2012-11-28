@@ -4,7 +4,7 @@ module project/project
   entity Project {
     name                 :: String( id )
     repos                -> List<Repo>
-    displayName          :: String   := if( name.length() > 0 ) name.substring( 0,1 ).toUpperCase() + name.substring( 1, name.length() ) else name
+    displayName          :: String   := capitalize(name)
     searchCount          :: Int      ( default=0 )
     weeklySearchCount    :: Int      := if( weekStartSearchCount != null ) searchCount - weekStartSearchCount else 0
     weekStartSearchCount :: Int      ( default=0 )
@@ -24,4 +24,8 @@ module project/project
     function newWeek() {
       weekStartSearchCount := searchCount;
     }
+  }
+  
+  function capitalize(name : String) : String {
+    return if( name.length() > 0 ) name.substring( 0,1 ).toUpperCase() + name.substring( 1, name.length() ) else name;
   }

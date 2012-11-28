@@ -47,7 +47,7 @@ section pages/templaets
       lineNumbers := /> ( \d+ ) </.replaceAll( " a name=\"$1\">$1<", lineNumbers );
     }
     
-    title       { output( e.name + " | " + query + " | " + projectName + " | Reposearch" ) }
+    title       { output( e.name + ":" + query + " - " + projectName + " | Reposearch" ) }
     description { output (
                   "Source code of file: " + e.name + 
                   ", project: " + projectName  + 

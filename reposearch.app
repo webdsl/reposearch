@@ -20,7 +20,7 @@ application reposearch
   }
   
   define mainResponsive( ns : String ) {
-    var project := if( ns == "" ) "All projects" else ns;
+    var project := if( ns == "" ) "All projects" else capitalize(ns);
     var query := "";
     var projects := [p | p : Project in( from Project ) order by p.displayName];
     var half  : Int := projects.length/2;
@@ -137,11 +137,7 @@ application reposearch
       }
     }
   }
-  
-  define description() {
-    includeHead("<meta name='description' content='" + /'/.replaceAll( "&#39;" ,rendertemplate(elements) ) +"'>")
-  }
-  
+ 
   native class svn.Svn as Svn {
     static test()
     static checkout( String ) :RepoTaskResult

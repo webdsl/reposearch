@@ -29,7 +29,7 @@ section pages/templates
       title       { output( "Search " + prjName + " | Reposearch" ) }
       description { output( "Search the " +  prjName + " source code repositories instantly with the ability to filter on file extension, file location and language construct.") }
     }
-    mainResponsive( prjName ) {
+    mainResponsive( namespace ) {
       <script>
       setupcompletion( "~source" );
       
@@ -297,7 +297,7 @@ section pages/templates
           pageIndex( pagenumber, size, resultsPerPage, 12, 3 )
         } pullRight{
           if( size > 0 ) {
-            output( size ) " results found in " output( searchtime from searcher ) ", displaying results " output( ( pagenumber-1 ) *resultsPerPage + 1 ) "-" output( lastResult )
+            <strong> output( size ) " results" </strong> " found in " output( searchtime from searcher ) ", displaying results " output( ( pagenumber-1 ) *resultsPerPage + 1 ) "-" output( lastResult )
           } else {
             "no results found"
           }
