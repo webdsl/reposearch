@@ -87,7 +87,7 @@ section functions
     return newSearcher;
   }
   
-  native class regex.MatchExtractor as MatchExtractor {
+  native class org.webdsl.reposearch.langcons.MatchExtractor as MatchExtractor {
     static extract( LangConstruct, String ) : String
     static decorateMatches( LangConstruct, String, String ) : String
   }

@@ -11,8 +11,8 @@ section entities
 
 section functions
 
-  function incSearchCount( prj : Project ) {
-    if( prj != null ) {prj.incSearchCount();}
+  function incSearchCount( namespace : String ) {
+    SearchCounter.inc( namespace );
   }
 
   function interestingPathFacets( searcher : EntrySearcher ) : List<Facet> {

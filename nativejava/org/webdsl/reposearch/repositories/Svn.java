@@ -1,4 +1,4 @@
-package svn;
+package org.webdsl.reposearch.repositories;
 
 
 import java.io.ByteArrayInputStream;

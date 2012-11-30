@@ -11,15 +11,13 @@ section pages/templates
   }
 
   define showSearch( entrySearcher : EntrySearcher, namespace : String, langCons : String, pageNum: Int ) {    
-    var prj := findProject( namespace );
-    var prjName := if ( prj == null ) "All projects" else prj.displayName;  
+    var prjName := if ( namespace == "" ) "All projects" else capitalize(namespace);  
     var source := "/autocompleteService"+"/"+URLFilter.filter( namespace );
     var searcher := entrySearcher;
     var query := searcher.getQuery();
     var caseSensitive := SearchPrefs.caseSensitive;
     init {
-      if( prj == null  && namespace != "" ) { return root(); }
-      if( query.length() > 0 ) { incSearchCount( prj ); }
+      if( query.length() > 0 && count from searcher  > 0 ) { incSearchCount( namespace ); }
     }
     
     if ( query.length() > 0 ) {
@@ -82,10 +80,10 @@ section pages/templates
         if( count from searcher  > 0 ){
           //HTML5 feature, replace url without causing page reload
           runscript( "window.history.pushState('history','reposearch','" + navigate( doSearch( searcher, namespace, langCons, 1 ) ) + "');" );
+          incSearchCount( namespace );
         }
         updateAreas( searcher, 1, namespace, langCons );
         replace( paginationOptions, paginationButtons( searcher, namespace, langCons ) );
-        incSearchCount( prj );
       } else {
         clear( resultArea );
         clear( facetArea );

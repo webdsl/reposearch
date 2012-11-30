@@ -19,8 +19,8 @@ module project/project
       countSince := now();
     }
   
-    function incSearchCount() {
-      searchCount := searchCount + 1;
+    function addSearchCount( count : Int) {
+      searchCount := searchCount + count;
     }
     function newWeek() {
       weekStartSearchCount := searchCount;

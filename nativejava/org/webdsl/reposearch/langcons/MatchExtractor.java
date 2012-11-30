@@ -1,4 +1,4 @@
-package regex;
+package org.webdsl.reposearch.langcons;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

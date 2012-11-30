@@ -139,7 +139,7 @@ application reposearch
     }
   }
  
-  native class svn.Svn as Svn {
+  native class org.webdsl.reposearch.repositories.Svn as Svn {
     static test()
     static checkout( String ) :RepoTaskResult
     static updateFromRevOrCheckout( String,Long ) :RepoTaskResult
@@ -149,7 +149,7 @@ application reposearch
     static getLog() : String
   }
   
-  native class svn.RepoTaskResult as RepoTaskResult {
+  native class org.webdsl.reposearch.repositories.RepoTaskResult as RepoTaskResult {
     getRevision() : Long
     getEntriesForAddition()  : List<Entry>
     getEntriesForRemoval()   : List<String>
