@@ -11,7 +11,8 @@ module project/project
     weekStartSearchCount :: Int      ( default=0 )
     countSince           :: DateTime ( default=now() )
 
-    validate( name.length() > 2, "length must be greater than 2" )
+    validate( name.length() > 2, "project name must be at least 3 characters long" )
+    validate( !name.contains(";"), "semicolons are not allowed in project name" )
 
     function resetSearchCount() {
       searchCount := 0;

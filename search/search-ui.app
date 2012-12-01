@@ -3,6 +3,7 @@ module search/search-ui
 section pages/templates
 
   define page search( namespace:String, q:String ) {
+    init { SearchPrefs.addToHistory( namespace ); }
     showSearch( toSearcher( q, namespace, "" ), namespace, "", 1 )
   }
 

@@ -3,10 +3,21 @@ module search/search-data
 section entities
 
   session SearchPrefs {
-    resultsPerPage :: Int ( default=10 )
-    caseSensitive  :: Bool( default=false )
-    exactMatch     :: Bool( default=true )
-    regex          :: Bool( default=false )
+    resultsPerPage :: Int   ( default=10 )
+    caseSensitive  :: Bool  ( default=false )
+    exactMatch     :: Bool  ( default=true )
+    regex          :: Bool  ( default=false )
+    projectHistory :: String( default="" )
+    
+    function addToHistory( projectName : String ) {
+      if ( projectName == "" ) { return; } 
+      var prjList := projectHistory.split( ";" );
+      var newHistory := projectName;
+      for( item : String in prjList where item != projectName limit 4 ) {
+        newHistory := newHistory + ";" + item;
+      }
+      projectHistory := newHistory;
+    } 
   }
 
 section functions

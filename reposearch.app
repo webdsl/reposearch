@@ -47,7 +47,11 @@ application reposearch
         navItem{
           dropdownInNavbar( project ) {
             dropdownMenu {
-              dropdownMenuItem{ navigate search( "","" ) {"All projects"} }
+              for ( prj : String in SearchPrefs.projectHistory.split( ";" ) ){
+                dropdownMenuItem{ navigate search( prj ,"" ) { output( capitalize(prj) ) } }  
+              }
+              dropdownMenuDivider
+              dropdownMenuItem{ navigate search( "","" ) { "All projects" } }
               dropdownMenuDivider
               if( projects.length > 10 ) {
                 dropdownSubMenu( projects.get( 0 ).displayName + " - " + projects.get( half-1 ).displayName ) {
