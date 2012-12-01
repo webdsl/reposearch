@@ -106,11 +106,12 @@ section pages/templates
     mainResponsive( "Projects" ) {
       if( pendingRequests.length < 1 ) {"There are no pending requests at this moment." <br />}
       for( r : Request in pendingRequests ) {
-        wellSmall { header4{ output( r.project ) " (project name)" } }
+        wellSmall { header4{ "Request for project: " output( r.project ) }
           list{
             listitem{"SVN: '" output( r.svn ) "'"}
-            listitem{"is a Github tag: '" output( r.isGithubTag ) "'"}
+            listitem{"is a Github tag: " output( r.isGithubTag ) }
           }
+        }
       }
     }
   }
