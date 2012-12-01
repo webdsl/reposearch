@@ -16,9 +16,9 @@ section pages/templates
         showRequests()
       }
       manageProjects()
-      <br />
+
       manageFrontpageMessage()
-      <br />
+      
       logMessage()
     }
   }
@@ -29,76 +29,82 @@ section pages/templates
     title { output( "Search statistics | Reposearch" ) }
     mainResponsive( "Projects" ) {
       showSearchStats()
-      submit action {SearchStatistics.clear();} {"Reset global statistics"}
+      submitlink action {SearchStatistics.clear();} { buttonMini { "Reset global statistics" } }
       header {"Search counts per project"}
-      table {
-        row{ column{ <i>"Project name"</i> } column{ <i>"total"</i> } column{ <i>"this week"</i> } column{ <center><i>"since"</i></center> } column{ <i>"reset"</i> }}
+      tableNotBordered {
+        theader{
+          row{ th[class="span4"]{ "Project name" } th[class="span2"]{ "total"} th[class="span2"]{ "this week" } th[class="span3"]{ "since" } th[class="span2"]{ "reset" }}
+        }
+          
         for( pr : Project in projectsInOrder order by pr.weeklySearchCount desc ) {
           searchCountInTable( pr )
         }
       }
       form {
-        "Change the day at which the week counters reset(date of last reset): " input( startDate )
-        submit action{manager.newWeekMoment := startDate;}{"set"}
+        "Control the day at which this week started (next week starts 7 days later) : " input( startDate )
+        submitlink action{manager.newWeekMoment := startDate;}{ buttonMini{"set"} }
       } <br />
-      submit action {for( pr : Project ) { pr.resetSearchCount(); }} {"Reset search statistics for all projects"}
+      submitlink action {for( pr : Project ) { pr.resetSearchCount(); }} { buttonMini{ "Reset search statistics for all projects" } }
     }
   }
 
   define manageRequestReceipts() {
     var addresses : String := manager.adminEmails;
-    form {
-      input( addresses ) {" will receive a notification upon a request."}
-      validate( validateEmailList( addresses ) ,"Email addresses need to be seperated by a comma, without whitespace e.g. 'foo@bar.com,bar@foo.com'" )
-      submit action{manager.adminEmails := addresses;}{"apply"}
+    manageContainer( "Administrator email addresses" ) {
+	    inlForm{
+	      formEntry( "Addresses which will receive a notification upon a request" ){ input( addresses ) }
+	      validate( validateEmailList( addresses ) ,"Email addresses need to be seperated by a comma, without whitespace e.g. 'foo@bar.com,bar@foo.com'" )
+	      div{ submitlink action{manager.adminEmails := addresses;}{ buttonPrimaryMini{"save"} } }
+	    }
     }
   }
 
   define ajax showProject( pr : Project ) {
-    div[class="main-container"] {
-      searchCount( pr )
-      <br />
-      placeholder "reposPH" + pr.name{
-        showRepos( pr )
-      }
-      placeholder "addRepoPH" + pr.name{
-        addRepoBtn( pr )
-      }
-      <br />
-      div[class="langCons-container"]{
-        manageLangConstructs( pr )
-      }
-    }
+    wellSmall{ 
+	    searchCount( pr )
+	    manageContainerNested("Repositories"){
+		    placeholder "reposPH" + pr.name{
+		      showRepos( pr )
+		    }
+		    placeholder "addRepoPH" + pr.name{
+	       addRepoBtn( pr )
+	      }
+	    }
+	    manageContainerNested("Language Constructs"){
+		    manageLangConstructs( pr )
+	    }	 
+    }       
   }
 
   define manageProjects() {
     var p := "";
     var fr := ( from Repo where project is null );
-    div[class="top-container"] {<b>"Manage Projects"</b>}
-    div[class="main-container"] {
-      form{
-        input( p )
-        submit action{Project{name:=p} .save();} {"Add new project"}
-      }
-      <br />
+    manageContainer( "Manage Projects" ) {
+      manageContainerNested( "New Projects" ) {
+	      inlForm {
+	        formEntry( "Project Name" ) { input( p ) }
+	        submitlink action{Project{name:=p} .save();} { buttonPrimaryMini{"Add new project"} }
+	      }
+      } 
+      
       for( pr:Project order by pr.displayName ) {
-        div[class="top-container"] {
-          <b>submitlink( pr.name, showProject( pr ) ) [ajax]</b>
-          div[class="float-right"]{"[" submitlink( "remove project", removeProject( pr ) ) "]*"}
-        }
-        <div id=URLFilter.filter( "projectPH"+pr.name ) class="webdsl-placeholder" style="display: none;">showProject( pr ) </div>
-        }
+	        <h5> 
+	          submitlink( pr.name, showProject( pr ) ) [ajax] 
+	          pullRight{"[" submitlink( "remove project", removeProject( pr ) ) "]*"}
+	        </h5>
+	        <div id=URLFilter.filter( "projectPH"+pr.name ) class="webdsl-placeholder" style="display: none;">showProject( pr ) </div>
+      }
               "* Removal of a project may take over a minute, please be patient."
               <br />
       if( fr.length > 0 ) {
         <br />
-        submit action {
+        submitlink action {
           for( r:Repo in fr ) {
             deleteAllRepoEntries( r );
             r.delete();
           }
           return manage();
-        } {"Remove foreign Repo's(" output( fr.length ) ")"} " (Repo entities where project == null)"
+        } { buttonMini{ "Remove foreign Repo's(" output( fr.length ) ")"} } " (Repo entities where project == null)"
       }
 
     }
@@ -121,47 +127,51 @@ section pages/templates
   define searchCount( pr : Project ) {
     "searches this week(since " output( manager.newWeekMoment ) "): " <b>output( pr.weeklySearchCount ) </b>
     <br />
-    "searches total(since " output( pr.countSince ) "): " <b>output( pr.searchCount ) </b> " " submitlink( "reset", action {pr.resetSearchCount();} )
+    "searches total(since " output( pr.countSince ) "): " <b>output( pr.searchCount ) </b> " " resetSearchCountLink(pr)
     <br />
   }
 
   define searchCountInTable( pr : Project ) {
     row {
-      column{output( pr.displayName ) }
-      column{<center><b>output( pr.searchCount ) </b></center>}
-      column{<center><b>output( pr.weeklySearchCount ) </b></center>}
-      column{output( pr.countSince ) }
-      column{submitlink( "reset", action{pr.resetSearchCount();} ) }
+      column{ output( pr.displayName ) }
+      column{ <b>output( pr.searchCount ) </b> }
+      column{ <b>output( pr.weeklySearchCount ) </b> }
+      column{ output( pr.countSince ) }
+      column{ resetSearchCountLink(pr) }
     }
+  }
+  
+  define resetSearchCountLink( pr : Project ) {
+  	submitlink action{pr.resetSearchCount();} { buttonMini{ "reset" } }
   }
 
   define manageFrontpageMessage() {
     var fpMsgText := fpMsg.msg;
-    div[class="top-container"] {<b>"Edit Frontpage Message"</b>}
-    div[class="main-container"] {
-      form{
-        input( fpMsgText ) [onkeyup := updateFpMsgPreview( fpMsgText )]
-        <br />submit action{fpMsg.msg := fpMsgText; fpMsg.save();}{"save"}
+    manageContainer( "Manage Frontpage Message" ){
+      inlForm{
+        formEntry( "Message" ){ input( fpMsgText ) [onkeyup := updateFpMsgPreview( fpMsgText )] }
+        div { submitlink action{fpMsg.msg := fpMsgText; fpMsg.save();}{ buttonPrimaryMini{"save"} } }
       }
-      placeholder fpMsgPreview {FpMsgPreview( fpMsgText ) }
+      <h5>"Preview"</h5>
+      wellSmall{
+        placeholder fpMsgPreview {FpMsgPreview( fpMsgText ) }
+      }
     }
+    
     action ignore-validation updateFpMsgPreview( d : WikiText ) {
       replace( fpMsgPreview, FpMsgPreview( d ) );
     }
   }
 
   define ajax FpMsgPreview( d : WikiText ) {
-    block {
       <center> output( d ) </center>
-    }
   }
 
   define logMessage() {
-    div[class="top-container"] {<b>"SVN Log"</b>}
-    div[class="main-container"] {
-      placeholder log {showLog() }<br />
-      "Auto-refreshes every 5 seconds" <br />
-      submit action{replace( log, showLog() );} [id = "autoRefresh", ajax]{"force refresh log"}
+    manageContainer( "Reposearch Log" ) { 
+      placeholder log { showLog() }
+      "Auto-refreshes every 5 seconds, but you can also "
+      submitlink action{replace( log, showLog() );} [id = "autoRefresh", ajax]{ buttonMini{"force it"} }
       <script>
       var refreshtimer;
       function setrefreshtimer() {
@@ -182,25 +192,26 @@ section pages/templates
 
   define ajax refreshScheduleControl() {
     var now := now();
-    div[class="top-container"] {<b>"Manage Refresh Scheduling"</b>}
-    div[class="main-container"] {
-      table{
-        row{ column{<i>"Refresh scheduling:" </i>}                  column{ submit action{resetSchedule();} {"reset"} } }
-        row{ column{"Server time"}                                  column{ output( now ) } }
-        row{ column{"Last refresh(all repos)"}                     column{ if( manager.lastInvocation != null ) { output( manager.lastInvocation ) } else {"unkown"} } }
-        row{ column{"Next scheduled refresh(all repos)"}           column{ output( manager.nextInvocation ) " " submit action{manager.shiftByHours( -24 ); replace( refreshManagement, refreshScheduleControl() );} {"-1d"} submit action{manager.shiftByHours( -3 ); replace( refreshManagement, refreshScheduleControl() );} {"-3h"} submit action{manager.shiftByHours( 3 ); replace( refreshManagement, refreshScheduleControl() );} {"+3h"} submit action{manager.shiftByHours( 24 ); replace( refreshManagement, refreshScheduleControl() );} {"+1d"} } }
-        row{ column{"Auto refresh interval(hours)"}                column{ form{ input( manager.intervalInHours ) [style := "width:3em;"]  submit action{manager.save(); replace( refreshManagement, refreshScheduleControl() );}{"set"}  } } }
-        row{ column{<i>"Instant refresh management:" </i>}          column{ }}
-        row{ column{"Update all repos to HEAD: "}                   column{submit action{refreshAllRepos();         replace( refreshManagement, refreshScheduleControl() );} {"refresh all"} } }
-        row{ column{"Force a fresh checkout for all repos: "}       column{submit action{forceCheckoutAllRepos();   replace( refreshManagement, refreshScheduleControl() );} {"force checkout all"} } }
-        row{ column{"Cancel all scheduled refresh/checkouts: "}     column{submit action{cancelScheduledRefreshes(); replace( refreshManagement, refreshScheduleControl() );} {"cancel all"} } }
-        row{ column{"Auto renewal of language construct matches: "} column{ "enabled? " form{ input( langConsRenewSchedule.enabled ) submit action{langConsRenewSchedule.save(); replace( refreshManagement, refreshScheduleControl() );} {"apply"} } }}
-      }
+    manageContainer("Manage Refresh Scheduling") {
+      gridRowFluid{ gridSpan(8){
+	      tableNotBordered{
+	        row{ column{<strong>"Refresh scheduling:"</strong>}         column{ submitlink action{resetSchedule();} { buttonMini{"reset"} } } }
+	        row{ column{"Server time"}                                  column{ output( now ) } }
+	        row{ column{"Last refresh(all repos)"}                      column{ if( manager.lastInvocation != null ) { output( manager.lastInvocation ) } else {"unkown"} } }
+	        row{ column{"Next scheduled refresh(all repos)"}            column{ output( manager.nextInvocation ) " " shiftScheduleBtn(-24,"-1d") shiftScheduleBtn(-1, "-1h" ) shiftScheduleBtn( 1, "+1h" ) shiftScheduleBtn(24, "+1d") } }
+	        row{ column{"Auto refresh interval(hours)"}                 column{ form{ input( manager.intervalInHours ) [style := "width:3em;"]  submitlink action{manager.save(); replace( refreshManagement, refreshScheduleControl() );}{ buttonMini{"set"} } } } }
+	        row{ column{<strong>"Instant refresh management:"</strong>} column{ }}
+	        row{ column{"Update all repos to HEAD: "}                   column{ submitlink action{refreshAllRepos();         replace( refreshManagement, refreshScheduleControl() );} { buttonMini{"refresh all"} } } }
+	        row{ column{"Force a fresh checkout for all repos: "}       column{ submitlink action{forceCheckoutAllRepos();   replace( refreshManagement, refreshScheduleControl() );} { buttonMini{"force checkout all"} } } }
+	        row{ column{"Cancel all scheduled refresh/checkouts: "}     column{ submitlink action{cancelScheduledRefreshes();replace( refreshManagement, refreshScheduleControl() );} { buttonMini{"cancel all"} } } }
+	        row{ column{"Auto renewal of language construct matches: "} column{ "enabled? " form{ input( langConsRenewSchedule.enabled ) submitlink action{langConsRenewSchedule.save(); replace( refreshManagement, refreshScheduleControl() );} { buttonMini{"apply"} } } }}
+	      }      
+	    } }
     }
   }
 
   define ajax addRepoBtn( pr : Project ) {
-    submit action { replace( "addRepoPH" + pr.name, addRepo( pr ) );} {"Add repository"}
+    submitlink action { replace( "addRepoPH" + pr.name, addRepo( pr ) );} { buttonMini{"Add repository" } }
   }
 
   define ajax showRepos( pr : Project ) {
@@ -208,40 +219,41 @@ section pages/templates
       showRepo( pr,r )
     }
   }
+  
+  define shiftScheduleBtn( shiftInHours : Int, btnText : String){
+  	submitlink action{manager.shiftByHours( shiftInHours ); replace( refreshManagement, refreshScheduleControl() );} { buttonMini{ output(btnText) } }
+  }
 
   define ajax addRepo( pr : Project ) {
     var gu:String
     var gr:String
     var isTag:=false;
     var n :URL
-    div[class="new-repo"] {
-      form{
-        "SVN or github URL: "
-        input( n )
-        <br />"resides within github tag?: "
-        input( isTag )
-        submit action{ pr.repos.add( createNewRepo( n, isTag ) ); replace( "addRepoPH" + pr.name, addRepoBtn( pr ) ); replace( "reposPH" + pr.name, showRepos( pr ) );} {"Add repository"}
-      }
-    }
-    div {
-      submit action{ replace( "addRepoPH" + pr.name, addRepoBtn( pr ) );} {"Cancel"}
+    manageContainerNested("New Repository"){
+	    inlForm{
+	      formEntry( "SVN or github URL" ){ input( n ) }
+	      div{ input( isTag ) " This is a tag on github" }  <br />   
+	      div{
+	        submitlink action{ replace( "addRepoPH" + pr.name, addRepoBtn( pr ) );} { buttonMini{"Cancel"} } " "
+	        submitlink action{ pr.repos.add( createNewRepo( n, isTag ) ); replace( "addRepoPH" + pr.name, addRepoBtn( pr ) ); replace( "reposPH" + pr.name, showRepos( pr ) );} { buttonPrimaryMini{"Add repository"} }
+	      }
+	    }
     }
   }
 
   define showRepo( pr:Project, r:Repo ) {
-    div[class="show-repo"] {
-      output( r )
+    output( r ){
       div{
         if( r.refresh ) {
           if( r.refreshSVN ) { "UPDATE TO HEAD SCHEDULED" }
           else { "CHECK OUT SCHEDULED" }
-          submit action {cancelQueryRepo( r ); replace( "reposPH" + pr.name,showRepos( pr ) ); } {"Cancel"}
+          submitlink action{cancelQueryRepo( r ); replace( "reposPH" + pr.name,showRepos( pr ) ); } { buttonMini{"Cancel"} }
         } else{
-          submit action{queryRepo( r ); replace( "reposPH" + pr.name,showRepos( pr ) );} {"Update if HEAD > r" output( r.rev ) }
-          submit action{queryCheckoutRepo( r ); replace( "reposPH" + pr.name,showRepos( pr ) );} {"Force checkout HEAD"}
+          submitlink action{queryRepo( r ); replace( "reposPH" + pr.name,showRepos( pr ) );} { buttonMini{"Update if HEAD > r" output( r.rev )} }
+          submitlink action{queryCheckoutRepo( r ); replace( "reposPH" + pr.name,showRepos( pr ) );} { buttonMini{"Force checkout HEAD"} }
         }
-        submit action{pr.repos.remove( r ); deleteAllRepoEntries( r ); replace( "reposPH" + pr.name, showRepos( pr ) );} {"Remove*"}
-        submit action{return skippedFiles( r );}{"skipped files"}
+        submitlink action{pr.repos.remove( r ); deleteAllRepoEntries( r ); replace( "reposPH" + pr.name, showRepos( pr ) );} { buttonMini{"Remove*"} }
+        submitlink action{return skippedFiles( r );}{ buttonMini{"skipped files"} }
       }
       if( r.error ) {
         div {"ERROR OCCURRED DURING REFRESH"}
@@ -250,8 +262,13 @@ section pages/templates
   }
 
   define ajax showRequests() {
-    for( r:Request order by r.project ) {
-      showRequest( r )
+  	var requests := from Request;
+  	if ( requests.length > 0 ) {
+	    manageContainer( "Pending Requests" ) {
+		    for( r:Request order by r.project ) {
+		      showRequest( r )
+		    }
+	    }
     }
   }
 
@@ -262,20 +279,13 @@ section pages/templates
     var existing : List<Project>;
     var targetProject : Project;
     var reason : Text := "";
-    div[class="top-container-green"] {"REQUEST"}
-    div[class="main-container"] {
+    alertSuccess {
       "requester: " output( r.submitter )
-      form{
-        "Project name: "
-        input( project )
-        <br />"SVN: "
-        input( repo )
-        <br />"is Github tag?"
-        input( isGithubTag )
-        <br />"Reason in case of rejection: "
-        <br />
-        input( reason )
-        <br />
+      inlForm{
+        formEntry( "Project name" ){ input( project ) }
+        formEntry( "Repository location" ){ input( repo ) }   
+        formEntry( "is Github tag?" ){ input( isGithubTag ) }   
+        formEntry( "Reason in case of rejection" ){ input( reason ) }           
         submit action{
           r.delete();
           replace( "requestsPH", showRequests() );
@@ -307,8 +317,8 @@ section pages/templates
 
   define ajax showLog() {
     init {updateLog();}
-    table {
-      row{ column{ <pre> rawoutput( manager.log ) </pre> } }
+    wellSmall {
+      small{ <pre> rawoutput( manager.log ) </pre> }
     }
   }
 
@@ -318,4 +328,21 @@ section pages/templates
       submitlink signoffAction() {"Logout"}
     }
     action signoffAction() { logout(); return root(); }
+  }
+  
+  define manageContainer( title : String ) {
+    gridRowFluid {
+      wellSmall {
+        header4 { output(title) } 
+        elements
+      }
+    }
+  }
+  define manageContainerNested( title : String ) {
+    gridRowFluid {
+      wellSmall {
+        <h5> output(title) </h5> 
+        elements
+      }
+    }
   }

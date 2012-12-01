@@ -3,7 +3,6 @@ module language-construct/language-construct-ui
 section pages/templates
 
   define manageLangConstructs( pr : Project ) {
-    "Language constructs management:"
     table {form{
         for( lc : LangConstruct in( from LangConstruct order by name ) ) {
           row {

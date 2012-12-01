@@ -54,6 +54,8 @@ section pages/templates
       } gridRowFluid {
         navigate( skippedFiles( r ) ) [target:="_blank"]{"Files marked as binary(not indexed)"}
       }
+      
+      elements
     }
   }
 
