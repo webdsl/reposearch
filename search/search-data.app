@@ -8,10 +8,11 @@ section entities
     exactMatch     :: Bool  ( default=true )
     regex          :: Bool  ( default=false )
     projectHistory :: String( default="" )
+    projectHistoryNotNull :: String := if( projectHistory == null ) "" else projectHistory
     
     function addToHistory( projectName : String ) {
       if ( projectName == "" ) { return; } 
-      var prjList := projectHistory.split( ";" );
+      var prjList := projectHistoryNotNull.split( ";" );
       var newHistory := projectName;
       for( item : String in prjList where item != projectName limit 4 ) {
         newHistory := newHistory + ";" + item;

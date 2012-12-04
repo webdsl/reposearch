@@ -47,7 +47,7 @@ application reposearch
         navItem{
           dropdownInNavbar( project ) {
             dropdownMenu {
-              for ( prj : String in SearchPrefs.projectHistory.split( ";" ) ){
+              for ( prj : String in SearchPrefs.projectHistoryNotNull.split( ";" ) ){
                 dropdownMenuItem{ navigate search( prj ,"" ) { output( capitalize(prj) ) } }  
               }
               dropdownMenuDivider
