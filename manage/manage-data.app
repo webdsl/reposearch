@@ -80,7 +80,9 @@ section functions
     manager.lastInvocation := now();
     for( pr:Project ) {
       for( r:Repo in pr.repos ) {
-        queryRepo( r );
+        if( !( r isa FileRepo) ){
+          queryRepo( r );
+        }
       }
     }
   }
