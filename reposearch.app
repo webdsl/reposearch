@@ -143,12 +143,13 @@ application reposearch
     }
   }
  
-  native class org.webdsl.reposearch.repositories.Svn as Svn {
+  native class org.webdsl.reposearch.repositories.RepositoryFetcher as RepositoryFetcher {
     static test()
-    static checkout( String ) :RepoTaskResult
-    static updateFromRevOrCheckout( String,Long ) :RepoTaskResult
-    static checkout( String,String,String ) :RepoTaskResult
-    static updateFromRevOrCheckout( String,String,String,Long ) :RepoTaskResult
+    static checkout( String ) : RepoTaskResult
+    static checkout( File )   : RepoTaskResult
+    static updateFromRevOrCheckout( String,Long ) : RepoTaskResult
+    static checkout( String,String,String )       : RepoTaskResult
+    static updateFromRevOrCheckout( String,String,String,Long ) : RepoTaskResult
     static log( String )
     static getLog() : String
   }

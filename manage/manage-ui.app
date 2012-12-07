@@ -227,15 +227,26 @@ section pages/templates
   define ajax addRepo( pr : Project ) {
     var gu:String
     var gr:String
-    var isTag:=false;
-    var n :URL
+    var file:File
+    var isTag:=false
+    var n:URL
     manageContainerNested("New Repository"){
 	    inlForm{
-	      formEntry( "SVN or github URL" ){ input( n ) }
-	      div{ input( isTag ) " This is a tag on github" }  <br />   
+	      formEntry( "SVN or github URL" ){
+	        input( n ) <br /> 
+	        input( isTag ) " This is a tag on github" 
+	      }
+	      formEntry( "Zipped file" ){
+	        input( file )
+	      }         
 	      div{
 	        submitlink action{ replace( "addRepoPH" + pr.name, addRepoBtn( pr ) );} { buttonMini{"Cancel"} } " "
-	        submitlink action{ pr.repos.add( createNewRepo( n, isTag ) ); replace( "addRepoPH" + pr.name, addRepoBtn( pr ) ); replace( "reposPH" + pr.name, showRepos( pr ) );} { buttonPrimaryMini{"Add repository"} }
+	        submitlink action{
+	          validate( n != null ||  (file != null && file.fileName() != ""), "Enter a valid repository URL or upload a zip file"); 
+	          pr.repos.add( createNewRepo( n, isTag, file ) );
+	          replace( "addRepoPH" + pr.name, addRepoBtn( pr ) );
+	          replace( "reposPH" + pr.name, showRepos( pr ) );
+	        } { buttonPrimaryMini{ "Add repository" } }
 	      }
 	    }
     }
@@ -299,7 +310,7 @@ section pages/templates
             targetProject := Project{ name:=project };
           }
           targetProject.save();
-          targetProject.repos.add( createNewRepo( repo, isGithubTag ) );
+          targetProject.repos.add( createNewRepo( repo, isGithubTag, null ) );
 
           sendRequestAcceptedMail( r );
           r.delete();

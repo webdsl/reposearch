@@ -6,8 +6,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -18,6 +20,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.tmatesoft.svn.core.SVNErrorMessage;
 import org.tmatesoft.svn.core.SVNException;
@@ -39,7 +43,7 @@ import webdsl.generated.domain.Entry;
 
 import com.google.common.io.Files;
 
-public class Svn {
+public class RepositoryFetcher {
   private static StringBuilder logBuilder = new StringBuilder();
   private static final Lock lock = new ReentrantLock();
 
@@ -58,6 +62,65 @@ public class Svn {
   public static RepoTaskResult checkout ( String user,String repo,String path ) {
     return checkout ( "https://github.com/"+user+"/"+repo+"/"+path );
   }
+  
+  public static RepoTaskResult checkout ( utils.File repoFile ) {
+    List<Entry> entriesForAddition = new ArrayList<Entry>();
+    File dst = null;
+    ZipInputStream zis = null;
+    byte[] buffer = new byte[1024];
+    
+    try {
+      zis = new ZipInputStream( repoFile.getContentStream() );
+      dst = Files.createTempDir();
+      log ( "checkout in temp dir: " + dst );      
+      
+      //get the zipped file list entry
+      ZipEntry ze = zis.getNextEntry();
+ 
+      while(ze!=null){ 
+        String fileName = ze.getName();
+        File newFile = new File(dst.getAbsolutePath() + File.separator + fileName);
+ 
+        log("file unzip : "+ newFile.getAbsoluteFile());
+ 
+        //create all non exists folders
+        //else you will hit FileNotFoundException for compressed folder
+        new File(newFile.getParent()).mkdirs();
+
+        FileOutputStream fos = new FileOutputStream(newFile);             
+ 
+        int len;
+        while ((len = zis.read(buffer)) > 0) {
+          fos.write(buffer, 0, len);
+        }
+ 
+        fos.close();   
+        ze = zis.getNextEntry();
+      }
+ 
+      zis.closeEntry();
+      zis.close();
+      
+      addEntryRecursive ( repoFile.getFileName(),"",dst, entriesForAddition );
+    } catch ( IOException e ) {
+      e.printStackTrace();
+    } catch ( SQLException e1 ) {
+      // TODO Auto-generated catch block
+      e1.printStackTrace();
+    }
+    
+    //delete temp dir
+    try {
+      delete ( dst );
+      log ( "Removed temp dir: " + dst );
+    } catch ( IOException e ) {
+      log ( e.getMessage() );
+      e.printStackTrace();
+    }
+    
+    return new RepoTaskResult( entriesForAddition, new ArrayList<String>(), 0 );
+  }
+  
 
   private static final long latestRevision = -1;
 
@@ -221,11 +284,12 @@ public class Svn {
       delete ( dst );
       log ( "Removed temp dir: " + dst );
     } catch ( IOException e ) {
-      System.out.println ( e.getMessage() );
+      log ( e.getMessage() );
       e.printStackTrace();
     }
   }
-
+  
+    
   private static void delete ( File f ) throws IOException {
     if ( f == null )
       return;
@@ -239,7 +303,7 @@ public class Svn {
 
 
 
-  private static void addEntryRecursive ( String repo, String dir, File dst, List<Entry> entries ) throws SVNException, IOException {
+  private static void addEntryRecursive ( String repo, String dir, File dst, List<Entry> entries ) throws IOException {
     File[] files = dst.listFiles();
     if ( files != null ) { // Either dir does not exist or is not a directory
       String content =null, contentFixed =null;

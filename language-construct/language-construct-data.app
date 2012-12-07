@@ -58,7 +58,7 @@ section entities
     function run() {
       if( enabled ) {
         for( pr : Project in dirtyProjects ) {
-          Svn.log( "Reindexing entries for project '" + pr.name + "' because of a change in assigned language constructs" );
+          RepositoryFetcher.log( "Reindexing entries for project '" + pr.name + "' because of a change in assigned language constructs" );
           for( repo : Repo in pr.repos ) {
             for( e:Entry where e.repo == repo ) {
               if( enabled ) {
@@ -66,7 +66,7 @@ section entities
               }
             }
           }
-          Svn.log( "Done adding language construct matches to project '" +  pr.name + "'" );
+          RepositoryFetcher.log( "Done adding language construct matches to project '" +  pr.name + "'" );
         }
       }//reschedule dirty projects if task is disabled
       if( enabled ) {

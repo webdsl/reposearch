@@ -75,43 +75,7 @@ section functions
     }
     return true;
   }
-
-  function createNewRepo( url:String,isGithubTag:Bool ) : Repo {
-    if( url.toLowerCase().contains( "github.com" ) ) {
-      //https://github.com/mobl/mobl/tree/master/editor/java/mobl/strategies
-      var params := /.*github\.com/ ( [^/]+ ) / ( [^/]+ ) /? ( .* ) /.replaceAll( "$1,$2,$3", url ).split( "," );
-      var u := params[0];
-      var r := params[1];
-      var p := "trunk";
-      var prefixPath := "";
-      log( "params[2]:" + params[2] );
-      if( / ( ^$ ) | ( ( tree|blob ) /master.* ) /.match( params[2] ) ) {
-        prefixPath := "trunk";
-      } else {
-        prefixPath := if( isGithubTag ) "tags" else "branch";
-      }
-      if( params[2].length() > 1 ) {
-        p := /^ ( tree|blob ) ( /master ) ?/.replaceFirst( prefixPath, params[2] );
-      }
-      return GithubRepo { user:=u.trim() repo:=r.trim() svnPath:=p.trim() refresh:=true};
-    } else{
-      return SvnRepo{ url:=url.trim() refresh:=true };
-    }
-  }
-
-  function queryRepo( r:Repo ) {
-    r.refresh := true;
-    r.refreshSVN := true;
-  }
-  function queryCheckoutRepo( r:Repo ) {
-    r.refresh := true;
-    r.refreshSVN := false;
-  }
-  function cancelQueryRepo( r:Repo ) {
-    r.refresh := false;
-    r.refreshSVN := false;
-  }
-
+  
   function refreshAllRepos() {
     manager.lastInvocation := now();
     for( pr:Project ) {
@@ -147,19 +111,22 @@ section functions
       var rev : Long;
       var performNextRefresh := false;
       r.inRefresh:=true;
+      if( r isa FileRepo ){
+        col := RepositoryFetcher.checkout( ( r as FileRepo ).repositoryFile ); 
+      }
       if( r.refreshSVN ) {
-        if( r isa SvnRepo ) { col := Svn.updateFromRevOrCheckout( ( r as SvnRepo ).url, oldRev ); }
-        if( r isa GithubRepo ) { col := Svn.updateFromRevOrCheckout( ( r as GithubRepo ).user, ( r as GithubRepo ).repo, ( r as GithubRepo ).svnPath, oldRev ); }
+        if( r isa SvnRepo ) { col := RepositoryFetcher.updateFromRevOrCheckout( ( r as SvnRepo ).url, oldRev ); }
+        if( r isa GithubRepo ) { col := RepositoryFetcher.updateFromRevOrCheckout( ( r as GithubRepo ).user, ( r as GithubRepo ).repo, ( r as GithubRepo ).svnPath, oldRev ); }
       } else { //forced checkout
-        if( r isa SvnRepo ) { col := Svn.checkout( ( r as SvnRepo ).url ); }
-        if( r isa GithubRepo ) { col := Svn.checkout( ( r as GithubRepo ).user, ( r as GithubRepo ).repo, ( r as GithubRepo ).svnPath ); }
+        if( r isa SvnRepo ) { col := RepositoryFetcher.checkout( ( r as SvnRepo ).url ); }
+        if( r isa GithubRepo ) { col := RepositoryFetcher.checkout( ( r as GithubRepo ).user, ( r as GithubRepo ).repo, ( r as GithubRepo ).svnPath ); }
       }
       if( col == null ) {
         r.error := true;
       } else {
         //only replace entries when new ones are retrieved, i.e. col.getEntriesForAddition() is not null
         if( col.getEntriesForAddition() != null ) {
-          if( r.refreshSVN ) {
+          if( !(r isa FileRepo) && r.refreshSVN ) {
             deleteRepoEntries( r, col );
           } else {
             deleteAllRepoEntries( r );
@@ -186,7 +153,7 @@ section functions
   }
 
   function updateLog() {
-    var toAdd := Svn.getLog();
+    var toAdd := RepositoryFetcher.getLog();
     if( manager.log == null ) { manager.log := "";}
     if( toAdd.length() > 0 ) {
       manager.log := manager.log + toAdd;
