@@ -2,7 +2,7 @@ module manage/manage-ui
 
 section pages/templates
 
-  define page manage() {
+  page manage() {
     init {
       if( langConsRenewSchedule.enabled == null ) {
         langConsRenewSchedule.enabled := true;
@@ -45,6 +45,29 @@ section pages/templates
         submitlink action{manager.newWeekMoment := startDate;}{ buttonMini{"set"} }
       } <br />
       submitlink action {for( pr : Project ) { pr.resetSearchCount(); }} { buttonMini{ "Reset search statistics for all projects" } }
+    }
+  }
+  
+  page fileUpload( pr : Project){
+    var file : File
+    title{ "Upload repository file" }    
+    mainResponsive( "Projects" ){
+      manageContainer( "File repository for " + pr.displayName ) {
+	      inlForm{
+          formEntry( "Zipped file" ){
+            input( file )
+          }
+          formActions{
+            submit action{ return manage(); } { "cancel" } " "
+            submit action{
+              validate( (file != null ) , "Select a valid file");
+              pr.repos.add( createNewRepo( "", false, file ) );
+              return manage();
+            } {  "upload" }
+          }
+	        
+	      }
+      }
     }
   }
 
@@ -232,17 +255,16 @@ section pages/templates
     var n:URL
     manageContainerNested("New Repository"){
 	    inlForm{
+        navigate( fileUpload(pr) ){ "Upload a zipfile"} <br />
+        <br /> "-OR-" <br />
 	      formEntry( "SVN or github URL" ){
 	        input( n ) <br /> 
 	        input( isTag ) " This is a tag on github" 
-	      }
-	      formEntry( "Zipped file" ){
-	        input( file )
-	      }         
+	      }      
 	      div{
 	        submitlink action{ replace( "addRepoPH" + pr.name, addRepoBtn( pr ) );} { buttonMini{"Cancel"} } " "
 	        submitlink action{
-	          validate( n != null ||  (file != null && file.fileName() != ""), "Enter a valid repository URL or upload a zip file"); 
+	          validate( ( n != null && n.length() > 0 ), "Enter a valid repository URL"); 
 	          pr.repos.add( createNewRepo( n, isTag, file ) );
 	          replace( "addRepoPH" + pr.name, addRepoBtn( pr ) );
 	          replace( "reposPH" + pr.name, showRepos( pr ) );

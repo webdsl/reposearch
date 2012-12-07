@@ -101,7 +101,7 @@ public class RepositoryFetcher {
       zis.closeEntry();
       zis.close();
       
-      addEntryRecursive ( repoFile.getFileName(),"",dst, entriesForAddition );
+      addEntryRecursive ( repoFile.getFileName() + ":","",dst, entriesForAddition );
     } catch ( IOException e ) {
       e.printStackTrace();
     } catch ( SQLException e1 ) {
