@@ -2,7 +2,7 @@
 
 Visit the live demo we use ourselves:
 
-[http://www.webdsl.org/reposearch](webdsl.org/reposearch)
+[webdsl.org/reposearch](http://www.webdsl.org/reposearch)
 
 ## Description ##
 
@@ -61,7 +61,7 @@ Reposearch will index all source code files of the HEAD revision that can be fou
 ### Build the project ###
 Currently, we cannot provide a ready-to-deploy war file of reposearch. You need to build your own using webdsl:
 
- 1. Get the latest version of webdsl, we recommend using Eclipse 3.7 and install webdsl using the update site `down-at-this-moment`
+ 1. Get the latest version of webdsl, we recommend using Eclipse 3.7 and install webdsl using the update site `http://webdsl.org/update/nightly`
  2. to be continued :)
  3. some more steps here
  4. remove or change the google analytics code js code ...
