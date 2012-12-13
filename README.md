@@ -59,15 +59,31 @@ Reposearch will index all source code files of the HEAD revision that can be fou
 ## Installation ##
 
 ### Build the project ###
-Currently, we cannot provide a ready-to-deploy war file of reposearch. You need to build your own using webdsl:
+Currently, we cannot provide a ready-to-deploy war file of reposearch. You need to build your own using WebDSL:
 
- 1. Get the latest version of webdsl, we recommend using Eclipse 3.7 and install webdsl using the update site `http://webdsl.org/update/nightly`
- 2. to be continued :)
- 3. some more steps here
- 4. remove or change the google analytics code js code ...
+#### Setup webdsl environment (Eclipse) ####
+Make sure you have the latest webdsl eclipse plugin installed. We recommend using Eclipse 3.7.
+
+ 1. Install webdsl using the update site `http://webdsl.org/update/nightly` (in eclipse: help->install new software)
+ 2. Uncheck 'group items by category', check 'contact all update sites during install to find required software'
+ 3. Select both WebDSL and Spoofax/IMP to be installed
+ 4. Complete the installation wizard
+
+#### Import reposearch and configure user settings ####
+ 1. Now, import the reposearch project into eclipse (if asked, it may be imported as general project)
+ 2. Rightclick the project name in the project explorer and click: 'convert to webdsl project'
+ 3. Fill in your database/mail settings, this will generate the application.ini file for you which is used for compilation of a WebDSL proejct
+
+#### Optional: Change google analytics code ####
+We currently have our google analytics script inserted into the application code.
+The function gAnalytics(), which can be found in [reposearch.app](https://github.com/webdsl/reposearch/blob/master/reposearch.app) , is used to add it to each page. You may want to adapt this code to a different analytics account, or just remove it by returning an empty String instead.
+Our analytics profile is setup to ignore other domains than webdsl.org, so it won't do any harm if you leave it like that.
+
+#### Build and run ####
+You can now build Reposearch, which will be deployed to the servlet engine as configured in the application.ini file.
 
 ### Initialize admin user ###
 
-When Reposearch is deployed to a java servlet container (Tomcat 6/7 is guaranteed to work), go to the website address of the web application followed by `/init` (e.g. `localhost:8080/reposearch/init`). Now enter the admin username and password.
+When Reposearch is deployed, go to the website address of the web application followed by `/init` (e.g. `localhost:8080/reposearch/init`). Now enter an admin username and password.
 
 Now you can log in as administrator (the admin login link in footer) and browse to the manage page where you can start adding projects and repositories.
