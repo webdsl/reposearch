@@ -55,6 +55,7 @@ Reposearch will index all source code files of the HEAD revision that can be fou
   - Set the next timestamp at which Reposearch should try to update all repostories to HEAD
   - Controls to force update-to-HEAD / checkout for all repositories at once
  - Frontpage message can be edited (markdown syntax)
+ - Search statistics: weekly and total number of searches can be viewed for each project.
 
 ## Installation ##
 
@@ -71,8 +72,9 @@ Make sure you have the latest webdsl eclipse plugin installed. We recommend usin
 
 #### Import reposearch and configure user settings ####
  1. Now, import the reposearch project into eclipse (if asked, it may be imported as general project)
- 2. Rightclick the project name in the project explorer and click: 'convert to webdsl project'
- 3. Fill in your database/mail settings, this will generate the application.ini file for you which is used for compilation of a WebDSL proejct
+ 2. Right click the project name in the project/package explorer and click: 'convert to webdsl project'
+ 3. Fill in your database/mail/servlet settings, this will generate the application.ini file for you which is used for compilation of a WebDSL project
+ 4. To enable statistics about the index size, number of executed queries and slowest queries, please add `searchstats=true` to the application.ini file (in the project root folder).
 
 #### Optional: Change google analytics code ####
 We currently have our google analytics script inserted into the application code.
@@ -84,6 +86,6 @@ You can now build Reposearch, which will be deployed to the servlet engine as co
 
 ### Initialize admin user ###
 
-When Reposearch is deployed, go to the website address of the web application followed by `/init` (e.g. `localhost:8080/reposearch/init`). Now enter an admin username and password.
+When Reposearch is deployed, go to the website address of the web application followed by `/init` (e.g. `localhost:8080/reposearch/init`). Now setup the administrator account by providing a username and password.
 
 Now you can log in as administrator (the admin login link in footer) and browse to the manage page where you can start adding projects and repositories.
