@@ -12,8 +12,8 @@ section entities
   search mapping Entry {
     + content using keep_all_chars      as content
     + content using keep_all_chars_cs   as contentCase ^ 50.0
-    content   using code_identifiers_cs as codeIdentifiers( autocomplete )
-    + name    using filename_analyzer   as fileName ^ 100.0( autocomplete )
+    content   using code_identifiers_cs as codeIdentifiers ( autocomplete )
+    + name    using filename_analyzer   as fileName ^ 100.0 ( autocomplete )
     name      using extension_analyzer  as fileExt
     url       using path_analyzer       as repoPath
     constructs with depth 1
@@ -44,7 +44,7 @@ section pages/templaets
       lineNumbers := highlighted[0].concat( "<br />" );
       codeLines := highlighted[1].concat( "<br />" );
       //add line number anchors
-      lineNumbers := /> ( \d+ ) </.replaceAll( " a name=\"$1\">$1<", lineNumbers );
+      lineNumbers := /> ( \d+ ) </.replaceAll( ">$1<a class=shift-top name=\"$1\"/><", lineNumbers );
     }
     
     title       { output( e.name + ":" + query + " - " + projectName + " | Reposearch" ) }

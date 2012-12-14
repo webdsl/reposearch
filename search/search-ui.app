@@ -105,7 +105,7 @@ section pages/templates
     highlightedResult( e, searcher, nOfFragments, langCons )
     prettifyCode( e.projectname )
   }
-
+  
   define highlightedResult( e : Entry, searcher : EntrySearcher, nOfFragments : Int, langCons : String ) {
     var highlightedContent : List<List<String>>;
     var ruleOffset : String;
@@ -119,16 +119,11 @@ section pages/templates
         linkText := e.name;
       }
       highlightedContent := highlightCodeLines( searcher, e, 150, nOfFragments, false, viewFileUri, langCons );
-      ruleOffset := "";
+      
       if( highlightedContent[0].length < 1 ) {
         ruleOffset := "1";
       } else {
         ruleOffset := /.+#(\d+).>.*/.replaceFirst("$1",highlightedContent[0][0]);
-      }
-      if( ! ( /^\d+$/.match( ruleOffset ) ) ) {
-        ruleOffset := "?";
-      } else {
-        ruleOffset := "" + ( ruleOffset.parseInt() - 3 );
       }
     }
     gridRowFluid {
