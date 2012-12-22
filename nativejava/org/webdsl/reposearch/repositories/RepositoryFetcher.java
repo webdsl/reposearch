@@ -77,7 +77,11 @@ public class RepositoryFetcher {
       //get the zipped file list entry
       ZipEntry ze = zis.getNextEntry();
  
-      while(ze!=null){ 
+      while(ze!=null){
+        if (ze.isDirectory()){
+          ze = zis.getNextEntry();
+          continue;
+        }
         String fileName = ze.getName();
         File newFile = new File(dst.getAbsolutePath() + File.separator + fileName);
  
