@@ -1,7 +1,14 @@
 body {
-    background-color: #EBF4FA;
     font-family: Arial;
     margin-left: 15px;
+}
+
+.hoverClickableTerm {
+    border-color: Black;
+    border-style: dotted;
+    border-width: 1px;
+    cursor: cell;
+    margin: -1px;
 }
 
 .facet-area .btn-group {

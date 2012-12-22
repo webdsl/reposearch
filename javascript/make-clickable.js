@@ -16,10 +16,10 @@ function prettifyAndMakeClickable(projectName){
       //$(this).html("<a href='"+urlstart+$(this).html()+"'>"+$(this).html()+"</a>");
       $(this).click(function(){ window.open(urlstart+searchterm); });
       $(this).mouseover(function(){
-        $(this).addClass('hover');
+        $(this).addClass('hoverClickableTerm');
       });	         
       $(this).mouseout(function(){
-        $(this).removeClass('hover');
+        $(this).removeClass('hoverClickableTerm');
       });
     });
   })
