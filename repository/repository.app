@@ -76,7 +76,9 @@ section pages/templates
   }
 
   define ajax showReposLink( p : Project ) {
-    submitlink action {replace( "repos-"+p.displayName, repos( p ) );} {  buttonMini{"info"} }
+    var nOfRepos := p.repos.length; 
+    var btnText := if ( nOfRepos == 1) 1+" repository" else nOfRepos+" repositories"
+    submitlink action {replace( "repos-"+p.displayName, repos( p ) );} {  buttonMini{ output( btnText ) } }
   }
 
   define output( r : Repo ) {
