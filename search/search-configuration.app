@@ -37,10 +37,19 @@ module searchconfiguration
   }
 
   analyzer path_analyzer {
-    char filter = PatternReplaceCharFilter(
-      pattern="(^.+://)(.*)/.*",
-      replacement="$2" )
-    tokenizer = PathHierarchyTokenizer( delimiter="/" )
+    index {
+      char filter = PatternReplaceCharFilter(
+                      pattern="(^.+://)(.*)/.*",
+                      replacement="$2" )
+      tokenizer = PathHierarchyTokenizer( delimiter="/" )
+    } query { 
+      //We currently only query directory locations for deletion, not file locations,
+      //so dont strip off the 'file' at the end, which is a directory at query time
+      char filter = PatternReplaceCharFilter(
+                      pattern="(^.+://)(.*)",
+                      replacement="$2" )
+      tokenizer = KeywordTokenizer
+    }
   }
 
   analyzer definedConstructMatchAnalyzer {
