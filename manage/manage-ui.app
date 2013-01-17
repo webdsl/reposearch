@@ -200,11 +200,14 @@ section pages/templates
       function setrefreshtimer() {
         clearTimeout( refreshtimer );
         refreshtimer = setTimeout( function() {
-          $ ( "#autoRefresh" ).click();
+          $ ( "#autoRefresh" ).click();          
           setrefreshtimer();
         },5000 );
       }
       setrefreshtimer();
+      
+      var objDiv = document.getElementById("log");
+      objDiv.scrollTop = objDiv.scrollHeight; 
       </script>
     }
   }

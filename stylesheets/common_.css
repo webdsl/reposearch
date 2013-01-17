@@ -107,6 +107,12 @@ h4, h5{
     white-space: nowrap;
     margin: -2px;
 }
+
+#log{
+    overflow: auto;
+    height: 600px;
+}
+
 .skipped-files-link a:link, .search-result-link a:visited {
     text-decoration: none;
 }

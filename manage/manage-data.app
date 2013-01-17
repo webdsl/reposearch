@@ -159,7 +159,7 @@ section functions
     if( manager.log == null ) { manager.log := "";}
     if( toAdd.length() > 0 ) {
       manager.log := manager.log + toAdd;
-      if( manager.log.length() > 20000 ) { manager.log := manager.log.substring( manager.log.length()-20000 );}
+      if( manager.log.length() > 25000 ) { manager.log := manager.log.substring( manager.log.length()-25000 );}
     }
   }
 
@@ -183,9 +183,11 @@ section functions
     var entries : List<Entry>;
     var projectName := r.project.name;
     for( url:String in rtr.getEntriesForRemoval() ) {
-      entries := ( from Entry as e where e.url=~url and e.repo = ~r );
-      //when no hits are retrieved, we might be dealing with a directory, so try to delete all files within that directory using search
-      if( entries.length < 1 )  { entries := ( search Entry in namespace projectName matching repoPath:url [no lucene, strict matching] ).results(); }
-      for( e : Entry in entries ) { e.delete(); log( "Deleted Entry: " + e.url ); }
+      entries := from Entry as e where e.repo = ~r and e.url=~url;
+      
+      //when no hits are retrieved, we might be dealing with a directory, so try to delete all files within that directory
+      if( entries.length < 1 )  { entries := from Entry as e where e.repo = ~r and e.url like ~(url+"/%"); }
+      
+      for( e : Entry in entries ) { RepositoryFetcher.log( "Deleting Entry: " + e.url ); e.delete();  }
     }
   }
