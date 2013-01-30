@@ -188,6 +188,6 @@ section functions
       //when no hits are retrieved, we might be dealing with a directory, so try to delete all files within that directory
       if( entries.length < 1 )  { entries := from Entry as e where e.repo = ~r and e.url like ~(url+"/%"); }
       
-      for( e : Entry in entries ) { RepositoryFetcher.log( "Deleting Entry: " + e.url ); e.delete();  }
+      for( e : Entry in entries ) { RepositoryFetcher.log( "Deleting or renewing: " + e.url ); e.delete();  }
     }
   }
