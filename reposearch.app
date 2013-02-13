@@ -38,7 +38,7 @@ application reposearch
     includeJS( "bootstrap/js/bootstrap.min.js" )
     includeHead( "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" )
     includeHead( gAnalytics() )
-    navbarResponsive {
+    navbar {
   
       navItems{
         if( ns != "Projects" ) {
