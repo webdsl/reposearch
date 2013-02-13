@@ -31,7 +31,6 @@ application reposearch
     includeCSS( "bootstrap/css/bootstrap.min.css" )
     includeCSS( "bootstrap/css/bootstrap-adapt.css" )
     includeCSS( "bootstrap-extension.css" )
-    includeCSS( "prettify.css" )
     includeCSS( "jquery-ui-1.9.1.custom.min.css" )
     includeJS( "jquery-1.8.2.min.js" )
     includeJS( "jquery-ui-1.9.1.custom.min.js" )

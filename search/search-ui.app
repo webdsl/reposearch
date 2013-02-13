@@ -30,8 +30,6 @@ section pages/templates
     }
     mainResponsive( namespace ) {
       includeJS( "completion.js" )
-      includeJS( "prettify.js" )
-      includeJS( "make-clickable.js" )
       includeJS( "jquery.history.js")
       <script>
       setupcompletion( "~source" );
@@ -89,6 +87,7 @@ section pages/templates
       } }
       placeholder resultArea {
         if( query.length() > 0 ) { paginatedTemplate( searcher, pageNum, namespace, langCons ) }
+        else { prettifyCode } // force correct imports
       }
     }
     action updateResults() {
