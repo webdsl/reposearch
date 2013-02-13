@@ -36,9 +36,6 @@ application reposearch
     includeJS( "jquery-1.8.2.min.js" )
     includeJS( "jquery-ui-1.9.1.custom.min.js" )
     includeJS( "bootstrap/js/bootstrap.min.js" )
-    includeJS( "completion.js" )
-    includeJS( "prettify.js" )
-    includeJS( "make-clickable.js" )
     includeHead( "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" )
     includeHead( gAnalytics() )
     navbarResponsive {

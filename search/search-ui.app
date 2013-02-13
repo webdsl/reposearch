@@ -29,13 +29,29 @@ section pages/templates
       description { output( "Search the " +  prjName + " source code repositories instantly with the ability to filter on file extension, file location and language construct.") }
     }
     mainResponsive( namespace ) {
+      includeJS( "completion.js" )
+      includeJS( "prettify.js" )
+      includeJS( "make-clickable.js" )
+      includeJS( "jquery.history.js")
       <script>
       setupcompletion( "~source" );
       
-      //When using browser history, load the url which is previously pushed to the history:
-      window.onpopstate = function() {
-        $('body').load(location.href)
-      };
+      var updatingResults = false;
+      
+      (function(window,undefined){
+        var History = window.History;
+
+        // Bind to State Change
+        History.Adapter.bind(window,'statechange',function(){ // Note: We are using statechange instead of popstate
+          // Only load the page from address bar if the history state changed by a back/forward action from browser,
+          // not by our own pushState call during updateResults action 
+          if(updatingResults) {                          
+             updatingResults = false;
+          } else {
+             window.open(location.href,'_self','',true);
+          }
+        });
+      })(window);
       </script>
       
       gridRowFluid { gridSpan( 12 ) {
@@ -80,8 +96,9 @@ section pages/templates
         searcher := toSearcher( query,namespace, langCons ); //update with entered query
         if( count from searcher  > 0 ){
           //HTML5 feature, replace url without causing page reload
-          runscript( "window.history.pushState('history','reposearch','" + navigate( doSearch( searcher, namespace, langCons, 1 ) ) + "');" );
-          incSearchCount( namespace );
+          runscript( "window.updatingResults = true; History.pushState(null,'Reposearch','" + navigate( doSearch( searcher, namespace, langCons, 1 ) ) + "');" );
+          // runscript( "window.initialized = true; window.history.pushState(null,'Reposearch','" + navigate( doSearch( searcher, namespace, langCons, 1 ) ) + "');" );
+          incSearchCount( namespace );// Change our States
         }
         updateAreas( searcher, 1, namespace, langCons );
         replace( paginationOptions, paginationButtons( searcher, namespace, langCons ) );
