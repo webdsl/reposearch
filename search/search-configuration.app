@@ -15,6 +15,10 @@ module searchconfiguration
     tokenizer = PatternTokenizer(
       pattern="((\n|^)\\d+\\s)|([a-zA-Z_]\\w*)|\\d+|[!-/:-@\\[-`{-~]",
       group="0" )
+    token filter = PatternReplaceFilter(
+      pattern="(\n|^)\\d+\\s",
+      replacement="",
+      replace="all" )
     token filter = LowerCaseFilter
   }
 
@@ -30,10 +34,9 @@ module searchconfiguration
 
   analyzer code_identifiers_cs {
     //The line number pattern is filtered out by a char filter: ((\n|^)\\d+\\s)
-    char filter = PatternReplaceCharFilter( pattern="(\n|^)\\d+\\s", replacement=" " )
-    tokenizer  = PatternTokenizer(
-      pattern="([a-zA-Z_]\\w*([\\-\\.](?=\\w))?)+",
-      group="0" )
+    char filter = PatternReplaceCharFilter( pattern="((\n|^)\\d+\\s)|[^a-zA-Z_\\-0-9]+", replacement=" " )    
+    tokenizer  = WhitespaceTokenizer
+    token filter = LengthFilter(min="2", max="100", enablePositionIncrements="false")
   }
 
   analyzer path_analyzer {
