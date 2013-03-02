@@ -59,7 +59,7 @@ section pages/templates
               gridSpan( 10,1 ) {
                 gridRowFluid {
                   gridSpan( 8 ) {
-                    formEntry( "Search " + prjName )  { <span class="ui-widget">input( query ) [autocomplete="off", autofocus="", id="searchfield", onkeyup=updateResults()] </span>}
+                    formEntry( "Search " + prjName )  { <span class="ui-widget">input( query ) [autocomplete="off", autofocus="", id="searchfield", onkeyup=updateResults(), type="search"] </span>}
                   }
                   gridSpan( 4 ) {
                     formEntry( "Results per page" )  {
@@ -139,7 +139,7 @@ section pages/templates
       if( highlightedContent[0].length < 1 ) {
         ruleOffset := "1";
       } else {
-        ruleOffset := /.+#(\d+).>.*/.replaceFirst("$1",highlightedContent[0][0]);
+        ruleOffset := /.+#(\d+|\?).>.*/.replaceFirst("$1",highlightedContent[0][0]);
       }
     }
     gridRowFluid {

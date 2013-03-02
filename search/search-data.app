@@ -129,7 +129,7 @@ section functions
     }
     //Line number unknown, link to line num 1
     if(fixPrevious){
-      listLines.set( listLines.length-2 , "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap( viewFileUri, "?" )  ) + "</div>" );
+      listLines.set( listLines.length-1 , "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap( viewFileUri, "?" )  ) + "</div>" );
     }
     lists.add( listLines );
     lists.add( listCode );
