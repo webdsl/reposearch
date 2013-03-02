@@ -1,4 +1,5 @@
 body {
+    background: url("/stylesheets/images/grey.png") repeat scroll 0 0 transparent;
     font-family: Arial;
     margin-left: 15px;
 }
@@ -38,7 +39,6 @@ h4, h5{
     padding: 0;
     position: relative;
     z-index: 1;
-    min-height: 18px;
 }
 
 .linenumbera {
