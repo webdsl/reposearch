@@ -40,10 +40,6 @@ application reposearch
     navbar {
   
       navItems{
-        if( ns != "Projects" ) {
-          navItem { navigate( search( ns, "" ) ) { iRefreshWhite() " New search"  } }
-          navItem { navigate( search( ns, "" ) ) [target:="_blank"]{ iPlusWhite() " New tab"  } }
-        }
         navItem{
           dropdownInNavbar( project ) {
             dropdownMenu {
@@ -75,6 +71,10 @@ application reposearch
               }
             }
           }
+        }
+        if( ns != "Projects" ) {
+          navItem { navigate( search( ns, "" ) ) { iRefreshWhite() " New search"  } }
+          navItem { navigate( search( ns, "" ) ) [target:="_blank"]{ iPlusWhite() " New tab"  } }
         }
         navItem{
           dropdownInNavbar( "Add your project" ) {
