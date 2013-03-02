@@ -57,6 +57,7 @@ section pages/templates
           r.save();
           newSuccessMessage( "Your request is sent to the administrators. You will receive an email when your request is processed" );
           emailRequest( r );
+          runscript("$('#addProject').modal('hide');");
         } [class="btn btn-primary"] {"add request"}
       </div>
     }
