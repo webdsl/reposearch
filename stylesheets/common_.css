@@ -1,5 +1,5 @@
 body {
-    background: url("/stylesheets/images/grey.png") repeat scroll 0 0 transparent;
+    background: url("./images/grey.png") repeat scroll 0 0 transparent;
     font-family: Arial;
     margin-left: 15px;
 }
