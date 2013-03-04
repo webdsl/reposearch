@@ -319,7 +319,7 @@ public class RepositoryFetcher {
           }
         } else {
           boolean isBinFile = true;
-          Entry c = new Entry();
+          Entry c = Entry.createEmpty();
           c.setNameNoEventsOrValidation ( f.getName() );
           c.setUrlNoEventsOrValidation ( fixUrl ( repo+dir+f.getName() ) );
           if ( !hasBinaryFileExtension ( f.getName() ) ) {
@@ -372,7 +372,7 @@ public class RepositoryFetcher {
     String fileName = url.substring ( url.lastIndexOf ( '/' ) +1 );
     String content = null, contentFixed = null;
     boolean isBinFile = true;
-    Entry c = new Entry();
+    Entry c = Entry.createEmpty();
     c.setNameNoEventsOrValidation ( fileName );
     c.setUrlNoEventsOrValidation ( fixUrl ( url ) );
     if ( ! hasBinaryFileExtension ( fileName ) ) {
