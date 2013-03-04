@@ -2,7 +2,7 @@
 
 Visit the live demo we use ourselves:
 
-[webdsl.org/reposearch](http://www.webdsl.org/reposearch)
+[codefinder.org](http://www.codefinder.org)
 
 ## Description ##
 
