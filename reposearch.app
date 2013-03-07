@@ -20,7 +20,7 @@ application reposearch
   }
 
   function gAnalytics() : String {
-    return "<script type=\"text/javascript\">var _gaq = _gaq || []; _gaq.push( ['_setAccount', 'UA-10588367-1'] ); _gaq.push( ['_trackPageview'] ); ( function() { var ga = document.createElement( 'script' ); ga.type = 'text/javascript'; ga.async = true; ga.src = ( 'https:' == document.location.protocol ? 'https://ssl' : 'http://www' ) + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName( 'script' ) [0]; s.parentNode.insertBefore( ga, s ); } ) ();</script>";
+    return "<script type=\"text/javascript\">var _gaq = _gaq || []; var pluginUrl = '//www.google-analytics.com/plugins/ga/inpage_linkid.js'; _gaq.push(['_require', 'inpage_linkid', pluginUrl]); _gaq.push( ['_setAccount', 'UA-38993791-2'] ); _gaq.push( ['_trackPageview'] ); ( function() { var ga = document.createElement( 'script' ); ga.type = 'text/javascript'; ga.async = true; ga.src = ( 'https:' == document.location.protocol ? 'https://ssl' : 'http://www' ) + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName( 'script' ) [0]; s.parentNode.insertBefore( ga, s ); } ) ();</script>";
   }
   
   define mainResponsive( ns : String ) {
@@ -113,7 +113,7 @@ application reposearch
   
   define page root() {
     title       { "Reposearch - Good in finding code fragments" }
-    description { "A powerful source code search facility with project-scoped type ahead suggestions. With support for any SVN/Github repository location. Supports filtering on file extension, location and language construct." }
+    description { "A powerful source code search engine with project-scoped type ahead suggestions. With support for any SVN/Github repository location. Supports filtering on file extension, location and language construct." }
     mainResponsive( "Projects" ) {
       gridRowFluid {
         gridSpan( 12 ) {
