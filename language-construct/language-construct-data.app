@@ -25,7 +25,7 @@ section entities
     
       /*store names of matches which are extracted by
        the pattern's group, preceded by pattern's name
-       and a seperator(#NEWITEM#), eg.: #NEWITEM#class#MATCH#SvnFetcher
+       and a seperator(' '), eg.: ' class#MATCH#SvnFetcher'
       */
       matches :: Text := getMatches()
       function getMatches() : String{
