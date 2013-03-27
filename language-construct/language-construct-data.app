@@ -8,7 +8,6 @@ section entities
       group   :: Int
       fileExts:: String
       caseSensitive :: Bool
-      nameNoSpaces  :: String := name.replace( " ", "_" )
       projects      -> Set<Project> ( inverse = Project.langConstructs )
     
       function addLangConstructConstraint( searcher : EntrySearcher ) { addLangConstructConstraint( searcher, name ); }
@@ -22,18 +21,21 @@ section entities
     entity ConstructMatch {
       entry         -> Entry
       langConstruct -> LangConstruct
+      langConsName  :: String := langConstruct.name 
+      project       :: String := entry.projectname 
     
-      /*store names of matches which are extracted by
-       the pattern's group, preceded by pattern's name
-       and a seperator(#NEWITEM#), eg.: #NEWITEM#class#MATCH#SvnFetcher
+      /**
+      * Retrieves matches in the form of: ' class#MATCH#SvnFetcher SvnFetcher'
+      * The search field 'matches' is used in 2 contexts:
+      *  one matching an identifier independent on the language construct (for faceting), using token 'SvnFetcher'
+      *  one matching the identifier specific for a language construct, using token 'class#MATCH#SvnFetcher'        
       */
-      matches :: Text := getMatches()
-      function getMatches() : String{
-        return MatchExtractor.extract( langConstruct, entry.content );
-      }
+      matches :: Text := MatchExtractor.extract( langConstruct, entry.content )
     
-      search mapping{
-        matches using definedConstructMatchAnalyzer
+      search mapping {
+        langConsName using none
+        matches      using definedConstructMatchAnalyzer
+        namespace by project
       }
     }
     
@@ -76,17 +78,32 @@ section entities
   }
     
 section functions
+
+  function getLanguageConstructFacets( searcher : EntrySearcher ) : List<Facet> {                                                      
+    return langConsName facets from search ConstructMatch matching matches: +searcher.getQuery() [no lucene]
+                                                          with facets (langConsName, 20)
+                                                          in namespace searcher.getNamespace();
+  }
     
   function addLangConstructConstraint( searcher : EntrySearcher, constructName: String ) {
     var constraint := constructName.replace( " ", "_" ) + "#MATCH#" + searcher.getQuery();
-    ~searcher matching constructs.matches: +constraint;
+    ~searcher matching constructs.matches: +constraint [no lucene];
   }
+  
   function replaceLangConstructConstraint( oldSearcher : EntrySearcher, constructName : String ) : EntrySearcher {
     var newSearcher := toSearcher( oldSearcher.getQuery(), oldSearcher.getNamespace(), constructName );
     newSearcher.addFacetSelection( oldSearcher.getFacetSelection() );
     return newSearcher;
   }
   
+  function deleteUnlinkedConstructMatches( ) {
+    var unlinked := from ConstructMatch as c where c.entry = null;
+    RepositoryFetcher.log( "Number of unlinked construct matches (should be 0, otherwise we're dealing with a bug):" + unlinked.length);
+    for( c : ConstructMatch in unlinked ) {  c.delete();}
+  }
+  
+section native java
+
   native class org.webdsl.reposearch.langcons.MatchExtractor as MatchExtractor {
     static extract( LangConstruct, String ) : String
     static decorateMatches( LangConstruct, String, String ) : String

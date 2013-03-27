@@ -14,6 +14,8 @@ public class MatchExtractor {
       while ( matcher.find() ) {
         sb.append ( prefix );
         sb.append ( matcher.group ( langCons.getGroup() ) );
+        sb.append ( SEP );
+        sb.append ( matcher.group ( langCons.getGroup() ) );
       }
       return sb.toString();
     } catch ( Exception ex ) {
@@ -26,11 +28,12 @@ public class MatchExtractor {
     Matcher matcher = getMatcher ( langCons.getPattern(), langCons.getCaseSensitive(), text );
     String currentMatchTerm, currentReplacement;
     StringBuffer sb = new StringBuffer();
+    String prefix = getPrefix ( langCons.getName() );
     while ( matcher.find() ) {
       currentMatchTerm = matcher.group ( langCons.getGroup() );
       //now, only replace instances for query matches
       if ( currentMatchTerm.equalsIgnoreCase ( queryTerm ) ) {
-        currentReplacement = matcher.group().replace ( currentMatchTerm, getPrefix ( langCons.getName() ) + matcher.group ( langCons.getGroup() ) + SEP );
+        currentReplacement = matcher.group().replace ( currentMatchTerm, prefix + matcher.group ( langCons.getGroup() ) + SEP );
       } else {
         currentReplacement = matcher.group();
       }

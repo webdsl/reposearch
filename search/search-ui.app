@@ -78,7 +78,7 @@ section pages/templates
             }
             gridRowFluid{ gridSpan( 12 ) {
               placeholder facetArea {
-                if( query.length() > 0 ) { viewFacets( searcher, namespace, langCons ) }
+                if( searcher.getQuery().length() > 0 ) { viewFacets( searcher, namespace, langCons ) }
               }
             } }
 
@@ -86,21 +86,20 @@ section pages/templates
         }
       } }
       placeholder resultArea {
-        if( query.length() > 0 ) { paginatedTemplate( searcher, pageNum, namespace, langCons ) }
+        if( searcher.getQuery().length() > 0 ) { paginatedTemplate( searcher, pageNum, namespace, langCons ) }
         else { prettifyCode } // force correct imports
       }
     }
     action updateResults() {
       if( query.length() > 2 ) {
-        searcher := toSearcher( query,namespace, langCons ); //update with entered query
+        searcher := toSearcher( query,namespace, "" ); //update with entered query, discard lang construct constraint
         if( count from searcher  > 0 ){
-          //HTML5 feature, replace url without causing page reload
+          //replace url without causing page reload
           runscript( "window.updatingResults = true; History.pushState(null,'Reposearch','" + navigate( doSearch( searcher, namespace, langCons, 1 ) ) + "');" );
-          // runscript( "window.initialized = true; window.history.pushState(null,'Reposearch','" + navigate( doSearch( searcher, namespace, langCons, 1 ) ) + "');" );
-          incSearchCount( namespace );// Change our States
+          incSearchCount( namespace );
         }
-        updateAreas( searcher, 1, namespace, langCons );
-        replace( paginationOptions, paginationButtons( searcher, namespace, langCons ) );
+        updateAreas( searcher, 1, namespace, "" );
+        replace( paginationOptions, paginationButtons( searcher, namespace, "" ) );
       } else {
         clear( resultArea );
         clear( facetArea );
@@ -178,6 +177,7 @@ section pages/templates
     var lc_hasSel        := langCons.length() > 0;
     var prj              := findProject( namespace );
     var path_selection   := List<Facet>();
+    var langConsFacets   := getLanguageConstructFacets( searcher );
     init {
       for( f : Facet in selected ) {
         if( f.getFieldName() == "fileExt" && !f.isMustNot() ) {
@@ -202,18 +202,18 @@ section pages/templates
           }
 
           gridSpan( 5 ) {
-            if( prj != null && prj.langConstructs.length > 0 ) {
+            if( langConsFacets.length  > 0 ) {
               formEntry( "Language construct" ) {
-                for( lc : LangConstruct in prj.langConstructs order by lc.name ) {
+                for( f : Facet in langConsFacets order by f.getValue() ) {
                   pullLeft {
                     if( lc_hasSel ) {
-                      if( lc.name == langCons ) {
-                        navigate search( namespace, searcher.getQuery() ) { buttonGroup { buttonMini{excludeFacetSym() } buttonMini{output( langCons ) } } }
+                      if( f.getValue() == langCons ) {
+                        navigate search( namespace, searcher.getQuery() ) { buttonGroup { buttonMini{excludeFacetSym() } buttonMini{ output( f.getValue() ) " (" output( f.getCount() ) ")" } } }
                       } else {
-                        buttonGroup {div[class="btn btn-mini disabled"]{ includeFacetSym() } div[class="btn btn-mini disabled"]{submitlink updateResults( lc ) { output( lc.name ) }}}
+                        buttonGroup {div[class="btn btn-mini disabled"]{ includeFacetSym() } div[class="btn btn-mini disabled"]{ submitlink updateResults( f.getValue() ) { output( f.getValue() ) " (" output( f.getCount() ) ")" }}}
                       }
                     } else {
-                      submitlink updateResults( lc ) { buttonGroup {buttonMini{ includeFacetSym() } buttonMini{output( lc.name ) }}}
+                      submitlink updateResults( f.getValue() ) { buttonGroup {buttonMini{ includeFacetSym() } buttonMini{ output( f.getValue() ) " (" output( f.getCount() ) ")" }}}
                     }
                   }
                 }
@@ -232,7 +232,8 @@ section pages/templates
         }
       }
     }
-    action updateResults( p: LangConstruct ) {
+    action updateResults( langConstructName : String ) {
+      var p := findLangConstruct( langConstructName );
       if( lc_hasSel ) {
         return doSearch( p.replaceLangConstructConstraint( searcher ), namespace, p.name, 1 );
       } else {
@@ -292,7 +293,7 @@ section pages/templates
 
   define ajax paginatedResults( searcher : EntrySearcher, pagenumber : Int, namespace : String, langCons : String ) {
     var resultsPerPage := SearchPrefs.resultsPerPage;
-    var resultList := results from( ~searcher offset( ( pagenumber - 1 ) * resultsPerPage ) limit resultsPerPage );
+    var resultList := results from ~searcher offset( ( pagenumber - 1 ) * resultsPerPage ) limit resultsPerPage;
     var size := count from searcher;
     var lastResult := size;
     var current : Int;

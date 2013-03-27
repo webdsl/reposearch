@@ -19,6 +19,8 @@ section pages/templates
 
       manageFrontpageMessage()
       
+      misc()
+      
       logMessage()
     }
   }
@@ -101,7 +103,6 @@ section pages/templates
 
   define manageProjects() {
     var p := "";
-    var fr := ( from Repo where project is null );
     manageContainer( "Manage Projects" ) {
       manageContainerNested( "New Projects" ) {
 	      inlForm {
@@ -119,17 +120,7 @@ section pages/templates
       }
               "* Removal of a project may take over a minute, please be patient."
               <br />
-      if( fr.length > 0 ) {
-        <br />
-        submitlink action {
-          for( r:Repo in fr ) {
-            deleteAllRepoEntries( r );
-            r.delete();
-          }
-          return manage();
-        } { buttonMini{ "Remove foreign Repo's(" output( fr.length ) ")"} } " (Repo entities where project == null)"
-      }
-
+      
     }
     action showProject( pr : Project ) {
       visibility( "projectPH"+pr.name, toggle );
@@ -209,6 +200,24 @@ section pages/templates
       var objDiv = document.getElementById("log");
       objDiv.scrollTop = objDiv.scrollHeight; 
       </script>
+    }
+  }
+  
+  define misc(){
+    var fr := ( from Repo where project is null );
+    
+    manageContainer( "Misc" ){
+      submitlink action { deleteUnlinkedConstructMatches(); }{ buttonMini{ "Delete unlinked construct matches" } }
+      if( fr.length > 0 ) {
+        <br />
+        submitlink action {
+          for( r:Repo in fr ) {
+            deleteAllRepoEntries( r );
+            r.delete();
+          }
+          return manage();
+        } { buttonMini{ "Remove foreign Repo's(" output( fr.length ) ")"} } " (Repo entities where project == null)"
+      }
     }
   }
 

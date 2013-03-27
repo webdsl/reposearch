@@ -43,12 +43,12 @@ section functions
 
   function toSearcher( q:String, ns:String, langCons:String ) : EntrySearcher {
 
-    var searcher := search Entry in namespace ns with facets( fileExt, 120 ), ( repoPath, 200 ) [no lucene, strict matching];
+    var searcher := search Entry in namespace ns with facets fileExt(120), repoPath(200) [no lucene, strict matching];
     // if(SearchPrefs.regex) {
     //     return searcher.regexQuery( q );
     // }
     var slop := if( SearchPrefs.exactMatch ) 0 else 100000;
-
+    
     if( SearchPrefs.caseSensitive ) { searcher:= ~searcher matching contentCase, fileName: q~slop; }
     else                            { searcher:= ~searcher matching q~slop; }
 
