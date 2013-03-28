@@ -28,7 +28,7 @@ section entities
       * Retrieves matches in the form of: ' class#MATCH#SvnFetcher SvnFetcher'
       * The search field 'matches' is used in 2 contexts:
       *  one matching an identifier independent on the language construct (for faceting), using token 'SvnFetcher'
-      *  one matching the identifier specific for a language construct, using token 'class#MATCH#SvnFetcher'        
+      *  one matching the identifier specific for a language construct, using token 'class#MATCH#SvnFetcher'
       */
       matches :: Text := MatchExtractor.extract( langConstruct, entry.content )
     

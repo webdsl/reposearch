@@ -25,7 +25,7 @@ section pages/templates
       title       { output( query + " - " +  prjName + " | Reposearch" ) }
       description { output( "Search results for '" + query + "' in source code repositories of " + prjName) }
     } else {
-      title       { output( "Search " + prjName + " | Reposearch" ) }
+      title       { output( "Search " + prjName + "'s source code | Reposearch" ) }
       description { output( "Search the " +  prjName + " source code repositories instantly with the ability to filter on file extension, file location and language construct.") }
     }
     mainResponsive( namespace ) {

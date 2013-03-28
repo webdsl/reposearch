@@ -8,6 +8,16 @@ section entities
     url         :: URL
     projectname :: String
     repo        -> Repo
+    
+//     function getDynamicSearchFields() : Set<DynamicSearchField>{
+// 	    var toReturn := Set<DynamicSearchField>();
+// 	    var fld : String;
+// 	    var val : String;
+// 
+// 	    toReturn.add( DynamicSearchField( "myfield" , "myval") );
+// 	
+// 	    return toReturn;
+//     }
   }
   search mapping Entry {
     + content using keep_all_chars      as content
@@ -20,7 +30,7 @@ section entities
     namespace by projectname
   }
 
-section pages/templaets
+section pages/templates
 
   //backwards compatibility
   define page showFile( searcher : EntrySearcher, e : Entry ) {

@@ -112,7 +112,7 @@ application reposearch
   define override appname() { "Reposearch" }
   
   define page root() {
-    title       { "Reposearch - Good in finding code fragments" }
+    title       { "Reposearch Source Code Search Engine - Good in finding code fragments" }
     description { "A powerful source code search engine with project-scoped type ahead suggestions. With support for any SVN/Github repository location. Supports filtering on file extension, location and language construct." }
     mainResponsive( "Projects" ) {
       gridRowFluid {

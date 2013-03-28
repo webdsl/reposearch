@@ -13,7 +13,7 @@ module search/search-misc
   }
 
   define prettifyCode() { prettifyCodeHelper( "" ) }
-  define prettifyCode( projectName : String ) { prettifyCodeHelper( "\""+URLFilter.filter( projectName ) +"\"" ) }
+  define prettifyCode( projectName : String ) { prettifyCodeHelper( "\"" + URLFilter.filter( projectName ) + "\"" ) }
   define prettifyCodeHelper( projectName : String ) {
     //highlight code using google-code-prettify
     includeCSS( "prettify.css" )
