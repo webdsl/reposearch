@@ -80,7 +80,7 @@ section entities
 section functions
 
   function getLanguageConstructFacets( searcher : EntrySearcher ) : List<Facet> {                                                      
-    return langConsName facets from search ConstructMatch matching matches: +searcher.getQuery() [no lucene]
+    return langConsName facets from search ConstructMatch matching matches: +searcher.getQuery() [no lucene, strict matching]
                                                           with facets (langConsName, 20)
                                                           in namespace searcher.getNamespace();
   }
