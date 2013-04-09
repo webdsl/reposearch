@@ -17,7 +17,7 @@ module search/search-misc
   define prettifyCodeHelper( projectName : String ) {
     //highlight code using google-code-prettify
     includeCSS( "prettify.css" )
-    includeJS( "prettify.js" )
+    includeJS( "prettify/prettify.js" )
     includeJS( "make-clickable.js" )
     <script>
       prettifyAndMakeClickable( ~projectName );
