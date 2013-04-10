@@ -32,6 +32,9 @@ section pages/templates
       includeJS( "completion.js" )
       includeJS( "jquery.history.js")
       <script>
+      /*Fixes encode issue for history.js see: https://github.com/browserstate/history.js/issues/257#issuecomment-15831039 */
+       // no fix yet
+       
       setupcompletion( "~source" );
       
       var updatingResults = false;
@@ -59,7 +62,7 @@ section pages/templates
               gridSpan( 10,1 ) {
                 gridRowFluid {
                   gridSpan( 8 ) {
-                    formEntry( "Search " + prjName )  { <span class="ui-widget">input( query ) [autocomplete="off", autofocus="", id="searchfield", onkeyup=updateResults(), type="search"] </span>}
+                    formEntry( "Search " + prjName )  { <span class="ui-widget">input( query ) [autocomplete="off", autofocus="", id="searchfield", oninput="$(this).keyup();", onkeyup=updateResults(), type="search"] </span>}
                   }
                   gridSpan( 4 ) {
                     formEntry( "Results per page" )  {
@@ -95,7 +98,7 @@ section pages/templates
         searcher := toSearcher( query,namespace, "" ); //update with entered query, discard lang construct constraint
         if( count from searcher  > 0 ){
           //replace url without causing page reload
-          runscript( "window.updatingResults = true; History.pushState(null,'Reposearch','" + navigate( doSearch( searcher, namespace, langCons, 1 ) ) + "');" );
+          runscript( "window.updatingResults = true; History.pushState({},'" + query.escapeJavaScript() + " - " +  prjName + " | Reposearch" + "','" + navigate( doSearch( searcher, namespace, langCons, 1 ) ) + "');" );
           incSearchCount( namespace );
         }
         updateAreas( searcher, 1, namespace, "" );

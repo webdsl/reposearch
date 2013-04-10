@@ -163,7 +163,7 @@ section pages/templates
     var fpMsgText := fpMsg.msg;
     manageContainer( "Manage Frontpage Message" ){
       inlForm{
-        formEntry( "Message" ){ input( fpMsgText ) [onkeyup := updateFpMsgPreview( fpMsgText )] }
+        formEntry( "Message" ){ input( fpMsgText ) [oninput="$(this).keyup();", onkeyup=updateFpMsgPreview( fpMsgText )] }
         div { submitlink action{fpMsg.msg := fpMsgText; fpMsg.save();}{ buttonPrimaryMini{"save"} } }
       }
       <h5>"Preview"</h5>
