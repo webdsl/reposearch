@@ -104,7 +104,7 @@ section functions
 
   function queryRepoTask() {
     langConsRenewSchedule.run();
-    var repos := from Repo where refresh=true and( inrefresh=null or inrefresh=false );
+    var repos := from Repo where refresh=true and inRefresh=false;
     var skippedFiles := List<String>();
     if( repos.length > 0 ) {
       var r := repos[0];

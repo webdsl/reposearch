@@ -16,7 +16,7 @@ application reposearch
   imports elib/lib
   
   init {
-    Project{name:="WebDSL" repos:=[ ( SvnRepo{url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac"} as Repo )]} .save();
+    Project{name:="WebDSL" repos:=[ ( SvnRepo{url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac" refresh:=true } as Repo )]} .save();
   }
 
   function gAnalytics() : String {
