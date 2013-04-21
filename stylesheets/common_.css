@@ -138,3 +138,8 @@ textarea.inputTextarea {
 #resultArea .pagination {
     margin: 0 0 13px;
 }
+.repolink {
+    font-size: 11px;
+    font-style: inherit;
+    color: #999999;
+}

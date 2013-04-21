@@ -124,22 +124,72 @@ application reposearch
       }
       gridRowFluid {
         gridSpan( 10,1 ) {
-          header4 { "Search within project or " navigate( search( "", "" ) ) {"all"} " projects:" }
-          tableNotBordered {
-            theader{
-              row{
-                th[class="span4"]{ "Project" } th[class="span8"]{ "Repositories" }
-              }
-            }
-            for( p:Project order by p.displayName ) {
-              row {
-                column{ navigate( search( p.name, "" ) ) {output( p.displayName ) }}
-                column{ reposLink( p ) }
-              }
-            }
+          
+          recentProjects
+          
+          header3 { "Search within project or " navigate( search( "", "" ) ) {"all"} " projects:" }
+          gridRowFluid{
+            filterProject
           }
+          
+          placeholder projects{  
+            projectsTable( from Project, true )
+          }        
+
         }
       }
+    }
+  }
+  
+  define filterProject(){
+    var prefix := "";
+    gridSpan(4){ inlForm{ 
+      input( prefix ) [id="filterInput", autocomplete="off", oninput="$(this).keyup();", onkeyup=updateProjects(), placeholder="Filter"] 
+    } }
+    
+    action updateProjects(){
+      if(prefix.length() > 0){
+        var prefixq := ProjectSearcher.escapeQuery(prefix) + "*";
+        var results := results from search Project matching prefixq;
+        replace(projects, projectsTable( results , false ));
+      } else {
+        replace(projects, projectsTable( from Project, true ));
+      }
+    }
+  }
+  
+  define ajax projectsTable(projects : List<Project>, orderByName : Bool){
+    if(projects.length < 1) {
+      "No projects found"
+    } else {
+	    tableNotBordered {
+	      if (orderByName){
+	        for( p:Project in projects order by p.displayName ) {
+	          row {
+  	          column[class="span4"]{ navigate( search( p.name, "" ) ) {output( p.displayName ) }}
+	            column[class="span8"]{ reposLink( p ) }
+	          }
+	        }
+	      } else {
+          for( p:Project in projects) {
+            row {
+              column[class="span4"]{ navigate( search( p.name, "" ) ) {output( p.displayName ) }}
+              column[class="span8"]{ reposLink( p ) }
+            }
+          }
+	      }    
+	    }
+    }
+  }
+  
+    
+  define recentProjects() {
+    var recentProjects := SearchPrefs.projectHistoryNotNull.split( ";" );
+    if (recentProjects.length > 0) {
+      header3 { "Your recently searched projects" }
+	      for( prjStr : String in recentProjects limit 4){
+		      gridRowFluid{ navigate( search( prjStr, "" ) ) { output( capitalize( prjStr ) ) } }
+		    }
     }
   }
  

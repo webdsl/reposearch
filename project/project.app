@@ -26,6 +26,10 @@ module project/project
     function newWeek() {
       weekStartSearchCount := searchCount;
     }
+    
+    search mapping{
+      name
+    }
   }
   
   function capitalize(name : String) : String {

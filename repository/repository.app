@@ -9,7 +9,7 @@ section entities
     inRefresh   :: Bool     ( default=false )
     error       :: Bool
     rev         :: Long
-    lastRefresh :: DateTime( default=now().addYears( -20 ) )
+    lastRefresh :: DateTime ( default=now().addYears( -20 ) )
   }
   
   entity SvnRepo : Repo {
@@ -77,8 +77,9 @@ section pages/templates
 
   define ajax showReposLink( p : Project ) {
     var nOfRepos := p.repos.length; 
-    var btnText := if ( nOfRepos == 1) 1+" repository" else nOfRepos+" repositories"
-    submitlink action {replace( "repos-"+p.displayName, repos( p ) );} {  buttonMini{ output( btnText ) } }
+    var text := "repositories (" + nOfRepos + ")";
+    
+    submitlink action {replace( "repos-"+p.displayName, repos( p ) );}[class:="repolink"] {  output( text )  }
   }
 
   define output( r : Repo ) {
@@ -113,7 +114,7 @@ section pages/templates
 
   define ajax repos( p : Project ) {
     gridRowFluid() {
-      submitlink action {replace( "repos-"+p.displayName, showReposLink( p ) );} { buttonMini{"hide"} }
+      submitlink action {replace( "repos-"+p.displayName, showReposLink( p ) );}[class:="repolink"] { "hide" }
     }
     for( r : Repo in p.repos ) {
       gridRowFluid {
