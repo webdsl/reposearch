@@ -1,10 +1,13 @@
 targetdir=reposearch-app
 
-echo -e "appname=reposearch\ndb=h2\ndbfile=reposearch.db\nindexdir=index\ndbmode=update" > application.ini
-webdsl build
-webdsl check-web
+echo -e "appname=reposearch\ndb=h2\ndbfile=reposearch.db\nindexdir=index\ndbmode=update\nsearchstats=true" > application.ini
+webdsl build war
+ant -f .servletapp/build.xml copy-clean-tomcat
 mkdir $targetdir
-cp -r .servletapp/ $targetdir/app-files
-echo -e "cd app-files\njava -cp "WEB-INF/classes/:WEB-INF/lib/*" utils.TestRun" > $targetdir/run.sh
+mkdir $targetdir/app-files
+cp -r .servletapp/tomcat/tomcat $targetdir/app-files/tomcat6x
+cp .servletapp/reposearch.war $targetdir/app-files/tomcat6x/webapps/reposearch.war
+echo -e "sh ./app-files/tomcat6x/bin/catalina.sh run" > $targetdir/run.sh
+echo -e "./app-files/tomcat6x/bin/catalina.bat run" > $targetdir/run.bat
+chmod +x $targetdir/app-files/tomcat6x/bin/*.sh
 chmod +x $targetdir/run.sh
-cp $targetdir/run.sh $targetdir/run.bat
