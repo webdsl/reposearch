@@ -79,7 +79,7 @@ Make sure you have the latest webdsl eclipse plugin installed. We recommend usin
 #### Optional: Change google analytics code ####
 We currently have our google analytics script inserted into the application code.
 The function gAnalytics(), which can be found in [reposearch.app](https://github.com/webdsl/reposearch/blob/master/reposearch.app) , is used to add it to each page. You may want to adapt this code to a different analytics account, or just remove it by returning an empty String instead.
-Our analytics profile is setup to ignore other domains than webdsl.org, so it won't do any harm if you leave it like that.
+Our analytics profile is setup to ignore other domains than codefinder.org, so it won't do any harm if you leave it like that.
 
 #### Build and run ####
 You can now build Reposearch, which will be deployed to the servlet engine as configured in the application.ini file.
