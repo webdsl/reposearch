@@ -57,7 +57,12 @@ Reposearch will index all source code files of the HEAD revision that can be fou
  - Frontpage message can be edited (markdown syntax)
  - Search statistics: weekly and total number of searches can be viewed for each project.
 
-## Installation ##
+## Download 1-click runnable reposearch (file-based h2 db) ##
+There are some todo's (see [issue 49 on yellowgrass](http://yellowgrass.org/issue/Reposearch/49)), but you can download the latest reposearch with tomcat and 1-click run script from our [build farm]( http://hydra.nixos.org/job/webdsl/reposearch-app/reposearch-app/latest/download/1/reposearch-app.zip).  
+Currently, you must first change permissions on all sh files in the tomcat6x/bin dir to be executable, and for the run script in the root folder.
+
+
+## Installation (manual build) ##
 
 ### Build the project ###
 Currently, we cannot provide a ready-to-deploy war file of reposearch. You need to build your own using WebDSL:
