@@ -187,7 +187,7 @@ application reposearch
     var recentProjects := SearchPrefs.projectHistoryNotNull.split( ";" );
     if (recentProjects.length > 0) {
       header3 { "Your recently searched projects" }
-	      for( prjStr : String in recentProjects limit 4){
+	      for( prjStr : String in recentProjects ){
 		      gridRowFluid{ navigate( search( prjStr, "" ) ) { output( capitalize( prjStr ) ) } }
 		    }
     }
