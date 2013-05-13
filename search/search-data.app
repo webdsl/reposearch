@@ -29,6 +29,7 @@ section functions
 
   function interestingPathFacets( searcher : EntrySearcher ) : List<Facet> {
     var previous : Facet;
+    var userQuery :=  "";
     var allFacets:= repoPath facets from searcher;
     var toReturn := List<Facet>();
     for( f : Facet in allFacets order by f.getValue() ) {

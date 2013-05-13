@@ -103,25 +103,37 @@ section pages/templates
 
   define manageProjects() {
     var p := "";
+    var projects := from Project;
+    
     manageContainer( "Manage Projects" ) {
-      manageContainerNested( "New Projects" ) {
+      manageContainerNested( "New Project" ) {
 	      inlForm {
 	        formEntry( "Project Name" ) { input( p ) }
 	        submitlink action{Project{name:=p} .save();} { buttonPrimaryMini{"Add new project"} }
 	      }
-      } 
-      
-      for( pr:Project order by pr.displayName ) {
-	        <h5> 
-	          submitlink( pr.name, showProject( pr ) ) [ajax] 
-	          pullRight{"[" submitlink( "remove project", removeProject( pr ) ) "]*"}
-	        </h5>
-	        <div id=URLFilter.filter( "projectPH"+pr.name ) class="webdsl-placeholder" style="display: none;">showProject( pr ) </div>
       }
-              "* Removal of a project may take over a minute, please be patient."
-              <br />
-      
+      gridRowFluid{
+        filterProject( projects )
+      }      
+      gridRowFluid{
+        placeholder "projectsArea" {
+          showManageProjects( projects )
+        }
+      }
+    }    
+  }
+
+  define ajax showManageProjects(projects : List<Project>){
+    for( pr:Project in projects order by pr.displayName ) {
+        <h5> 
+          submitlink( pr.name, showProject( pr ) ) [ajax] 
+          pullRight{"[" submitlink( "remove project", removeProject( pr ) ) "]*"}
+        </h5>
+        <div id=URLFilter.filter( "projectPH"+pr.name ) class="webdsl-placeholder" style="display: none;">showProject( pr ) </div>
     }
+    "* Removal of a project may take over a minute, please be patient."
+    <br />
+      
     action showProject( pr : Project ) {
       visibility( "projectPH"+pr.name, toggle );
     }
@@ -137,7 +149,7 @@ section pages/templates
       return manage();
     }
   }
-
+  
   define searchCount( pr : Project ) {
     "searches this week(since " output( manager.newWeekMoment ) "): " <b>output( pr.weeklySearchCount ) </b>
     <br />

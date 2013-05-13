@@ -76,9 +76,10 @@ access control rules
   rule ajaxtemplate showLog( * ) {loggedIn() }
   rule ajaxtemplate viewFacets( * ) {true}
   rule ajaxtemplate highlightedResultToggled( * ) {true}
-  rule ajaxtemplate showProject( * ) {loggedIn() }
+  rule ajaxtemplate showManageProjects( * ) {loggedIn() }
   rule ajaxtemplate paginationButtons( * ) {true}
-  rule ajaxtemplate projectsTable( * ) {true}
+  rule ajaxtemplate showProjects ( * ) {true}
+  rule ajaxtemplate showProject ( * ) {true}
   rule page fileUpload( * ) { loggedIn() }
   rule page pendingRequests( * ) {true}
   rule page skippedFiles( * ) {true}

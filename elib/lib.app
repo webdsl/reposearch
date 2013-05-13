@@ -10,7 +10,7 @@ imports elib/editable
 imports elib/coordinates
 imports elib/modal-dialog
 imports elib/rss
-imports elib/wikitext
+// imports elib/wikitext
 imports elib/counter
 imports elib/ace
 imports elib/tabs

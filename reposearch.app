@@ -26,8 +26,6 @@ application reposearch
   define mainResponsive( ns : String ) {
     var project := if( ns == "" ) "All projects" else capitalize(ns);
     var query := "";
-    var projects := [p | p : Project in( from Project ) order by p.displayName];
-    var half  : Int := projects.length/2;
     includeCSS( "bootstrap/css/bootstrap.min.css" )
     includeCSS( "bootstrap/css/bootstrap-adapt.css" )
     includeCSS( "bootstrap-extension.css" )
@@ -48,27 +46,7 @@ application reposearch
               }
               dropdownMenuDivider
               dropdownMenuItem{ navigate search( "","" ) { "All projects" } }
-              dropdownMenuDivider
-              if( projects.length > 10 ) {
-                dropdownSubMenu( projects.get( 0 ).displayName + " - " + projects.get( half-1 ).displayName ) {
-                  dropdownMenu {
-                    for( index:Int from 0 to half ) {
-                      dropdownMenuItem { navigate search( projects.get( index ).name , "" ) {output( projects.get( index ).displayName ) } }
-                    }
-                  }
-                }
-                dropdownSubMenu( projects.get( half ).displayName + " - " + projects.get( projects.length-1 ).displayName ) {
-                  dropdownMenu {
-                    for( index:Int from half to projects.length ) {
-                      dropdownMenuItem { navigate search( projects.get( index ).name , "" ) {output( projects.get( index ).displayName ) } }
-                    }
-                  }
-                }
-              } else {
-                for( p:Project order by p.displayName ) {
-                  dropdownMenuItem { navigate search( p.name, "" ) {output( p.displayName ) } }
-                }
-              }
+              dropdownMenuItem{ navigate root() { "Other project" } }
             }
           }
         }
@@ -77,7 +55,7 @@ application reposearch
           navItem { navigate( search( ns, "" ) ) [target:="_blank"]{ iPlusWhite() " New tab"  } }
         }
         navItem{
-          dropdownInNavbar( "Add your project" ) {
+          dropdownInNavbar( "Add project" ) {
             dropdownMenu {
               dropdownMenuItem{<a data-toggle="modal" href="#addProject">"New project request"</a>}
               dropdownMenuItem{ navigate( pendingRequests() ) { "Pending requests" } }
@@ -112,6 +90,7 @@ application reposearch
   define override appname() { "Reposearch" }
   
   define page root() {
+    var projects := from Project;
     title       { "Reposearch Source Code Search Engine - Good in finding code fragments" }
     description { "A powerful source code search engine with project-scoped type ahead suggestions. With support for any SVN/Github repository location. Supports filtering on file extension, location and language construct." }
     mainResponsive( "Projects" ) {
@@ -129,11 +108,11 @@ application reposearch
           
           header3 { "Search within project or " navigate( search( "", "" ) ) {"all"} " projects:" }
           gridRowFluid{
-            filterProject
+            filterProject( projects )
           }
           
-          placeholder projects{  
-            projectsTable( from Project, true )
+          placeholder "projectsArea" {  
+            showProjects( projects )
           }        
 
         }
@@ -141,47 +120,39 @@ application reposearch
     }
   }
   
-  define filterProject(){
+  define ajax showProjects( projects : List<Project> ){
+    if(projects.length < 1) {
+      "No projects found"
+    } else {
+      // tableNotBordered{  //workaround for http://yellowgrass.org/issue/WebDSL/709 using inline html
+      <table class="table table-striped table-condensed">
+        for( p:Project in projects order by p.displayName ) {
+          row {
+            column[class="span4"]{ navigate( search( p.name, "" ) ) {output( p.displayName ) }}
+            column[class="span8"]{ reposLink( p ) }
+          }
+        }   
+      </table>
+      // }
+    }
+  }
+  
+  define filterProject( projects : Ref<List<Project>> ){
     var prefix := "";
     gridSpan(4){ inlForm{ 
-      input( prefix ) [id="filterInput", autocomplete="off", oninput="$(this).keyup();", onkeyup=updateProjects(), placeholder="Filter"] 
+      input( prefix ) [id="filterInput", autocomplete="off", oninput="$(this).keyup();", autofocus="", onkeyup=updateProjects(), placeholder="Filter"] 
     } }
     
     action updateProjects(){
       if(prefix.length() > 0){
         var prefixq := ProjectSearcher.escapeQuery(prefix) + "*";
-        var results := results from search Project matching prefixq;
-        replace(projects, projectsTable( results , false ));
+        projects := results from search Project matching prefixq;
       } else {
-        replace(projects, projectsTable( from Project, true ));
+        projects := from Project;
       }
+      replace("projectsArea");
     }
   }
-  
-  define ajax projectsTable(projects : List<Project>, orderByName : Bool){
-    if(projects.length < 1) {
-      "No projects found"
-    } else {
-	    tableNotBordered {
-	      if (orderByName){
-	        for( p:Project in projects order by p.displayName ) {
-	          row {
-  	          column[class="span4"]{ navigate( search( p.name, "" ) ) {output( p.displayName ) }}
-	            column[class="span8"]{ reposLink( p ) }
-	          }
-	        }
-	      } else {
-          for( p:Project in projects) {
-            row {
-              column[class="span4"]{ navigate( search( p.name, "" ) ) {output( p.displayName ) }}
-              column[class="span8"]{ reposLink( p ) }
-            }
-          }
-	      }    
-	    }
-    }
-  }
-  
     
   define recentProjects() {
     var recentProjects := SearchPrefs.projectHistoryNotNull.split( ";" );
