@@ -116,7 +116,7 @@ section pages/templates
   }
 
   define navWithAnchor( n:String,a:String ) {
-    rawoutput { <a all attributes href=n+"#"+a> elements </a> }
+    <a all attributes href=n+"#"+a> elements </a> 
   }
 
   define ajax highlightedResultToggled( e : Entry, searcher : EntrySearcher, nOfFragments : Int, langCons : String ) {
@@ -145,10 +145,9 @@ section pages/templates
       }
     }
     gridRowFluid {
-
       navWithAnchor( viewFileUri , ruleOffset ) {
         <h5>
-        output( if( linkText.length() >0 ) linkText else "-" )
+        rawoutput( if( linkText.length() >0 ) linkText else "-" )
             pullRight { div[class="repoFolderLocation"]{ output( location ) } }
         </h5>
       }
