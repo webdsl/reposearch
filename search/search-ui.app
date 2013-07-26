@@ -97,8 +97,12 @@ section pages/templates
       if( query.length() > 2 ) {
         searcher := toSearcher( query,namespace, "" ); //update with entered query, discard lang construct constraint
         if( count from searcher  > 0 ){
+          var queryJs := query.escapeJavaScript();
           //replace url without causing page reload
-          runscript( "window.updatingResults = true; History.pushState({},'" + query.escapeJavaScript() + " - " +  prjName + " | Reposearch" + "','" + navigate( doSearch( searcher, namespace, langCons, 1 ) ) + "');" );
+          runscript(
+            "window.updatingResults = true; History.pushState({},'" + queryJs + " - " +  prjName + " | Reposearch" + "','" + navigate( doSearch( searcher, namespace, langCons, 1 ) ) + "');" 
+          );
+          
           incSearchCount( namespace );
         }
         updateAreas( searcher, 1, namespace, "" );
@@ -304,7 +308,11 @@ section pages/templates
         lastResult := pagenumber * resultsPerPage;
       }
     }
+
     if( searcher.getQuery().length() >0 ) {
+      <script>
+         if (_gaq) _gaq.push(['_trackEvent', '~namespace', 'Search']);
+      </script>
       gridRowFluid {
         pullLeft {
           pageIndex( pagenumber, size, resultsPerPage, 12, 3 )

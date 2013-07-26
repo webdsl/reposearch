@@ -5,19 +5,9 @@ section entities
   entity Entry {
     name        :: String
     content     :: Text
-    url         :: URL
+    url         :: URL (length=511)
     projectname :: String
     repo        -> Repo
-    
-//     function getDynamicSearchFields() : Set<DynamicSearchField>{
-// 	    var toReturn := Set<DynamicSearchField>();
-// 	    var fld : String;
-// 	    var val : String;
-// 
-// 	    toReturn.add( DynamicSearchField( "myfield" , "myval") );
-// 	
-// 	    return toReturn;
-//     }
   }
   search mapping Entry {
     + content using keep_all_chars      as content
@@ -55,14 +45,17 @@ section pages/templates
       codeLines := highlighted[1].concat( "<br />" );
       //add line number anchors
       lineNumbers := /> ( \d+ ) </.replaceAll( ">$1<a class=shift-top name=\"$1\"/><", lineNumbers );
-    }
-    
+    }    
     title       { output( e.name + ":" + query + " - " + projectName + " | Reposearch" ) }
     description { output (
                   "Source code of file: " + e.name + 
                   ", project: " + projectName  + 
                   ", query: " + query + 
-                  ", repository url: " + e.url) }
+                  ", repository url: " + e.url)
+                }
+    <script>
+      if (_gaq) _gaq.push(['_trackEvent', '~projectName', 'View file']);
+    </script>
     
     mainResponsive( projectName ) {
       wellSmall {
@@ -78,7 +71,7 @@ section pages/templates
         gridRowFluid{
           <div class="search-result-highlight">
             <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput( lineNumbers ) </div>
-            <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput( codeLines ) </pre></div>
+            <div class="code-area" style="left: 3.1em;" id="code-area"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput( codeLines ) </pre></div>
           </ div>
         }
         prettifyCode( projectName )
