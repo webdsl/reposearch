@@ -53,9 +53,8 @@ section pages/templates
                   ", query: " + query + 
                   ", repository url: " + e.url)
                 }
-    <script>
-      if (_gaq) _gaq.push(['_trackEvent', '~projectName', 'View file']);
-    </script>
+                
+    trackEvent( projectName, "View file" )
     
     mainResponsive( projectName ) {
       wellSmall {

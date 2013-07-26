@@ -17,9 +17,9 @@ section pages/templates
       }
       manageProjects()
 
-      manageMessage( messages.frontPageMsg , "Manage Frontpage Message")
+      manageMessage( messages.frontPageMsg , "Manage Frontpage Message", true)
       
-      manageMessage( messages.downloadMsg , "Manage Download Page")
+      manageMessage( messages.downloadMsg , "Manage Download Page", false)
       
       misc()
       
@@ -173,7 +173,7 @@ section pages/templates
   	submitlink action{pr.resetSearchCount();} { buttonMini{ "reset" } }
   }
 
-  define manageMessage( msg : Ref<WikiText>, title : String ) {
+  define manageMessage( msg : Ref<WikiText>, title : String, centered : Bool ) {
     var msgText := msg;
     manageContainer( title ){
       inlForm{
@@ -182,17 +182,18 @@ section pages/templates
       }
       <h5>"Preview"</h5>
       wellSmall{
-        placeholder ""+title { msgPreview( msgText ) }
+        placeholder ""+title { msgPreview( msgText, centered ) }
       }
     }
     
     action ignore-validation updateMsgPreview( d : WikiText ) {
-      replace( ""+title, msgPreview( d ) );
+      replace( ""+title, msgPreview( d, centered ) );
     }
   }
 
-  define ajax msgPreview( d : WikiText ) {
-      rawoutput( d )
+  define ajax msgPreview( d : WikiText, centered : Bool ) {
+  	if(centered)  { <center> rawoutput( d ) </center> }
+  	else { rawoutput( d ) }
   }
 
   define logMessage() {

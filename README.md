@@ -58,7 +58,7 @@ Reposearch will index all source code files of the HEAD revision that can be fou
  - Search statistics: weekly and total number of searches can be viewed for each project.
 
 ## Download 1-click runnable reposearch (file-based h2 db) ##
-There are some todo's (see [issue 49 on yellowgrass](http://yellowgrass.org/issue/Reposearch/49)), but you can download the latest reposearch zip archive with tomcat and 1-click run script from our [build farm](http://hydra.nixos.org/job/webdsl/reposearch-app/reposearch-app/latest).  
+There are some todo's (see [issue 49 on yellowgrass](http://yellowgrass.org/issue/Reposearch/49)), but you can download the latest reposearch zip archive with tomcat and 1-click run script from our [build farm](http://codefinder.org/doDownload).  
 Currently, you must first change permissions on all sh files in the tomcat6x/bin dir to be executable, and for the run script in the root folder.
 
 

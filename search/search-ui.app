@@ -310,9 +310,7 @@ section pages/templates
     }
 
     if( searcher.getQuery().length() >0 ) {
-      <script>
-         if (_gaq) _gaq.push(['_trackEvent', '~namespace', 'Search']);
-      </script>
+      trackEvent(namespace, "Search")      
       gridRowFluid {
         pullLeft {
           pageIndex( pagenumber, size, resultsPerPage, 12, 3 )
