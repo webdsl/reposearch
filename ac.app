@@ -31,6 +31,9 @@ module ac
   }
 
   page dologin() {
+  	init{
+  		if( ( from User ).length < 1 ) { return init(); }
+  	}
     authentication()
   }
 
@@ -70,7 +73,7 @@ access control rules
   rule ajaxtemplate showPathFacets( * ) {true}
   rule ajaxtemplate showReposLink( * ) {true}
   rule ajaxtemplate repos( * ) {true}
-  rule ajaxtemplate FpMsgPreview( * ) {true}
+  rule ajaxtemplate msgPreview( * ) {true}
   rule ajaxtemplate addProjectModal( * ) {true}
   rule ajaxtemplate refreshScheduleControl( * ) {loggedIn() }
   rule ajaxtemplate showLog( * ) {loggedIn() }
@@ -92,3 +95,4 @@ access control rules
   rule page editLangConstruct( arg : LangConstruct ) { loggedIn() }
   rule page createLangConstruct() { loggedIn() }
   rule logsql { loggedIn() }
+  rule page download( * ) {true}

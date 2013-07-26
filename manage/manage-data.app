@@ -4,7 +4,14 @@ module manage/manage-data
   invoke invokeCheckReindex() every 60 seconds
   invoke manager.newHour()    every 1 hours
 
-  var fpMsg := if( ( from Message ).length > 0 ) ( from Message ) [0]  else Message {msg := ""}
+  var messages := if( ( from Message ).length > 0 ) ( from Message ) [0]  else Message {frontPageMsg := "<div class=\"well well-small\"><center><pre><code>" +
+"________                                                   ______" +  
+"___  __ \\____________________________________ ________________  /_ " +
+"__  /_/ /  _ \\__  __ \\  __ \\_  ___/  _ \\  __ `/_  ___/  ___/_  __ \\" +
+"_  _, _//  __/_  /_/ / /_/ /(__  )/  __/ /_/ /_  /   / /__ _  / / /" +
+"/_/ |_| \\___/_  .___/\\____//____/ \\___/\\__,_/ /_/    \\___/ /_/ /_/ " +
+"            /_/                    Good in finding code fragments" +
+"</code></pre>This message can be changed on the manage page</center></div>"}
   var manager := if( ( from RepoSearchManager ).length > 0 ) ( from RepoSearchManager ) [0] else RepoSearchManager {hourCounter := 0 nextInvocation := now().addHours( 12 ) log:="" adminEmails:=""}
   var settings := if( ( from Settings ).length > 0 ) ( from Settings ) [0] else Settings {reindex := false projects := List<Project>() }
   var langConsRenewSchedule := if( ( from LangConstructRenewSchedule ).length > 0 ) ( from LangConstructRenewSchedule ) [0] else LangConstructRenewSchedule { dirtyProjects := Set<Project>() enabled:=true}
@@ -14,7 +21,8 @@ section entities
 
   entity Message {
     cache //home page message doesnt need to be fetched over and over again
-    msg :: WikiText
+    frontPageMsg :: WikiText
+    downloadMsg :: WikiText
   }
 
   entity Settings {

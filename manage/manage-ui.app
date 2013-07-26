@@ -17,7 +17,9 @@ section pages/templates
       }
       manageProjects()
 
-      manageFrontpageMessage()
+      manageMessage( messages.frontPageMsg , "Manage Frontpage Message")
+      
+      manageMessage( messages.downloadMsg , "Manage Download Page")
       
       misc()
       
@@ -171,26 +173,26 @@ section pages/templates
   	submitlink action{pr.resetSearchCount();} { buttonMini{ "reset" } }
   }
 
-  define manageFrontpageMessage() {
-    var fpMsgText := fpMsg.msg;
-    manageContainer( "Manage Frontpage Message" ){
+  define manageMessage( msg : Ref<WikiText>, title : String ) {
+    var msgText := msg;
+    manageContainer( title ){
       inlForm{
-        formEntry( "Message" ){ input( fpMsgText ) [oninput="$(this).keyup();", onkeyup=updateFpMsgPreview( fpMsgText )] }
-        div { submitlink action{fpMsg.msg := fpMsgText; fpMsg.save();}{ buttonPrimaryMini{"save"} } }
+        formEntry( "Message" ){ input( msgText ) [oninput="$(this).keyup();", onkeyup=updateMsgPreview( msgText )] }
+        div { submitlink action{msg := msgText; messages.save();}{ buttonPrimaryMini{"save"} } }
       }
       <h5>"Preview"</h5>
       wellSmall{
-        placeholder fpMsgPreview {FpMsgPreview( fpMsgText ) }
+        placeholder ""+title { msgPreview( msgText ) }
       }
     }
     
-    action ignore-validation updateFpMsgPreview( d : WikiText ) {
-      replace( fpMsgPreview, FpMsgPreview( d ) );
+    action ignore-validation updateMsgPreview( d : WikiText ) {
+      replace( ""+title, msgPreview( d ) );
     }
   }
 
-  define ajax FpMsgPreview( d : WikiText ) {
-      <center> output( d ) </center>
+  define ajax msgPreview( d : WikiText ) {
+      rawoutput( d )
   }
 
   define logMessage() {
