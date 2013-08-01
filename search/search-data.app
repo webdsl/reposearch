@@ -59,6 +59,7 @@ section functions
 
   function highlightCodeLines( searcher : EntrySearcher, entry : Entry, fragmentLength : Int, noFragments : Int, fullContentFallback: Bool, viewFileUri : String, langConsStr : String ) : List<List<String>> {
     var raw : String;
+    var hlField := if( SearchPrefs.caseSensitive ) "contentCase" else "content";
     if( langConsStr.length() > 0 ) {
       //a langCons is used
       var langCons : LangConstruct := findLangConstruct( langConsStr );
@@ -69,11 +70,7 @@ section functions
       //undecorate highlighted matches again
       raw := /\s?\$OHL\$[^#]+#MATCH#([^\$]+)\$CHL\$\s?/.replaceAll("\\$OHL\\$$1\\$CHL\\$", raw);
     } else {
-      if( SearchPrefs.caseSensitive ) {
-        raw := searcher.highlightLargeText( "contentCase", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n" );
-      } else{
-        raw := searcher.highlightLargeText( "content", entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n" );
-      }
+      raw := searcher.highlightLargeText( hlField, entry.content, "$OHL$","$CHL$", noFragments, fragmentLength, "\n%frgmtsep%\n" );
     }
     if( fullContentFallback && raw.length() < 1 ) {
       raw := entry.content;
@@ -98,7 +95,7 @@ section functions
           style := "a";
         }
         listLines.add( "<div class=\"nolinenumber" + style +"\">...</div>" );
-        listCode.add( "" );
+        listCode.add( "</pre><pre class=\"prettyprint\" style=\"WHITE-SPACE: pre\">" );
 		    if(fixPrevious){
 		      listLines.set( listLines.length-2 , "<div class=\"linenumber" + style +"\" UNSELECTABLE=\"on\">" + rendertemplate( issue599wrap( viewFileUri, "?" )  ) + "</div>" );
 		      fixPrevious := false;
