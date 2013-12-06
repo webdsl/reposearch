@@ -4,13 +4,13 @@ module manage/manage-data
   invoke invokeCheckReindex() every 60 seconds
   invoke manager.newHour()    every 1 hours
 
-  var messages := if( ( from Message ).length > 0 ) ( from Message ) [0]  else Message {frontPageMsg := "<div class=\"well well-small\"><center><pre><code>" +
-"________                                                   ______" +  
-"___  __ \\____________________________________ ________________  /_ " +
-"__  /_/ /  _ \\__  __ \\  __ \\_  ___/  _ \\  __ `/_  ___/  ___/_  __ \\" +
-"_  _, _//  __/_  /_/ / /_/ /(__  )/  __/ /_/ /_  /   / /__ _  / / /" +
-"/_/ |_| \\___/_  .___/\\____//____/ \\___/\\__,_/ /_/    \\___/ /_/ /_/ " +
-"            /_/                    Good in finding code fragments" +
+  var messages := if( ( from Message ).length > 0 ) ( from Message ) [0]  else Message {frontPageMsg := "<div class=\"well well-small\"><center><pre><code>\n" +
+"________                                                   ______\n" +  
+"___  __ \\____________________________________ ________________  /_ \n" +
+"__  /_/ /  _ \\__  __ \\  __ \\_  ___/  _ \\  __ `/_  ___/  ___/_  __ \\\n" +
+"_  _, _//  __/_  /_/ / /_/ /(__  )/  __/ /_/ /_  /   / /__ _  / / /\n" +
+"/_/ |_| \\___/_  .___/\\____//____/ \\___/\\__,_/ /_/    \\___/ /_/ /_/ \n" +
+"            /_/                    Good in finding code fragments\n" +
 "</code></pre>This message can be changed on the manage page</center></div>"}
   var manager := if( ( from RepoSearchManager ).length > 0 ) ( from RepoSearchManager ) [0] else RepoSearchManager {hourCounter := 0 nextInvocation := now().addHours( 12 ) log:="" adminEmails:=""}
   var settings := if( ( from Settings ).length > 0 ) ( from Settings ) [0] else Settings {reindex := false projects := List<Project>() }
