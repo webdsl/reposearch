@@ -88,7 +88,6 @@ application reposearch
   define override appname() { "Reposearch" }
   
   define page root() {
-    var projects := from Project;
     title       { "Reposearch Source Code Search Engine - Good in finding code fragments" }
     description { "A powerful source code search engine with project-scoped type ahead suggestions. With support for any SVN/Github repository location. Supports filtering on file extension, location and language construct." }
     mainResponsive( "Projects" ) {
@@ -98,20 +97,10 @@ application reposearch
         }
       }
       gridRowFluid {
-        gridSpan( 10,1 ) {
-          
-          recentProjects
-          
-          header3 { "Search within project or " navigate( search( "", "" ) ) {"all"} " projects:" }
-          gridRowFluid{
-            filterProject( projects )
-          }
-          
-          placeholder "projectsArea" {  
-            showProjects( projects )
-          }        
-
-        }
+        gridSpan( 5,1 ) { instantSearch } gridSpan( 5 ){ recentProjects }      
+      }
+      gridRowFluid{
+        gridSpan( 10,1 ) { filterProjectHomepage }
       }
     }
   }
@@ -133,11 +122,42 @@ application reposearch
     }
   }
   
+  define instantSearch(){
+  	var source := "/autocompleteService/";
+  	var query := ""
+  	includeJS( "completion.js" )
+  	<script>setupcompletion( "~source" );</script>
+  	
+  	header3 { "Instantly search all projects" }
+  	gridRowFluid{ gridSpan(8){ inlForm{
+  		<span class="ui-widget" id="instant-search">input( query ) [autocomplete="off", autofocus="", id="searchfield", type="search", placeholder="Search"] </span>
+  		submit action{ return search("", query);}[style="display: none;", id="perform-search"]{"search"}
+  	} } }
+  	
+  	<script>
+  	$("#instant-search").keyup(function (e) {
+	    if (e.keyCode == 13) {
+	        $("#perform-search").click();
+	    }
+	});
+  	</script>
+  }
+  
+  define filterProjectHomepage(){ 
+  	var projects := from Project;
+  	header3 { "Or pick a project:" }
+  	filterProject( projects )
+	placeholder "projectsArea" {  
+		showProjects( projects )
+	}
+  }
+  
   define filterProject( projects : Ref<List<Project>> ){
     var prefix := "";
-    gridSpan(4){ inlForm{ 
-      input( prefix ) [id="filterInput", autocomplete="off", oninput="$(this).keyup();", autofocus="", onkeyup=updateProjects(), placeholder="Filter"] 
-    } }
+    
+    gridRowFluid{ gridSpan(4){ inlForm{ 
+      input( prefix ) [id="filterInput", autocomplete="off", oninput="$(this).keyup();", onkeyup=updateProjects(), placeholder="Filter"] 
+    } } }
     
     action updateProjects(){
       if(prefix.length() > 0){
@@ -153,7 +173,7 @@ application reposearch
   define recentProjects() {
     var recentProjects := SearchPrefs.projectHistoryNotNull.split( ";" );
     if (recentProjects.length > 0) {
-      header3 { "Your recently searched projects" }
+      header3 { "Or pick a recently searched project" }
 	      for( prjStr : String in recentProjects ){
 		      gridRowFluid{ navigate( search( prjStr, "" ) ) { output( capitalize( prjStr ) ) } }
 		    }

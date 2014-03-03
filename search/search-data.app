@@ -48,6 +48,10 @@ section functions
     // if(SearchPrefs.regex) {
     //     return searcher.regexQuery( q );
     // }
+    if( ns == ""){
+    	~searcher with facet ~"_WebDSLNamespaceID_"(120);
+    }
+    
     var slop := if( SearchPrefs.exactMatch ) 0 else 100000;
     
     if( SearchPrefs.caseSensitive ) { searcher:= ~searcher matching contentCase, fileName: q~slop; }

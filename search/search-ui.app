@@ -181,7 +181,7 @@ section pages/templates
     var path_hasSel      := false;
     var ext_hasSel       := false;
     var lc_hasSel        := langCons.length() > 0;
-    var prj              := findProject( namespace );
+    // var prj              := findProject( namespace );
     var path_selection   := List<Facet>();
     var langConsFacets   := getLanguageConstructFacets( searcher );
     init {
@@ -200,6 +200,17 @@ section pages/templates
     }
     formActions {
       div[class="facet-area"]{
+      	if(namespace == ""){
+      		gridRowFluid{ gridSpan(12){
+      			formEntry( "Project" ){
+      				for( f : Facet in ~"_WebDSLNamespaceID_" facets from searcher order by f.getValue() ) {  
+      					pullLeft {
+      						buttonGroup {div[class="btn btn-mini"]{ includeFacetSym() } div[class="btn btn-mini"]{ navigate doSearch( searcher, f.getValue(), langCons, 1 ) { output( f.getValue() ) " (" output( f.getCount() ) ")" }}}
+  					    }
+      				}
+  				}
+      		} }
+      	}
         gridRowFluid{
           gridSpan( 7 ) {
             formEntry( "File extension" ) {
