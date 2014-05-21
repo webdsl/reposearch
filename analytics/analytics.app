@@ -7,7 +7,8 @@ section functions and templates
   }
   
   template trackEvent( namespace : String, event : String){
+  	var ns := if(namespace == "") "All projects" else namespace
     <script>
-      if (_gaq) _gaq.push(['_trackEvent', '~namespace', '~event']);
+      if (_gaq) _gaq.push(['_trackEvent', '~ns', '~event']);
     </script>
   }
