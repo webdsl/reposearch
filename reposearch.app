@@ -23,24 +23,26 @@ application reposearch
   define mainResponsive( ns : String ) {
     var project := if( ns == "" ) "All projects" else capitalize(ns);
     var query := "";
+   
     includeCSS( "bootstrap/css/bootstrap.min.css" )
     includeCSS( "bootstrap/css/bootstrap-adapt.css" )
     includeCSS( "bootstrap-extension.css" )
-    includeCSS( "jquery-ui-1.9.1.custom.min.css" )
-    includeJS( "jquery-1.8.2.min.js" )
-    includeJS( "jquery-ui-1.9.1.custom.min.js" )
+    includeCSS( IncludePaths.jQueryUICSS() )
+    includeJS( IncludePaths.jQueryJS() )
+    includeJS( IncludePaths.jQueryUIJS() )
     includeJS( "bootstrap/js/bootstrap.min.js" )
+
     includeHead( "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" )
     includeHead( gAnalytics() )
+    
     navbar {
-  
       navItems{
         navItem{
           dropdownInNavbar( project ) {
-            dropdownMenu {
+            dropdownMenu {  
               for ( prj : String in SearchPrefs.projectHistoryNotNull.split( ";" ) ){
                 dropdownMenuItem{ navigate search( prj ,"" ) { output( capitalize(prj) ) } }  
-              }
+              }   
               dropdownMenuDivider
               dropdownMenuItem{ navigate search( "","" ) { "All projects" } }
               dropdownMenuItem{ navigate root() { "Other project" } }

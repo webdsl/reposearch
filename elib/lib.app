@@ -16,7 +16,6 @@ imports elib/ace
 imports elib/tabs
 imports elib/list
 
-imports elib/request
 
 imports elib/bootstrap/bootstrap
 

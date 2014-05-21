@@ -157,8 +157,6 @@ section tables
 
 section forms
 
-  template span() { <span all attributes>elements</span> }
-
   template inlForm() {
       span[class="inlineForm"]{
           form{
