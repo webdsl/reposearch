@@ -10,7 +10,7 @@ let
   build = appname : src :
     pkgs.stdenv.mkDerivation rec {
       name = "${appname}-r${toString src.rev}";
-      buildInputs = [webdsl pkgs.ant pkgs.zip];
+      buildInputs = [webdsl pkgs.ant pkgs.openjdk pkgs.zip];
       buildCommand = ''
         ensureDir $out/nix-support
         ulimit -s unlimited
