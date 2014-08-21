@@ -312,7 +312,7 @@ section pages/templates
           submitlink action{queryRepo( r ); replace( "reposPH" + pr.name,showRepos( pr ) );} { buttonMini{"Update if HEAD > r" output( r.rev )} }
           submitlink action{queryCheckoutRepo( r ); replace( "reposPH" + pr.name,showRepos( pr ) );} { buttonMini{"Force checkout HEAD"} }
         }
-        submitlink action{pr.repos.remove( r ); deleteAllRepoEntries( r ); replace( "reposPH" + pr.name, showRepos( pr ) );} { buttonMini{"Remove*"} }
+        submitlink action{deleteAllRepoEntries( r ); pr.repos.remove( r ); replace( "reposPH" + pr.name, showRepos( pr ) );} { buttonMini{"Remove*"} }
         submitlink action{return skippedFiles( r );}{ buttonMini{"skipped files"} }
       }
       if( r.error ) {

@@ -3,6 +3,7 @@ module repository/repository
 section entities
 
   entity Repo {
+  	uri : String := getURI()
     project     -> Project  ( inverse=Project.repos )
     refresh     :: Bool
     refreshSVN  :: Bool
@@ -10,20 +11,33 @@ section entities
     error       :: Bool
     rev         :: Long
     lastRefresh :: DateTime ( default=now().addYears( -20 ) )
+    function getURI() : String{
+    	return "";
+    }  
   }
   
   entity SvnRepo : Repo {
     url :: URL
+    function getURI() : String{
+    	return url;
+	}
   }
   
   entity GithubRepo : Repo {
     user    ::String( default="" )
     repo    ::String( default="" )
     svnPath ::String( default="" )
+    function getURI() : String{
+    	return svnPath;
+	}
   }
   
   entity FileRepo : Repo {
     repositoryFile :: File
+    
+    function getURI() : String{
+    	return "file: " + repositoryFile.getFileName();
+	}
   }
   
 section functions
