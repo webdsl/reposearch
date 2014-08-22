@@ -76,7 +76,7 @@ section pages/templates
                 gridRow { gridCol(12){
                   input( SearchPrefs.caseSensitive ) [onclick=updateResults(), title="Case sensitive search"]{"case sensitive"}
                   " " input( SearchPrefs.exactMatch ) [onclick=updateResults(), title="If enabled, the exact sequence of characters is matched in that order(recommended)"]{"exact match"}
-                  " " submit action{return search( namespace,query );} [class="btn btn-sm btn-primary"] { iSearch " search" }
+                  " " submitlink action{return search( namespace,query );} [class="btn btn-sm btn-primary"] { iSearch " search" }
                 } }
               }
             }
