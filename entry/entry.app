@@ -58,7 +58,7 @@ section pages/templates
     
     mainResponsive( projectName ) {
       wellSmall {
-        gridRowFluid{
+        gridRow{
           navigate( url( e.url ) ) {
             <h5>
             <b>rawoutput( if( linkText.length() >0 ) linkText else "-" ) </b>
@@ -67,7 +67,7 @@ section pages/templates
           }
         }
 
-        gridRowFluid{
+        gridRow{
           <div class="search-result-highlight">
             <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput( lineNumbers ) </div>
             <div class="code-area" style="left: 3.1em;" id="code-area"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput( codeLines ) </pre></div>

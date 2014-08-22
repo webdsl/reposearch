@@ -1,16 +1,20 @@
 module manage/manage-ui
 
-section pages/templates
+section pages
 
   page manage() {
     init {
       if( langConsRenewSchedule.enabled == null ) {
         langConsRenewSchedule.enabled := true;
       }
+      if(activeTheme.theme == null){
+      	activeTheme.theme := findBootstrapTheme("bootstrap");
+      }
     }
     title { output( "Manage Reposearch | Reposearch" ) }
     mainResponsive( "Projects" ) {
       manageRefresh()
+      themeChooser
       manageRequestReceipts()
       placeholder requestsPH {
         showRequests()
@@ -35,7 +39,7 @@ section pages/templates
       showSearchStats()
       submitlink action {SearchStatistics.clear();} { buttonMini { "Reset global statistics" } }
       header {"Search counts per project"}
-      tableNotBordered {
+      tableStriped {
         theader{
           row{ th[class="span4"]{ "Project name" } th[class="span2"]{ "total"} th[class="span2"]{ "this week" } th[class="span3"]{ "since" } th[class="span2"]{ "reset" }}
         }
@@ -75,6 +79,29 @@ section pages/templates
     }
   }
 
+section templates
+
+template themeChooser(){
+	var allowed := from BootstrapTheme order by name;
+	init{
+		if(allowed.length < 2){
+			initThemes();
+			allowed := from BootstrapTheme order by name;
+		}
+		
+	}
+	panel("Choose theme"){
+		horizontalForm{
+			controlGroup("Theme"){ input(activeTheme.theme, allowed) }
+			
+			formActions{
+				submitlink action{}[class="btn btn-primary"]{"Save"}
+			}
+		}
+		
+	}
+}
+
   define manageRequestReceipts() {
     var addresses : String := manager.adminEmails;
     manageContainer( "Administrator email addresses" ) {
@@ -110,18 +137,18 @@ section pages/templates
     manageContainer( "Manage Projects" ) {
       manageContainerNested( "New Project" ) {
 	      inlForm {
-	        formEntry( "Project Name" ) { input( p ) }
+	        controlGroup( "Project Name" ) { input( p ) }
 	        submitlink action{Project{name:=p} .save();} { buttonPrimaryMini{"Add new project"} }
 	      }
       }
-      gridRowFluid{
+      gridRow{ gridCol(12){
         filterProject( projects )
-      }      
-      gridRowFluid{
+      } }
+      gridRow{ gridCol(12){
         placeholder "projectsArea" {
           showManageProjects( projects )
         }
-      }
+      } }
     }    
   }
 
@@ -177,7 +204,7 @@ section pages/templates
     var msgText := msg;
     manageContainer( title ){
       inlForm{
-        formEntry( "Message" ){ input( msgText ) [oninput="$(this).keyup();", onkeyup=updateMsgPreview( msgText )] }
+        controlGroup( "Message" ){ input( msgText ) [oninput="$(this).keyup();", onkeyup=updateMsgPreview( msgText )] }
         div { submitlink action{msg := msgText; messages.save();}{ buttonPrimaryMini{"save"} } }
       }
       <h5>"Preview"</h5>
@@ -243,8 +270,8 @@ section pages/templates
   define ajax refreshScheduleControl() {
     var now := now();
     manageContainer("Manage Refresh Scheduling") {
-      gridRowFluid{ gridSpan(8){
-	      tableNotBordered{
+      gridRow{ gridCol(8){
+	      tableStriped{
 	        row{ column{<strong>"Refresh scheduling:"</strong>}         column{ submitlink action{resetSchedule();} { buttonMini{"reset"} } } }
 	        row{ column{"Server time"}                                  column{ output( now ) } }
 	        row{ column{"Last refresh(all repos)"}                      column{ if( manager.lastInvocation != null ) { output( manager.lastInvocation ) } else {"unkown"} } }
@@ -391,18 +418,17 @@ section pages/templates
   }
   
   define manageContainer( title : String ) {
-    gridRowFluid {
-      wellSmall {
-        header4 { output(title) } 
+    gridRow { gridCol(12){
+      panel(title) {
         elements
       }
     }
-  }
+  }}
   define manageContainerNested( title : String ) {
-    gridRowFluid {
+    gridRow { gridCol(12){
       wellSmall {
         <h5> output(title) </h5> 
         elements
       }
-    }
+    } }
   }

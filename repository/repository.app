@@ -98,7 +98,7 @@ section pages/templates
 
   define output( r : Repo ) {
     wellSmall {
-      gridRowFluid() {
+      gridRow() {
         if( r isa SvnRepo ) {
           "SVN: "
           output( ( r as SvnRepo ).url )
@@ -114,11 +114,11 @@ section pages/templates
           "Uploaded file: " output( ( r as FileRepo).repositoryFile.fileName() )          
         } }
       }
-      gridRowFluid {
+      gridRow {
         "Rev: " output( r.rev )
-      } gridRowFluid {
+      } gridRow {
         "Last refresh: " output( r.lastRefresh )
-      } gridRowFluid {
+      } gridRow {
         navigate( skippedFiles( r ) ) [target:="_blank"]{"Files marked as binary(not indexed)"}
       }
       
@@ -127,11 +127,11 @@ section pages/templates
   }
 
   define ajax repos( p : Project ) {
-    gridRowFluid() {
+    gridRow() {
       submitlink action {replace( "repos-"+p.displayName, showReposLink( p ) );}[class:="repolink"] { "hide" }
     }
     for( r : Repo in p.repos ) {
-      gridRowFluid {
+      gridRow {
         output( r )
       }
     }

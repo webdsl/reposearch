@@ -56,16 +56,16 @@ section pages/templates
       })(window);
       </script>
       
-      gridRowFluid { gridSpan( 12 ) {
+      gridRow { gridCol( 12 ) {
         wellSmall {
           inlForm{
-            gridRowFluid{
-              gridSpan( 10,1 ) {
-                gridRowFluid {
-                  gridSpan( 8 ) {
+            gridRow{
+              gridCol( 10,1 ) {
+                gridRow {
+                  gridCol( 8 ) {
                     formEntry( "Search " + prjName )  { <span class="ui-widget">input( query ) [autocomplete="off", autofocus="", id="searchfield", oninput="$(this).keyup();", onkeyup=updateResults(), type="search"] </span>}
                   }
-                  gridSpan( 4 ) {
+                  gridCol( 4 ) {
                     formEntry( "Results per page" )  {
                       placeholder paginationOptions {
                         paginationButtons( searcher, namespace, langCons )
@@ -73,18 +73,18 @@ section pages/templates
                     }
                   }
                 }
-                gridRowFluid {
+                gridRow { gridCol(12){
                   input( SearchPrefs.caseSensitive ) [onclick=updateResults(), title="Case sensitive search"]{"case sensitive"}
                   " " input( SearchPrefs.exactMatch ) [onclick=updateResults(), title="If enabled, the exact sequence of characters is matched in that order(recommended)"]{"exact match"}
-                  " " submit action{return search( namespace,query );} [class="btn btn-primary"] { "search" }
-                }
+                  " " submit action{return search( namespace,query );} [class="btn btn-sm btn-primary"] { iSearch " search" }
+                } }
               }
             }
-            gridRowFluid{ gridSpan( 12 ) {
+            // gridRow{ gridCol( 12 ) {
               placeholder facetArea {
                 if( searcher.getQuery().length() > 0 ) { viewFacets( searcher, namespace, langCons ) }
               }
-            } }
+            // } }
 
           }
         }
@@ -100,6 +100,7 @@ section pages/templates
         if( count from searcher  > 0 ){
           var queryJs := query.escapeJavaScript();
           //replace url without causing page reload
+          log("URL: " + navigate( doSearch( searcher, namespace, langCons, 1 ) ));
           runscript(
             "window.updatingResults = true; History.pushState({},'" + queryJs + " - " +  prjName + " | Reposearch" + "','" + navigate( doSearch( searcher, namespace, langCons, 1 ) ) + "');" 
           );
@@ -149,20 +150,21 @@ section pages/templates
         ruleOffset := /.+#(\d+|\?).>.*/.replaceFirst("$1",highlightedContent[0][0]);
       }
     }
-    gridRowFluid {
+    gridRow { gridCol(12){
       navWithAnchor( viewFileUri , ruleOffset ) {
         <h5>
         rawoutput( if( linkText.length() >0 ) linkText else "-" )
             pullRight { div[class="repoFolderLocation"]{ output( location ) } }
         </h5>
       }
-    }
-    gridRowFluid {
+    } }
+    gridRow { gridCol(12){
       <div class="search-result-highlight">
         <div class="linenumberarea" style="left: 0em; width: 3.1em;">rawoutput( highlightedContent[0].concat( "<br />" ) ) </div>
           <div class="code-area" style="left: 3.1em;"><pre class="prettyprint" style="WHITE-SPACE: pre">rawoutput( highlightedContent[1].concat( "<br />" ) ) </pre></div>
               </ div>
-            }
+    } }
+            
     submitlink toggleAllFragments() { buttonMini { output( toggleText ) } }
     action toggleAllFragments() {
       if( nOfFragments != 10 ) {replace( "result-"+e.url, highlightedResultToggled( e, searcher, 10, langCons ) ); }
@@ -199,57 +201,58 @@ section pages/templates
         }
       }
     }
-    formActions {
-      div[class="facet-area"]{
+    // formActions {
+      div[class="facet-area"]{ gridRow{ gridCol(10,1){
       	if(namespace == ""){
-      		gridRowFluid{ gridSpan(12){
-      			formEntry( "Project" ){
+      		gridRow{ gridCol(12){
+      			formEntry( "Project" ){ div {
       				for( f : Facet in ~"_WebDSLNamespaceID_" facets from searcher order by f.getValue() ) {  
       					pullLeft {
-      						buttonGroup {div[class="btn btn-mini"]{ includeFacetSym() } div[class="btn btn-mini"]{ navigate doSearch( searcher, f.getValue(), langCons, 1 ) { output( f.getValue() ) " (" output( f.getCount() ) ")" }}}
+      						buttonGroup {div[class="btn btn-default btn-xs"]{ includeFacetSym() } navigate doSearch( searcher, f.getValue(), langCons, 1 )[class="btn btn-default btn-xs"]{ output( f.getValue() ) " (" output( f.getCount() ) ")" }}
   					    }
       				}
-  				}
+  				} }
       		} }
       	}
-        gridRowFluid{
-          gridSpan( 7 ) {
-            formEntry( "File extension" ) {
+      	
+        gridRow{
+          gridCol( 7 ) {
+            formEntry( "File extension" ) { div{ 
               for( f : Facet in fileExt facets from searcher ) {  pullLeft {  showFacet( searcher, f, ext_hasSel, namespace, langCons )  } }
-            }
+            } }
           }
 
-          gridSpan( 5 ) {
+          gridCol( 5 ) {
             if( langConsFacets.length  > 0 ) {
-              formEntry( "Language construct" ) {
+              formEntry( "Language construct" ) { div{ 
                 for( f : Facet in langConsFacets order by f.getValue() ) {
                   pullLeft {
                     if( lc_hasSel ) {
                       if( f.getValue() == langCons ) {
                         navigate search( namespace, searcher.getQuery() ) { buttonGroup { buttonMini{excludeFacetSym() } buttonMini{ output( f.getValue() ) " (" output( f.getCount() ) ")" } } }
                       } else {
-                        buttonGroup {div[class="btn btn-mini disabled"]{ includeFacetSym() } div[class="btn btn-mini disabled"]{ submitlink updateResults( f.getValue() ) { output( f.getValue() ) " (" output( f.getCount() ) ")" }}}
+                        submitlink updateResults( f.getValue() ){ buttonGroup{ div[class="btn btn-default btn-xs disabled"]{ includeFacetSym() } div[class="btn btn-default btn-xs disabled"]{  output( f.getValue() ) " (" output( f.getCount() ) ")" }} }
                       }
                     } else {
                       submitlink updateResults( f.getValue() ) { buttonGroup {buttonMini{ includeFacetSym() } buttonMini{ output( f.getValue() ) " (" output( f.getCount() ) ")" }}}
                     }
                   }
                 }
-              }
+              } } 
             }
           }
         }
 
-        gridRowFluid{
+        gridRow{ gridCol(12){
           formEntry( "File location" ) {
             placeholder repoPathPh {
               showPathFacets( searcher, path_hasSel, namespace, false, langCons )
             }
             for( f : Facet in path_selection ) { showFacet( searcher, f, path_hasSel, namespace, langCons ) }
           }
-        }
-      }
-    }
+        } }
+      // }
+    } } }
     action updateResults( langConstructName : String ) {
       var p := findLangConstruct( langConstructName );
       if( lc_hasSel ) {
@@ -263,11 +266,11 @@ section pages/templates
 
   define ajax showPathFacets( searcher : EntrySearcher, hasSelection : Bool, namespace : String, show : Bool, langCons : String ) {
     if( show ) {
-      submitlink action {replace( repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, langCons ) );} [class="btn btn-small"] {"collapse"}
+      submitlink action {replace( repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, langCons ) );} [class="btn btn-default btn-sm"] {"collapse"}
       <br />
       div {
         for( f : Facet in interestingPathFacets( searcher ) ) {
-          gridRowFluid {
+          gridRow {
             pullLeft{
               showFacet( searcher, f, hasSelection, namespace, langCons )
             }
@@ -275,24 +278,24 @@ section pages/templates
         }
       }
     } else {
-      submitlink action {replace( repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, langCons ) );} [class="btn btn-small"] {"expand"}
+      submitlink action {replace( repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, langCons ) );} [class="btn btn-default btn-sm"] {"expand"}
     }
   }
 
   define showFacet( searcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String, langCons : String ) {
     if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
       if( f.isSelected() ) {
-        submitlink updateResults( searcher.removeFacetSelection( f ) ) { buttonGroup {div[class="btn btn-mini disabled"]{includeFacetSym() } div[class="btn btn-mini disabled"]{output( f.getValue() ) " (" output( f.getCount() ) ")"}}}
+        submitlink updateResults( searcher.removeFacetSelection( f ) ) { buttonGroup {div[class="btn btn-default btn-xs disabled"]{includeFacetSym() } div[class="btn btn-default btn-xs disabled"]{output( f.getValue() ) " (" output( f.getCount() ) ")"}}}
       } else {
-        submitlink updateResults( ~searcher matching f.should() ) { buttonGroup {div[class="btn btn-mini disabled"]{includeFacetSym() }    div[class="btn btn-mini disabled"]{ output( f.getValue() ) " (" output( f.getCount() ) ")"}}}
+        submitlink updateResults( ~searcher matching f.should() ) { buttonGroup {div[class="btn btn-default btn-xs disabled"]{includeFacetSym() }    div[class="btn btn-default btn-xs disabled"]{ output( f.getValue() ) " (" output( f.getCount() ) ")"}}}
       }
     } else {
       if( f.isSelected() ) {
         submitlink updateResults( searcher.removeFacetSelection( f ) ) { buttonGroup { buttonMini{excludeFacetSym() } buttonMini{output( f.getValue() ) " (" output( f.getCount() ) ") "} } }
       } else {
         buttonGroup {
-          submitlink updateResults( ~searcher matching f.mustNot() ) [class="btn btn-mini"]{ excludeFacetSym() } " "
-          submitlink updateResults( ~searcher matching f.should()  ) [class="btn btn-mini"]{ output( f.getValue() ) " (" output( f.getCount() ) ")"}
+          submitlink updateResults( ~searcher matching f.mustNot() ) [class="btn btn-default btn-xs"]{ excludeFacetSym() } " "
+          submitlink updateResults( ~searcher matching f.should()  ) [class="btn btn-default btn-xs"]{ output( f.getValue() ) " (" output( f.getCount() ) ")"}
         }
         " "
       }
@@ -323,7 +326,7 @@ section pages/templates
 
     if( searcher.getQuery().length() >0 ) {
       trackEvent(namespace, "Search")      
-      gridRowFluid {
+      gridRow { gridCol(12){
         pullLeft {
           pageIndex( pagenumber, size, resultsPerPage, 12, 3 )
         } pullRight{
@@ -333,18 +336,17 @@ section pages/templates
             "no results found"
           }
         }
-      }
-      gridRowFluid {
+      }}
+      gridRow { gridCol(12){
         for( e : Entry in resultList ) {
           wellSmall {
             placeholder "result-"+e.url {highlightedResult( e, searcher, 3, langCons ) }
           }
         }
-      }
-      gridRowFluid { pullLeft{
+      } }
+      gridRow { gridCol(12) { pullLeft{
           pageIndex( pagenumber, size, resultsPerPage, 12, 3 )
-        }
-      }
+      } } }
     }
     define pageIndexLink( page: Int, lab : String ) {
       navigate( doSearch( searcher, namespace, langCons, page ) ) { output( lab ) }
@@ -355,7 +357,7 @@ section pages/templates
     var limit := SearchPrefs.resultsPerPage;
     buttonGroup[data-toggle="buttons-radio"] {
       for( i : Int in [5, 10, 25, 50, 100, 500] ) {
-        submitlink action { SearchPrefs.resultsPerPage := i; updateAreas( searcher, 1, namespace, langCons ); } [class="btn btn-small", id="limit"+i] {  output( i ) }
+        submitlink action { SearchPrefs.resultsPerPage := i; updateAreas( searcher, 1, namespace, langCons ); } [class="btn btn-default btn-sm", id="limit"+i] {  output( i ) }
       }
     }
     <script>

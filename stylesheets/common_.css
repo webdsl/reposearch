@@ -1,5 +1,5 @@
 body {
-    background: url("./images/grey.png") repeat scroll 0 0 transparent;
+    /* background: url("./images/grey.png") repeat scroll 0 0 transparent; */
     font-family: Arial;
     margin-left: 15px;
 }
@@ -116,12 +116,13 @@ h4, h5{
 .skipped-files-link a:link, .search-result-link a:visited {
     text-decoration: none;
 }
-pre {
-    margin: 0;
+.pretty-print {
+	margin: 0;
+
 }
 textarea.inputTextarea {
-    height: 12em;
-    width: 70em;
+    height: 12em !important;
+    width: 70em !important;
 }
 
 .inlineForm .form-actions {
@@ -129,6 +130,20 @@ textarea.inputTextarea {
     margin-top: 12px;
     padding-top: 6px;
     padding-bottom: 6px;
+}
+pre{
+	border: inherit !important;
+	background-color: inherit !important;
+	color: inherit !important;
+	word-wrap: inherit !important;
+	line-height: inherit !important;
+	word-break: inherit !important;
+	display: block !important;
+	font-family: monospace !important;
+	font-size: 13px !important;
+	margin: 0px !important;
+	white-space: pre !important;
+	padding: 0px !important;
 }
 .repoFolderLocation {
     color: #666666;
