@@ -67,7 +67,7 @@ section pages/templates
                   }
                   gridCol( 4 ) {
                     formEntry( "Results per page" )  {
-                      placeholder paginationOptions {
+                      placeholder "paginationOptions" {
                         paginationButtons( searcher, namespace, langCons )
                       }
                     }
@@ -81,7 +81,7 @@ section pages/templates
               }
             }
             // gridRow{ gridCol( 12 ) {
-              placeholder facetArea {
+              placeholder "facetArea" {
                 if( searcher.getQuery().length() > 0 ) { viewFacets( searcher, namespace, langCons ) }
               }
             // } }
@@ -89,7 +89,7 @@ section pages/templates
           }
         }
       } }
-      placeholder resultArea {
+      placeholder "resultArea" {
         if( searcher.getQuery().length() > 0 ) { paginatedTemplate( searcher, pageNum, namespace, langCons ) }
         else { prettifyCode } // force correct imports
       }
@@ -108,17 +108,17 @@ section pages/templates
           incSearchCount( namespace );
         }
         updateAreas( searcher, 1, namespace, "" );
-        replace( paginationOptions, paginationButtons( searcher, namespace, "" ) );
+        replace( "paginationOptions", paginationButtons( searcher, namespace, "" ) );
       } else {
-        clear( resultArea );
-        clear( facetArea );
+        clear( "resultArea" );
+        clear( "facetArea" );
       }
     }
   }
 
   function updateAreas( searcher : EntrySearcher, page : Int, namespace : String, langCons : String ) {
-    replace( facetArea, viewFacets( searcher, namespace, langCons ) );
-    replace( resultArea, paginatedTemplate( searcher, page, namespace, langCons ) );
+    replace( "facetArea", viewFacets( searcher, namespace, langCons ) );
+    replace( "resultArea", paginatedTemplate( searcher, page, namespace, langCons ) );
   }
 
   define navWithAnchor( n:String,a:String ) {
@@ -245,7 +245,7 @@ section pages/templates
 
         gridRow{ gridCol(12){
           formEntry( "File location" ) {
-            placeholder repoPathPh {
+            placeholder "repoPathPh" {
               showPathFacets( searcher, path_hasSel, namespace, false, langCons )
             }
             for( f : Facet in path_selection ) { showFacet( searcher, f, path_hasSel, namespace, langCons ) }
@@ -266,7 +266,7 @@ section pages/templates
 
   define ajax showPathFacets( searcher : EntrySearcher, hasSelection : Bool, namespace : String, show : Bool, langCons : String ) {
     if( show ) {
-      submitlink action {replace( repoPathPh, showPathFacets( searcher, hasSelection, namespace, false, langCons ) );} [class="btn btn-default btn-sm"] {"collapse"}
+      submitlink action {replace( "repoPathPh", showPathFacets( searcher, hasSelection, namespace, false, langCons ) );} [class="btn btn-default btn-sm"] {"collapse"}
       <br />
       div {
         for( f : Facet in interestingPathFacets( searcher ) ) {
@@ -278,7 +278,7 @@ section pages/templates
         }
       }
     } else {
-      submitlink action {replace( repoPathPh, showPathFacets( searcher, hasSelection, namespace, true, langCons ) );} [class="btn btn-default btn-sm"] {"expand"}
+      submitlink action {replace( "repoPathPh", showPathFacets( searcher, hasSelection, namespace, true, langCons ) );} [class="btn btn-default btn-sm"] {"expand"}
     }
   }
 

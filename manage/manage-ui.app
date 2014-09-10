@@ -16,7 +16,7 @@ section pages
       manageRefresh()
       themeChooser
       manageRequestReceipts()
-      placeholder requestsPH {
+      placeholder "requestsPH" {
         showRequests()
       }
       manageProjects()
@@ -166,7 +166,7 @@ template themeChooser(){
     action showProject( pr : Project ) {
       visibility( "projectPH"+pr.name, toggle );
     }
-    action removeProject( pr : Project ) {
+    action ignore-validation removeProject( pr : Project ) {
       for( r:Repo in pr.repos ) {
         deleteAllRepoEntries( r );
         r.delete();
@@ -225,9 +225,9 @@ template themeChooser(){
 
   define logMessage() {
     manageContainer( "Reposearch Log" ) { 
-      placeholder log { showLog() }
+      placeholder "log" { showLog() }
       "Auto-refreshes every 5 seconds, but you can also "
-      submitlink action{replace( log, showLog() );} [id = "autoRefresh", ajax]{ buttonMini{"force it"} }
+      submitlink action{replace( "log", showLog() );} [id = "autoRefresh", ajax]{ buttonMini{"force it"} }
       <script>
       var refreshtimer;
       function setrefreshtimer() {
@@ -248,23 +248,25 @@ template themeChooser(){
   define misc(){
     var fr := ( from Repo where project is null );
     
-    manageContainer( "Misc" ){
-      submitlink action { deleteUnlinkedConstructMatches(); }{ buttonMini{ "Delete unlinked construct matches" } }
-      if( fr.length > 0 ) {
-        <br />
-        submitlink action {
-          for( r:Repo in fr ) {
+    action ignore-validation removeFRs(){
+    	for( r:Repo in fr ) {
             deleteAllRepoEntries( r );
             r.delete();
           }
           return manage();
-        } { buttonMini{ "Remove foreign Repo's(" output( fr.length ) ")"} } " (Repo entities where project == null)"
+    }
+    
+    manageContainer( "Misc" ){
+      submitlink action { deleteUnlinkedConstructMatches(); }{ buttonMini{ "Delete unlinked construct matches" } }
+      if( fr.length > 0 ) {
+        <br />
+        submitlink removeFRs(){ buttonMini{ "Remove foreign Repo's(" output( fr.length ) ")"} } " (Repo entities where project == null)"
       }
     }
   }
 
   define manageRefresh() {
-    placeholder refreshManagement { refreshScheduleControl() } <br />
+    placeholder "refreshManagement" { refreshScheduleControl() } <br />
   }
 
   define ajax refreshScheduleControl() {
@@ -276,12 +278,12 @@ template themeChooser(){
 	        row{ column{"Server time"}                                  column{ output( now ) } }
 	        row{ column{"Last refresh(all repos)"}                      column{ if( manager.lastInvocation != null ) { output( manager.lastInvocation ) } else {"unkown"} } }
 	        row{ column{"Next scheduled refresh(all repos)"}            column{ output( manager.nextInvocation ) " " shiftScheduleBtn(-24,"-1d") shiftScheduleBtn(-1, "-1h" ) shiftScheduleBtn( 1, "+1h" ) shiftScheduleBtn(24, "+1d") } }
-	        row{ column{"Auto refresh interval(hours)"}                 column{ form{ input( manager.intervalInHours ) [style := "width:3em;"]  submitlink action{manager.save(); replace( refreshManagement, refreshScheduleControl() );}{ buttonMini{"set"} } } } }
+	        row{ column{"Auto refresh interval(hours)"}                 column{ form{ input( manager.intervalInHours ) [style := "width:3em;"]  submitlink action{manager.save(); replace( "refreshManagement", refreshScheduleControl() );}{ buttonMini{"set"} } } } }
 	        row{ column{<strong>"Instant refresh management:"</strong>} column{ }}
-	        row{ column{"Update all repos to HEAD: "}                   column{ submitlink action{refreshAllRepos();         replace( refreshManagement, refreshScheduleControl() );} { buttonMini{"refresh all"} } } }
-	        row{ column{"Force a fresh checkout for all repos: "}       column{ submitlink action{forceCheckoutAllRepos();   replace( refreshManagement, refreshScheduleControl() );} { buttonMini{"force checkout all"} } } }
-	        row{ column{"Cancel all scheduled refresh/checkouts: "}     column{ submitlink action{cancelScheduledRefreshes();replace( refreshManagement, refreshScheduleControl() );} { buttonMini{"cancel all"} } } }
-	        row{ column{"Auto renewal of language construct matches: "} column{ "enabled? " form{ input( langConsRenewSchedule.enabled ) submitlink action{langConsRenewSchedule.save(); replace( refreshManagement, refreshScheduleControl() );} { buttonMini{"apply"} } } }}
+	        row{ column{"Update all repos to HEAD: "}                   column{ submitlink action{refreshAllRepos();         replace( "refreshManagement", refreshScheduleControl() );} { buttonMini{"refresh all"} } } }
+	        row{ column{"Force a fresh checkout for all repos: "}       column{ submitlink action{forceCheckoutAllRepos();   replace( "refreshManagement", refreshScheduleControl() );} { buttonMini{"force checkout all"} } } }
+	        row{ column{"Cancel all scheduled refresh/checkouts: "}     column{ submitlink action{cancelScheduledRefreshes();replace( "refreshManagement", refreshScheduleControl() );} { buttonMini{"cancel all"} } } }
+	        row{ column{"Auto renewal of language construct matches: "} column{ "enabled? " form{ input( langConsRenewSchedule.enabled ) submitlink action{langConsRenewSchedule.save(); replace( "refreshManagement", refreshScheduleControl() );} { buttonMini{"apply"} } } }}
 	      }      
 	    } }
     }
@@ -298,7 +300,7 @@ template themeChooser(){
   }
   
   define shiftScheduleBtn( shiftInHours : Int, btnText : String){
-  	submitlink action{manager.shiftByHours( shiftInHours ); replace( refreshManagement, refreshScheduleControl() );} { buttonMini{ output(btnText) } }
+  	submitlink action{manager.shiftByHours( shiftInHours ); replace( "refreshManagement", refreshScheduleControl() );} { buttonMini{ output(btnText) } }
   }
 
   define ajax addRepo( pr : Project ) {
@@ -329,6 +331,10 @@ template themeChooser(){
   }
 
   define showRepo( pr:Project, r:Repo ) {
+  	
+  	action ignore-validation removeRepo(){
+  		deleteAllRepoEntries( r ); pr.repos.remove( r ); replace( "reposPH" + pr.name, showRepos( pr ) );
+  	}
     output( r ){
       div{
         if( r.refresh ) {
@@ -339,7 +345,7 @@ template themeChooser(){
           submitlink action{queryRepo( r ); replace( "reposPH" + pr.name,showRepos( pr ) );} { buttonMini{"Update if HEAD > r" output( r.rev )} }
           submitlink action{queryCheckoutRepo( r ); replace( "reposPH" + pr.name,showRepos( pr ) );} { buttonMini{"Force checkout HEAD"} }
         }
-        submitlink action{deleteAllRepoEntries( r ); pr.repos.remove( r ); replace( "reposPH" + pr.name, showRepos( pr ) );} { buttonMini{"Remove*"} }
+        submitlink removeRepo(){ buttonMini{"Remove*"} }
         submitlink action{return skippedFiles( r );}{ buttonMini{"skipped files"} }
       }
       if( r.error ) {

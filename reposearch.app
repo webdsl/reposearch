@@ -90,7 +90,7 @@ application reposearch
     }
     addProject()
     gridContainer[id="content"] {
-      placeholder notificationsPH{}
+      placeholder "notificationsPH"{}
       elements
     }
     footer {

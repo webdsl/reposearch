@@ -184,8 +184,12 @@ section functions
   }
 
   function deleteAllRepoEntries( r:Repo ) {
-  	log("deleting all repo entries for repo " + r.name);
-    for( e:Entry where e.repo == r ) {  e.delete();}
+  	log("deleting all repo entries for repo " + r.uri);
+    for( e:Entry where e.repo == r ) {
+    	log("Deleting: " + e.name);
+    	e.repo := null;
+    	e.delete();
+    }
   }
 
   function deleteRepoEntries( r:Repo, rtr : RepoTaskResult ) {
