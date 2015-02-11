@@ -1,5 +1,5 @@
 targetdir=reposearch-app
-
+source ~/.bash_profile
 echo -e "appname=reposearch\ndb=h2\ndbfile=reposearch.db\nindexdir=index\ndbmode=update\nsearchstats=true" > application.ini
 webdsl build war
 ant -f .servletapp/build.xml copy-clean-tomcat

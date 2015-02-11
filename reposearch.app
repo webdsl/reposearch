@@ -113,7 +113,7 @@ application reposearch
   
   define override appname() { "Reposearch" }
   
-  define page root() {
+  page root() {
     title       { "Reposearch Source Code Search Engine - Good in finding code fragments" }
     description { "A powerful source code search engine with project-scoped type ahead suggestions. With support for any SVN/Github repository location. Supports filtering on file extension, location and language construct." }
     mainResponsive( "Projects" ) {
@@ -185,7 +185,7 @@ application reposearch
   define filterProject( projects : Ref<List<Project>> ){
     var prefix := "";
     
-    gridRow{ gridCol(4){ inlForm{ 
+    gridRow{ gridCol(4){ form[onsubmit="javascript:return false"]{ 
       input( prefix ) [id="filterInput", autocomplete="off", oninput="$(this).keyup();", onkeyup=updateProjects(), placeholder="Filter"] 
     } } }
     
