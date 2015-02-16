@@ -1,0 +1,12 @@
+.saved-but-not-built
+.dependencies.webdsl
+.cache/
+.servletapp/
+.settings/
+.webdsl-fragment-cache/
+.webdsl-parsecache/
+WebContent/
+build.xml
+reposearch build.xml.launch
+clean-project.xml
+reposearch clean-project.xml.launch

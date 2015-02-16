@@ -282,20 +282,20 @@ section pages/templates
     }
   }
 
-  define showFacet( searcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String, langCons : String ) {
+  define showFacet(entrysearcher : EntrySearcher, f : Facet, hasSelection : Bool, namespace : String, langCons : String ) {
     if( f.isMustNot() || ( !f.isSelected() && hasSelection ) ) {
       if( f.isSelected() ) {
-        submitlink updateResults( searcher.removeFacetSelection( f ) ) { buttonGroup {div[class="btn btn-default btn-xs disabled"]{includeFacetSym() } div[class="btn btn-default btn-xs disabled"]{output( f.getValue() ) " (" output( f.getCount() ) ")"}}}
+        submitlink updateResults( entrysearcher.removeFacetSelection( f ) ) { buttonGroup {div[class="btn btn-default btn-xs disabled"]{includeFacetSym() } div[class="btn btn-default btn-xs disabled"]{output( f.getValue() ) " (" output( f.getCount() ) ")"}}}
       } else {
-        submitlink updateResults( ~searcher matching f.should() ) { buttonGroup {div[class="btn btn-default btn-xs disabled"]{includeFacetSym() }    div[class="btn btn-default btn-xs disabled"]{ output( f.getValue() ) " (" output( f.getCount() ) ")"}}}
+        submitlink updateResults( ~entrysearcher matching f.should() ) { buttonGroup {div[class="btn btn-default btn-xs disabled"]{includeFacetSym() }    div[class="btn btn-default btn-xs disabled"]{ output( f.getValue() ) " (" output( f.getCount() ) ")"}}}
       }
     } else {
       if( f.isSelected() ) {
-        submitlink updateResults( searcher.removeFacetSelection( f ) ) { buttonGroup { buttonMini{excludeFacetSym() } buttonMini{output( f.getValue() ) " (" output( f.getCount() ) ") "} } }
+        submitlink updateResults( entrysearcher.removeFacetSelection( f ) ) { buttonGroup { buttonMini{excludeFacetSym() } buttonMini{output( f.getValue() ) " (" output( f.getCount() ) ") "} } }
       } else {
         buttonGroup {
-          submitlink updateResults( ~searcher matching f.mustNot() ) [class="btn btn-default btn-xs"]{ excludeFacetSym() } " "
-          submitlink updateResults( ~searcher matching f.should()  ) [class="btn btn-default btn-xs"]{ output( f.getValue() ) " (" output( f.getCount() ) ")"}
+          submitlink updateResults( ~entrysearcher matching f.mustNot() ) [class="btn btn-default btn-xs"]{ excludeFacetSym() } " "
+          submitlink updateResults( ~entrysearcher matching f.should()  ) [class="btn btn-default btn-xs"]{ output( f.getValue() ) " (" output( f.getCount() ) ")"}
         }
         " "
       }
