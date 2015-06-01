@@ -100,7 +100,7 @@ section pages/templates
     par { navigate( manage() ) {"Go to manage page"} }
   }
 
-  define page pendingRequests() {
+  page pendingRequests() {
     var pendingRequests := from Request order by project;
     title       { output( "Pending requests | Reposearch" ) }
     description { "Pending project and repository addition requests" }

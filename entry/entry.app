@@ -23,11 +23,11 @@ section entities
 section pages/templates
 
   //backwards compatibility
-  define page showFile( searcher : EntrySearcher, e : Entry ) {
+  page showFile( searcher : EntrySearcher, e : Entry ) {
     init {return viewFile( searcher.getQuery(),e.url, e.projectname, "" );}
   }
 
-  define page viewFile( query : String, url:URL, projectName:String, langCons : String ) {
+  page viewFile( query : String, url:URL, projectName:String, langCons : String ) {
     var e := ( from Entry as e where e.url=~url and e.projectname = ~projectName ) [0]
     var viewFileUri := navigate( viewFile( query, url, projectName, langCons ) );
     var linkText    := "";

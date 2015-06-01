@@ -16,6 +16,7 @@ application reposearch
   imports elib/elib-bootstrap/lib
   imports elib/elib-utils/lib
   imports analytics/analytics
+  imports tools/tools
   
   init {
     Project{name:="WebDSL" repos:=[ ( SvnRepo{url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac" refresh:=true } as Repo )]} .save();
@@ -82,6 +83,7 @@ application reposearch
             }
           }
         }
+        navItem{ navigate( formattool() )    { iIndentRight " Code Formatter" } }
   
         navItem{ navigate( manage() )         { "Manage"           } }
         navItem{ navigate( searchStats() )    {"Search statistics" } }

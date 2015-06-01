@@ -402,7 +402,7 @@ template themeChooser(){
     }
   }
 
-  define page skippedFiles( r : Repo ) {
+  page skippedFiles( r : Repo ) {
     init {
       return search( r.project.name , "BINFILE" );
     }

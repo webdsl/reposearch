@@ -21,7 +21,7 @@ section pages/templates
   }
   
   
-  define page createLangConstruct() {
+  page createLangConstruct() {
     var p:= LangConstruct { }
     title { output( "New language construct | Reposearch" ) }
     mainResponsive( "Projects") {
@@ -29,7 +29,7 @@ section pages/templates
     }
   }
   
-  define page editLangConstruct( p : LangConstruct ) {
+  page editLangConstruct( p : LangConstruct ) {
     title { output( "Edit language construct | Reposearch" ) }
     mainResponsive( "Projects" ) {
       editLangConstruct( p )

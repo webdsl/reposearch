@@ -2,12 +2,12 @@ module search/search-ui
 
 section pages/templates
 
-  define page search( namespace:String, q:String ) {
+  page search( namespace:String, q:String ) {
     init { SearchPrefs.addToHistory( namespace ); }
     showSearch( toSearcher( q, namespace, "" ), namespace, "", 1 )
   }
 
-  define page doSearch( searcher : EntrySearcher, namespace:String, langCons : String, pageNum: Int ) {
+  page doSearch( searcher : EntrySearcher, namespace:String, langCons : String, pageNum: Int ) {
   	init{ if( searcher.getNamespace() != namespace){ ~searcher in namespace namespace; } }
     showSearch( searcher, namespace, langCons, pageNum )
   }

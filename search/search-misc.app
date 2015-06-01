@@ -12,16 +12,22 @@ module search/search-misc
     static steal(String) : Int
   }
 
-  define prettifyCode() { prettifyCodeHelper( "" ) }
-  define prettifyCode( projectName : String ) { prettifyCodeHelper( "\"" + URLFilter.filter( projectName ) + "\"" ) }
-  define prettifyCodeHelper( projectName : String ) {
+  define prettifyCode() { prettifyCodeHelper( "", true ) }
+  define prettifyCode( projectName : String ) { prettifyCodeHelper( "\"" + URLFilter.filter( projectName ) + "\"", true) }
+  define prettifyCodeHelper( projectName : String, clickable : Bool ) {
     //highlight code using google-code-prettify
     includeCSS( "prettify.css" )
     includeJS( "prettify/prettify.js" )
     includeJS( "make-clickable.js" )
-    <script>
-      prettifyAndMakeClickable( ~projectName );
-    </script>
+    if(clickable){
+	    <script>
+	      prettifyAndMakeClickable( ~projectName );
+	    </script>
+    } else {
+    	<script>
+    	  prettyPrint();
+    	</script>
+    }
   }
 
   service autocompleteService( namespace:String, term : String ) {
