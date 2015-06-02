@@ -29,6 +29,7 @@ page indentTool(){
 		var indentChars := if(indentType == TwoSpaces) "  " else (if(indentType == FourSpaces) "    " else "\t");
 		replace(formattedCode, codearea(CodeFormatter.format(code,openOnNewLine,whiteSpaceBeforeOpen,indentChars)));
 	}
+	title{"Indentation Tool | Reposearch"}
 	
 	mainResponsive( "Projects" ){
 		prettifyCode()

@@ -138,6 +138,9 @@ section functions
     return lists;
   }
 
+  page unusedTemplateFix(){
+  	issue599wrap("", "")
+  }
   define issue599wrap( viewFileUri: String, lineNum: String ) {
     navWithAnchor( viewFileUri, lineNum ) { output( lineNum ) }
   }
