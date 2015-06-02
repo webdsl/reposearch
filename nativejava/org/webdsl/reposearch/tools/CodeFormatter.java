@@ -13,8 +13,8 @@ public class CodeFormatter {
     String[] lines = input.split( "\\r?\\n" );
     List<String> formatted = new ArrayList<String>();
     String currentIndent="";
-    Pattern p = Pattern.compile( "((\\s*).*)\\s*(\\{|<[^/]+>)\\s*$" );
-    String replacement = openOnNewLine ? "$1\n$2$3" : (whiteSpaceBeforeOpen ? "$1 $3" : "$1$3");
+    Pattern p = Pattern.compile( "(\\S?)\\s*(\\{|(<[^/]+>))\\s*$" );
+    String replacement = openOnNewLine ? "$1\n$2$3" : (whiteSpaceBeforeOpen ? "$1 $2" : "$1$2");
     Pattern closePattern= Pattern.compile("(^[^\\{\"]*\\})|(^[^<\"]*</)");
     Pattern openPattern= Pattern.compile("(\\{[^\\}]*$)|(^\\s*<[^/]*>[^<]*)$");
     

@@ -83,7 +83,7 @@ application reposearch
             }
           }
         }
-        navItem{ navigate( formattool() )    { iIndentRight " Code Formatter" } }
+        navItem{ navigate( indentTool() )    { iIndentRight " Code Indenter" } }
   
         navItem{ navigate( manage() )         { "Manage"           } }
         navItem{ navigate( searchStats() )    {"Search statistics" } }
