@@ -19,7 +19,8 @@ application reposearch
   imports tools/tools
   
   init {
-    Project{name:="WebDSL" repos:=[ ( SvnRepo{url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac" refresh:=true } as Repo )]} .save();
+  	var repo := (SvnRepo{ url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac" refresh:=true } as Repo);
+    Project{name:="WebDSL" repos:=[ repo ] }.save();
   }
   
   entity BootstrapTheme{
@@ -165,7 +166,7 @@ application reposearch
   	} } }
   	
   	<script>
-  	var instantSearch := $("#instant-search");
+  	var instantSearch = $("#instant-search");
   	instantSearch.keyup(function (e) {
 	    if (e.keyCode == 13) {
 	        $("#perform-search").click();
