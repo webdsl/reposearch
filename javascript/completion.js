@@ -9,7 +9,7 @@ return $( "<li></li>" )
 function setupcompletion(url){
   $(function() {
     $( "#searchfield" ).autocomplete({
-      autoFocus: true,
+      autoFocus: false,
       select: function(event, ui) {
         if(ui.item){
             $(this).val(ui.item.value);
@@ -38,6 +38,11 @@ function setupcompletion(url){
         },
       minLength: 1,
       delay: 200
-    }) 
+    }).keypress(function(event){
+      if(event.keyCode === 13){
+        event.preventDefault();
+        $(event.target).autocomplete( "close" );
+      }
+    }); 
   });
 }
