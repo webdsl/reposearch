@@ -4,7 +4,7 @@ section entities
 
   entity Entry {
     name        :: String
-    content     :: Text
+    content     :: Text (length=100000000)
     url         :: URL (length=511)
     projectname :: String
     repo        -> Repo
