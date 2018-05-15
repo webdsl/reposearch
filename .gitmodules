@@ -1,6 +1,3 @@
-[submodule "elib"]
-	path = elib
-	url = https://github.com/webdsl/elib-bootstrap.git
 [submodule "elib/elib-bootstrap"]
 	path = elib/elib-bootstrap
 	url = https://github.com/webdsl/elib-bootstrap.git
