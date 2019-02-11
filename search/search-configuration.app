@@ -13,7 +13,7 @@ module search-configuration
 
   analyzer keep_all_chars {
     tokenizer = PatternTokenizer(
-      pattern="((\n|^)\\d+\\s)|([a-zA-Z_]\\w*)|\\d+|[!-/:-@\\[-`{-~]",
+      pattern="((\n|^)\\d+\\s)|([a-zA-Z_]\\w*)|\\d+|[!-/:-@\\[-`{-\~]",
       group="0" )
     token filter = PatternReplaceFilter(
       pattern="\\d+\\s",
@@ -24,7 +24,7 @@ module search-configuration
 
   analyzer keep_all_chars_cs {
     tokenizer = PatternTokenizer(
-      pattern="((\n|^)\\d+\\s)|([a-zA-Z_]\\w*)|\\d+|[!-/:-@\\[-`{-~]",
+      pattern="((\n|^)\\d+\\s)|([a-zA-Z_]\\w*)|\\d+|[!-/:-@\\[-`{-\~]",
       group="0" )
     token filter = PatternReplaceFilter(
       pattern="\\d+\\s",
