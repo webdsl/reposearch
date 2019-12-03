@@ -122,7 +122,7 @@ application reposearch
     mainResponsive( "Projects" ) {
       gridRow {
         gridCol( 12 ) {
-            <center> rawoutput( messages.frontPageMsg ) </center>
+            <center> rawoutput( globalMessages.frontPageMsg ) </center>
         }
       }
       gridRow {
@@ -219,7 +219,7 @@ application reposearch
   	mainResponsive( "Projects" ){
   		gridRow {
         gridCol( 12 ) {
-        	rawoutput( messages.downloadMsg )
+        	rawoutput( globalMessages.downloadMsg )
         }
       }
   	}

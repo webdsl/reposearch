@@ -4,7 +4,7 @@ module manage/manage-data
   invoke invokeCheckReindex() every 60 seconds
   invoke manager.newHour()    every 1 hours
 
-  var messages := if( ( from Message ).length > 0 ) ( from Message ) [0]  else Message {frontPageMsg := "<div class=\"well well-small\"><center><pre><code>\n" +
+  var globalMessages := if( ( from Message ).length > 0 ) ( from Message ) [0]  else Message {frontPageMsg := "<div class=\"well well-small\"><center><pre><code>\n" +
 "________                                                   ______\n" +  
 "___  __ \\____________________________________ ________________  /_ \n" +
 "__  /_/ /  _ \\__  __ \\  __ \\_  ___/  _ \\  __ `/_  ___/  ___/_  __ \\\n" +

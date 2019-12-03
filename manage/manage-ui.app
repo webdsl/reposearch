@@ -21,9 +21,9 @@ section pages
       }
       manageProjects()
 
-      manageMessage( messages.frontPageMsg , "Manage Frontpage Message", true)
+      manageMessage( globalMessages.frontPageMsg , "Manage Frontpage Message", true)
       
-      manageMessage( messages.downloadMsg , "Manage Download Page", false)
+      manageMessage( globalMessages.downloadMsg , "Manage Download Page", false)
       
       misc()
       
@@ -205,7 +205,7 @@ template themeChooser(){
     manageContainer( title ){
       inlForm{
         controlGroup( "Message" ){ input( msgText ) [oninput="$(this).keyup();", onkeyup=updateMsgPreview( msgText )] }
-        div { submitlink action{msg := msgText; messages.save();}{ buttonPrimaryMini{"save"} } }
+        div { submitlink action{msg := msgText; globalMessages.save();}{ buttonPrimaryMini{"save"} } }
       }
       <h5>"Preview"</h5>
       wellSmall{
