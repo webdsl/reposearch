@@ -117,7 +117,7 @@ section functions
     if( repos.length > 0 ) {
       var r := repos[0];
       var col : RepoTaskResult;
-      var oldRev : Long := if( r.rev == null ) -1 else r.rev;
+      var oldRev : Long := if( r.rev == null ) -1L else r.rev;
       var rev : Long;
       var performNextRefresh := false;
       r.inRefresh:=true;
