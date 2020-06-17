@@ -180,9 +180,9 @@ application reposearch
   	var projects := from Project;
   	header3 { "Or pick a project" }
   	filterProject( projects )
-	placeholder "projectsArea" {  
-		showProjects( projects )
-	}
+	    placeholder "projectsArea" {  
+		  showProjects( projects )
+    }
   }
   
   define filterProject( projects : Ref<List<Project>> ){

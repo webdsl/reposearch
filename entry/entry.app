@@ -28,7 +28,7 @@ section pages/templates
   }
 
   page viewFile( query : String, url:URL, projectName:String, langCons : String ) {
-    var e := ( from Entry as e where e.url=~url and e.projectname = ~projectName ) [0]
+    var e : Entry;
     var viewFileUri := navigate( viewFile( query, url, projectName, langCons ) );
     var linkText    := "";
     var location    : String;
@@ -37,14 +37,20 @@ section pages/templates
     var highlighted : List<List<String>>;
     var searcher    := toSearcher( query, "", langCons );
     init {
-      linkText := searcher.highlight( "fileName", e.name, "<span class=\"hlcontent\">","</span>", 1, 256, "" );
-      if( linkText.length() < 1 ) { linkText := e.name; }
-      location := e.url.substring( 0, e.url.length() - e.name.length() );
-      highlighted := highlightCodeLines( searcher, e, 1000000, 1, true, viewFileUri, langCons );
-      lineNumbers := highlighted[0].concat( "<br />" );
-      codeLines := highlighted[1].concat( "<br />" );
-      //add line number anchors
-      lineNumbers := /> ( \d+ ) </.replaceAll( ">$1<a class=shift-top name=\"$1\"/><", lineNumbers );
+      var entries:= ( from Entry as e where e.url=~url and e.projectname = ~projectName );
+      if(entries.length < 1){
+        return pagenotfound();
+      } else {
+         e := entries[0];
+        linkText := searcher.highlight( "fileName", e.name, "<span class=\"hlcontent\">","</span>", 1, 256, "" );
+        if( linkText.length() < 1 ) { linkText := e.name; }
+        location := e.url.substring( 0, e.url.length() - e.name.length() );
+        highlighted := highlightCodeLines( searcher, e, 1000000, 1, true, viewFileUri, langCons );
+        lineNumbers := highlighted[0].concat( "<br />" );
+        codeLines := highlighted[1].concat( "<br />" );
+        //add line number anchors
+        lineNumbers := /> ( \d+ ) </.replaceAll( ">$1<a class=shift-top name=\"$1\"/><", lineNumbers );
+      }
     }    
     title       { output( e.name + ":" + query + " - " + projectName + " | Reposearch" ) }
     description { output (

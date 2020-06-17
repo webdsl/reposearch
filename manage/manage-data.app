@@ -110,8 +110,13 @@ section functions
     }
   }
 
+  function reloadRepo( r : Repo ) : Repo{
+  	return (from Repo where id = ~r.id)[0];
+  }
   function queryRepoTask() {
+  	var settingsId := settings.id;
     langConsRenewSchedule.run();
+    commitAndStartNewTransaction();
     var repos := from Repo where refresh=true and inRefresh=false;
     var skippedFiles := List<String>();
     if( repos.length > 0 ) {
@@ -121,6 +126,8 @@ section functions
       var rev : Long;
       var performNextRefresh := false;
       r.inRefresh:=true;
+      commitAndStartNewTransaction(); //commit change, new transaction won't be used for writes during expensive update/checkout steps
+      r := reloadRepo(r);
       if( r isa FileRepo ){
         col := RepositoryFetcher.checkout( ( r as FileRepo ).repositoryFile ); 
       }
@@ -131,6 +138,8 @@ section functions
         if( r isa SvnRepo ) { col := RepositoryFetcher.checkout( ( r as SvnRepo ).url ); }
         if( r isa GithubRepo ) { col := RepositoryFetcher.checkout( ( r as GithubRepo ).user, ( r as GithubRepo ).repo, ( r as GithubRepo ).svnPath ); }
       }
+      commitAndStartNewTransaction(); //checkout/update finished, start new transaction for writing updates
+      r := reloadRepo(r);
       if( col == null ) {
         r.error := true;
       } else {
@@ -147,7 +156,8 @@ section functions
             c.addconstructs();
             c.save();
           }
-          settings.addProject( r.project );
+          var txSettings := (from Settings where id= ~settingsId)[0];
+          txSettings.addProject( r.project );
         } else {
           performNextRefresh := true;
         }
