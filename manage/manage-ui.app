@@ -1,5 +1,17 @@
 module manage/manage-ui
 
+imports built-in
+imports reposearch
+imports language-construct/language-construct-data
+imports language-construct/language-construct-ui
+imports manage/manage-data
+imports project/project
+imports repository/repository
+imports request/request
+imports search/search-ui
+
+imports elib/elib-bootstrap/lib
+
 section pages
 
   page manage() {

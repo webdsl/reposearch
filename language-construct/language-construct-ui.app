@@ -1,5 +1,12 @@
 module language-construct/language-construct-ui
 
+imports built-in
+imports reposearch
+imports project/project
+imports language-construct/language-construct-data
+imports manage/manage-ui
+imports manage/manage-data
+
 section pages/templates
 
   define manageLangConstructs( pr : Project ) {

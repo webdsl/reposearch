@@ -1,5 +1,12 @@
 module request/request
 
+imports built-in
+imports reposearch
+imports manage/manage-data
+imports manage/manage-ui
+
+imports elib/elib-bootstrap/lib
+
 section entities
 
   entity Request {

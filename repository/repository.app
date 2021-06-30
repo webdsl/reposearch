@@ -1,5 +1,11 @@
 module repository/repository
 
+imports built-in
+imports manage/manage-ui
+imports project/project
+
+imports elib/elib-bootstrap/lib
+
 section entities
 
   entity Repo {

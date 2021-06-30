@@ -1,5 +1,8 @@
 module project/project
 
+imports repository/repository
+
+imports elib/elib-utils/string
 
   entity Project {
     cache //Project entitities are retrieved on any page

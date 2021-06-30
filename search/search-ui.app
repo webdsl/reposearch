@@ -1,5 +1,18 @@
 module search/search-ui
 
+imports built-in
+imports reposearch
+imports analytics/analytics
+imports entry/entry
+imports language-construct/language-construct-data
+imports search/search-data
+imports search/search-misc
+
+imports elib-bootstrap-3/icons
+imports elib/elib-bootstrap/lib
+imports elib/elib-utils/pageindex
+imports elib/elib-utils/string
+
 section pages/templates
 
   page search( namespace:String, q:String ) {

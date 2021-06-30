@@ -1,5 +1,10 @@
 module search/search-data
 
+imports built-in
+imports entry/entry
+imports language-construct/language-construct-data
+imports search/search-misc
+
 section entities
 
   session SearchPrefs {

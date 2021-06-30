@@ -1,4 +1,4 @@
-module search-configuration
+module search/search-configuration
 
   analyzer filename_analyzer {
     tokenizer = PatternTokenizer( pattern="[^\\.]+", group="0" )

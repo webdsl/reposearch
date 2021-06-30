@@ -1,0 +1,14 @@
+---
+id: org.example:reposearch:0.1.0-SNAPSHOT
+name: webdsl-statix
+dependencies:
+  compile:
+  - org.example:webdslstatix:0.1.0-SNAPSHOT
+debug:
+  typesmart: false
+build:
+  useBuildSystemSpec: true
+runtime:
+  statix:
+    message-trace-length: 0  # default: 0, full trace: -1
+    message-term-depth: 5    # full trace: -1

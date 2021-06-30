@@ -1,5 +1,13 @@
 module manage/manage-data
 
+imports built-in
+imports reposearch
+imports entry/entry
+imports language-construct/language-construct-data
+imports project/project
+imports repository/repository
+imports request/request
+
   invoke queryRepoTask()      every 30 seconds
   invoke invokeCheckReindex() every 60 seconds
   invoke manager.newHour()    every 1 hours

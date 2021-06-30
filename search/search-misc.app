@@ -1,5 +1,9 @@
 module search/search-misc
 
+imports built-in
+imports entry/entry
+imports project/project
+
   invoke updateSearchCounts() every 60 seconds
 
   native class utils.URLFilter as URLFilter {

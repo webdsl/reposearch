@@ -1,5 +1,12 @@
 module language-construct/language-construct-data
 
+imports built-in
+imports reposearch
+imports entry/entry
+imports project/project
+imports repository/repository
+imports search/search-data
+
 section entities
     entity LangConstruct {      
       cache //LangConstruct entities are fetched on every search page

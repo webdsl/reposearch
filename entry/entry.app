@@ -1,5 +1,14 @@
 module entry/entry
 
+imports built-in
+imports reposearch
+imports analytics/analytics
+imports repository/repository
+imports search/search-data
+imports search/search-misc
+
+imports elib/elib-bootstrap/lib
+
 section entities
 
   entity Entry {
