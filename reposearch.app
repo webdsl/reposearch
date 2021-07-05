@@ -5,24 +5,16 @@ application reposearch
   imports ac
   imports analytics/analytics
   imports entry/entry
-  imports language-construct/language-construct-data
-  imports language-construct/language-construct-ui
-  imports manage/manage-data
-  imports manage/manage-ui
+  imports language-construct/*
+  imports manage/*
   imports project/project
   imports repository/repository
   imports request/request
-  imports search/search-configuration
-  imports search/search-data
-  imports search/search-ui
-  imports search/search-misc
+  imports search/*
   imports tools/tools
 
-  imports elib/elib-bootstrap/lib
-  imports elib-bootstrap-3/icons
-  imports elib/elib-utils/lib
-  imports elib/elib-utils/markup
-  imports elib/elib-utils/string
+  imports elib/*
+  imports elib-bootstrap-3/*
 
   init {
   	var repo := (SvnRepo{ url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac" refresh:=true } as Repo);

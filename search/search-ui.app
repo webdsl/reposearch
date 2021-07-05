@@ -5,13 +5,10 @@ imports reposearch
 imports analytics/analytics
 imports entry/entry
 imports language-construct/language-construct-data
-imports search/search-data
-imports search/search-misc
+imports search/*
 
+imports elib/*
 imports elib-bootstrap-3/icons
-imports elib/elib-bootstrap/lib
-imports elib/elib-utils/pageindex
-imports elib/elib-utils/string
 
 section pages/templates
 

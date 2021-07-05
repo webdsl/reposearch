@@ -4,8 +4,7 @@ imports built-in
 imports reposearch
 imports search/search-misc
 
-imports elib/elib-bootstrap/lib
-imports elib/elib-utils/markup
+imports elib/*
 
 access control rules
 rule page indentTool(){ true }

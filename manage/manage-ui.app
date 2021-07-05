@@ -2,8 +2,7 @@ module manage/manage-ui
 
 imports built-in
 imports reposearch
-imports language-construct/language-construct-data
-imports language-construct/language-construct-ui
+imports language-construct/*
 imports manage/manage-data
 imports project/project
 imports repository/repository

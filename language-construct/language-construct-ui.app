@@ -4,8 +4,7 @@ imports built-in
 imports reposearch
 imports project/project
 imports language-construct/language-construct-data
-imports manage/manage-ui
-imports manage/manage-data
+imports manage/*
 
 section pages/templates
 
