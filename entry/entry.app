@@ -4,7 +4,7 @@ imports built-in
 imports reposearch
 imports analytics/analytics
 imports repository/repository
-imports search/*
+imports search/-
 
 imports elib/elib-bootstrap/lib
 

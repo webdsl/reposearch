@@ -2,7 +2,7 @@ module request/request
 
 imports built-in
 imports reposearch
-imports manage/*
+imports manage/-
 
 imports elib/elib-bootstrap/lib
 

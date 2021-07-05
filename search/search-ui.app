@@ -5,9 +5,9 @@ imports reposearch
 imports analytics/analytics
 imports entry/entry
 imports language-construct/language-construct-data
-imports search/*
+imports search/-
 
-imports elib/*
+imports elib/-
 imports elib-bootstrap-3/icons
 
 section pages/templates

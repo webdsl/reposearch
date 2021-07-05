@@ -7,7 +7,7 @@ imports language-construct/language-construct-ui
 imports manage/manage-ui
 imports repository/repository
 imports request/request
-imports search/*
+imports search/-
 
   entity User {
     name :: String
