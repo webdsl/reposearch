@@ -3,7 +3,7 @@ module ac
 imports built-in
 imports reposearch
 imports entry/entry
-imports language-construct/language-construct-ui
+imports language-construct/-
 imports manage/manage-ui
 imports repository/repository
 imports request/request

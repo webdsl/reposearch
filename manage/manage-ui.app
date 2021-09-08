@@ -7,7 +7,7 @@ imports manage/manage-data
 imports project/project
 imports repository/repository
 imports request/request
-imports search/search-ui
+imports search/-
 
 imports elib/elib-bootstrap/lib
 
