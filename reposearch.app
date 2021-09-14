@@ -14,7 +14,6 @@ application reposearch
   imports tools/tools
 
   imports elib/-
-  imports elib-bootstrap-3/-
 
   init {
   	var repo := (SvnRepo{ url:="https://svn.strategoxt.org/repos/WebDSL/webdsls/trunk/test/fail/ac" refresh:=true } as Repo);

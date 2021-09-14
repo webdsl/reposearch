@@ -8,7 +8,6 @@ imports language-construct/language-construct-data
 imports search/-
 
 imports elib/-
-imports elib-bootstrap-3/icons
 
 section pages/templates
 
