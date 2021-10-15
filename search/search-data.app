@@ -4,6 +4,7 @@ imports built-in
 imports entry/entry
 imports language-construct/language-construct-data
 imports search/search-misc
+imports search/search-ui
 
 section entities
 
