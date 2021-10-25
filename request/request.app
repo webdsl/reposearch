@@ -4,7 +4,7 @@ imports built-in
 imports reposearch
 imports manage/-
 
-imports elib/elib-bootstrap/lib
+imports elib/-
 
 section entities
 
