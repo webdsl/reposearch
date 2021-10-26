@@ -330,9 +330,12 @@ public class RepositoryFetcher {
             try {
               in = new FileInputStream ( f );
               webdslFile.setContentStream ( in );
-              content = webdslFile.getContentAsString();
-              contentFixed = fixEncoding ( content );
-              isBinFile = ( contentFixed.length() < 1 && !contentFixed.equals ( content ) ) ;
+              long size = webdslFile.getSizeInBytes();
+              if(size < 1024*1024) {
+                content = webdslFile.getContentAsString();
+                contentFixed = fixEncoding ( content );
+                isBinFile = ( contentFixed.length() < 1 && !contentFixed.equals ( content ) ) ;
+              }
             } catch ( IOException ex ) {
               log ( ex.getMessage() );
               ex.printStackTrace();
@@ -388,9 +391,12 @@ public class RepositoryFetcher {
       try {
         in = new ByteArrayInputStream ( out.toByteArray() );
         webdslFile.setContentStream ( in );
-        content = webdslFile.getContentAsString();
-        contentFixed = fixEncoding ( content );
-        isBinFile = ( contentFixed.length() < 1 && !contentFixed.equals ( content ) ) ;
+        long size = webdslFile.getSizeInBytes();
+        if(size < 1024*1024) {
+          content = webdslFile.getContentAsString();
+          contentFixed = fixEncoding ( content );
+          isBinFile = ( contentFixed.length() < 1 && !contentFixed.equals ( content ) ) ;
+        }
       } catch ( IOException ex ) {
         log ( ex.getMessage() );
         ex.printStackTrace();
@@ -421,7 +427,9 @@ public class RepositoryFetcher {
              ||fileName.endsWith ( ".png" )
              ||fileName.endsWith ( ".jpg" )
              ||fileName.endsWith ( ".bmp" )
-             ||fileName.endsWith ( ".jar" ) );
+             ||fileName.endsWith ( ".jar" )
+             ||fileName.endsWith ( ".stxlib" )
+           );
   }
 
   /*
