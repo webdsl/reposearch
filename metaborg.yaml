@@ -6,9 +6,12 @@ dependencies:
   - org.example:webdslstatix:0.1.0-SNAPSHOT
 debug:
   typesmart: false
+language:
+  statix:
+    mode: concurrent
 build:
   useBuildSystemSpec: true
 runtime:
   statix:
-    message-trace-length: 0  # default: 0, full trace: -1
-    message-term-depth: 5    # full trace: -1
+    message-trace-length: 6  # default: 0, full trace: -1
+    message-term-depth: 10    # full trace: -1
