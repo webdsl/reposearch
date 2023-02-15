@@ -64,7 +64,7 @@ section pages/templates
     
     mainResponsive( projectName ) {
       wellSmall {
-        gridRow{
+        gridRow[class="sticky-top"]{
           navigate( url( e.url ) ) {
             <h5>
             <b>rawoutput( if( linkText.length() >0 ) linkText else "-" ) </b>
