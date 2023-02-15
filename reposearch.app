@@ -177,7 +177,7 @@ application reposearch
   }
   
   define filterProjectHomepage(){ 
-  	var projects := from Project;
+  	request var projects := from Project;
   	header3 { "Or pick a project" }
   	filterProject( projects )
 	    placeholder "projectsArea" {  
